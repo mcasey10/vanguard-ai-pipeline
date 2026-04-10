@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contextual segment map — Vanguard Sell & Rebalance</title>
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f5f4f0;
+  --color-background-info: #e6f1fb;
+  --color-text-primary: #1a1a19;
+  --color-text-secondary: #5f5e5a;
+  --color-text-tertiary: #8f8e89;
+  --color-text-info: #185fa5;
+  --color-border-tertiary: rgba(0,0,0,0.12);
+  --color-border-secondary: rgba(0,0,0,0.20);
+  --color-border-primary: rgba(0,0,0,0.30);
+  --color-border-info: #378add;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background-primary: #1e1e1c;
+    --color-background-secondary: #2a2a28;
+    --color-background-info: #042c53;
+    --color-text-primary: #e8e6de;
+    --color-text-secondary: #b4b2a9;
+    --color-text-tertiary: #73726c;
+    --color-text-info: #85b7eb;
+    --color-border-tertiary: rgba(255,255,255,0.10);
+    --color-border-secondary: rgba(255,255,255,0.18);
+    --color-border-primary: rgba(255,255,255,0.28);
+    --color-border-info: #378add;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--color-background-secondary);color:var(--color-text-primary);padding:24px 20px 48px;max-width:960px;margin:0 auto;font-size:14px;line-height:1.6}
+h1{font-size:18px;font-weight:500;margin-bottom:4px}
+.subtitle{font-size:13px;color:var(--color-text-secondary);margin-bottom:20px}
+.seg-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;background:var(--color-background-primary);cursor:pointer;transition:border-color .15s}
+.seg-card:hover{border-color:var(--color-border-primary)}
+.seg-card.active{border-width:1.5px}
+.seg-label{font-size:13px;font-weight:500;margin-bottom:4px}
+.seg-trigger{font-size:11px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.4}
+.dim-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.dim-name{font-size:10px;color:var(--color-text-tertiary);min-width:80px}
+.dim-track{flex:1;height:5px;background:var(--color-border-tertiary);border-radius:3px;position:relative}
+.dim-fill{height:100%;border-radius:3px;transition:width .3s}
+.dim-val{font-size:10px;color:var(--color-text-secondary);min-width:68px;text-align:right}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.detail-panel{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;background:var(--color-background-secondary);min-height:120px}
+.detail-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:8px}
+.detail-row{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
+.detail-key{font-size:11px;color:var(--color-text-tertiary);min-width:80px;flex-shrink:0}
+.detail-val{font-size:11px;color:var(--color-text-primary);line-height:1.4}
+</style>
+</head>
+<body>
+<h1>Contextual segment map</h1>
+<p class="subtitle">Vanguard Sell &amp; Rebalance — user research output · Click a segment to see its full profile</p>
+
+<div class="grid" id="seg-grid"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-title">Select a segment above to see its full profile</div>
+</div>
+
+<script>
+const segs=[
+  {
+    id:'A',name:'Strategic optimizer',
+    color:'#534AB7',bg:'#EEEDFE',border:'#AFA9EC',
+    darkColor:'#AFA9EC',darkBg:'#26215C',
+    trigger:'Planning a large withdrawal, comparing scenarios',
+    dims:[
+      {name:'Session pressure',val:'Low',pct:15},
+      {name:'Withdrawal size',val:'Large',pct:85},
+      {name:'Portfolio drift',val:'High',pct:80},
+      {name:'Tax clarity',val:'High',pct:85},
+      {name:'Portfolio complexity',val:'High',pct:90},
+    ],
+    goal:'Maximum optimization across both tax and rebalancing dimensions',
+    anxiety:'Tool recommendation diverges from their own system without explanation',
+    toolMust:'Surface lot-level detail, progressive disclosure of optimization logic',
+    toolAvoid:'Hiding reasoning; oversimplified rationale that can\'t be audited',
+    workflow:'A then B, scenario comparison primary destination',
+  },
+  {
+    id:'B',name:'Routine executor',
+    color:'#0F6E56',bg:'#E1F5EE',border:'#5DCAA5',
+    darkColor:'#5DCAA5',darkBg:'#04342C',
+    trigger:'Quarterly drawdown, RMD, established withdrawal pattern',
+    dims:[
+      {name:'Session pressure',val:'Low–mild',pct:25},
+      {name:'Withdrawal size',val:'Small–mod.',pct:35},
+      {name:'Portfolio drift',val:'Low–mod.',pct:30},
+      {name:'Tax clarity',val:'Moderate',pct:50},
+      {name:'Portfolio complexity',val:'Moderate',pct:45},
+    ],
+    goal:'Efficient confirmation that the routine withdrawal is reasonable',
+    anxiety:'Tool makes a simple task feel unnecessarily complex',
+    toolMust:'Consistent, predictable recommendations that reinforce routine',
+    toolAvoid:'Pushing scenario comparison onto a user who just wants to execute',
+    workflow:'Workflow A, direct execution path',
+  },
+  {
+    id:'C',name:'Reactive withdrawer',
+    color:'#993C1D',bg:'#FAECE7',border:'#F0997B',
+    darkColor:'#F0997B',darkBg:'#4A1B0C',
+    trigger:'Medical bill, family emergency, urgent external need',
+    dims:[
+      {name:'Session pressure',val:'High',pct:95},
+      {name:'Withdrawal size',val:'Non-negotiable',pct:60},
+      {name:'Portfolio drift',val:'Unknown',pct:30},
+      {name:'Tax clarity',val:'Low',pct:20},
+      {name:'Portfolio complexity',val:'Any',pct:50},
+    ],
+    goal:'Fastest credible path to executing a specific dollar amount',
+    anxiety:'Any complexity or friction that delays execution',
+    toolMust:'Single trustworthy recommendation, minimal inputs, short path to execution',
+    toolAvoid:'Scenario comparison, tax detail, anything that reads as optional extra work',
+    workflow:'Workflow A, execute without modification',
+  },
+  {
+    id:'D',name:'Newly self-directed',
+    color:'#854F0B',bg:'#FAEEDA',border:'#EF9F27',
+    darkColor:'#FAC775',darkBg:'#412402',
+    trigger:'Death of spouse, divorce, end of advisor relationship',
+    dims:[
+      {name:'Session pressure',val:'Moderate',pct:50},
+      {name:'Withdrawal size',val:'Uncertain',pct:40},
+      {name:'Portfolio drift',val:'Unknown',pct:35},
+      {name:'Tax clarity',val:'Low–mod.',pct:30},
+      {name:'Portfolio complexity',val:'Mod.–high',pct:65},
+    ],
+    goal:'Comprehension before optimization — understand what is happening',
+    anxiety:'Making an irreversible error without understanding the consequences',
+    toolMust:'Orientation before action, plain-language rationale, comfort with incomplete sessions',
+    toolAvoid:'Leading with a recommendation before establishing comprehension',
+    workflow:'Workflow A with coach marks active, may pause and return',
+  },
+];
+
+const dark=matchMedia('(prefers-color-scheme:dark)').matches;
+let active=null;
+
+function renderGrid(){
+  const g=document.getElementById('seg-grid');
+  g.innerHTML=segs.map(s=>{
+    const isActive=active===s.id;
+    const col=dark?s.darkColor:s.color;
+    const bg=dark?s.darkBg:s.bg;
+    const brd=isActive?col:s.border;
+    const dims=s.dims.map(d=>`
+      <div class="dim-bar-row">
+        <span class="dim-name">${d.name}</span>
+        <div class="dim-track"><div class="dim-fill" style="width:${d.pct}%;background:${col}"></div></div>
+        <span class="dim-val">${d.val}</span>
+      </div>`).join('');
+    return `<div class="seg-card${isActive?' active':''}" onclick="select('${s.id}')" style="border-color:${brd}${isActive?';border-color:'+col:''}">
+      <div class="seg-label" style="color:${col}">${s.name}</div>
+      <div class="seg-trigger">${s.trigger}</div>
+      ${dims}
+    </div>`;
+  }).join('');
+}
+
+function renderDetail(s){
+  const col=dark?s.darkColor:s.color;
+  document.getElementById('detail-panel').innerHTML=`
+    <div class="detail-title" style="color:${col}">Segment ${s.id} — ${s.name}</div>
+    <div class="detail-row"><span class="detail-key">Primary goal</span><span class="detail-val">${s.goal}</span></div>
+    <div class="detail-row"><span class="detail-key">Key anxiety</span><span class="detail-val">${s.anxiety}</span></div>
+    <div class="detail-row"><span class="detail-key">Tool must</span><span class="detail-val">${s.toolMust}</span></div>
+    <div class="detail-row"><span class="detail-key">Tool must avoid</span><span class="detail-val">${s.toolAvoid}</span></div>
+    <div class="detail-row"><span class="detail-key">Likely workflow</span><span class="detail-val">${s.workflow}</span></div>
+  `;
+}
+
+function select(id){
+  active=active===id?null:id;
+  renderGrid();
+  if(active){
+    const s=segs.find(x=>x.id===id);
+    renderDetail(s);
+  } else {
+    document.getElementById('detail-panel').innerHTML='<div class="detail-title">Select a segment above to see its full profile</div>';
+  }
+}
+
+renderGrid();
+</script>
+</body>
+</html>
