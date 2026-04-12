@@ -232,7 +232,37 @@
       z-index: 1;
     }
 
-    /* ── Handoff ── */
+    /* ── Phase inputs box ── */
+    .phase-inputs {
+      margin-bottom: 14px;
+      padding: 10px 14px;
+      border-radius: var(--rad);
+      border: 0.5px solid var(--t4-bdr);
+      background: var(--bg2);
+    }
+    .phase-inputs-lbl {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--t4-txt);
+      margin-bottom: 6px;
+    }
+    .phase-inputs-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .input-item {
+      font-size: 11px;
+      color: var(--text2);
+      padding: 3px 9px;
+      border-radius: 10px;
+      border: 0.5px solid var(--bdr);
+      background: var(--bg);
+      text-decoration: none;
+    }
+    .input-item:hover { border-color: var(--bdr2); color: var(--text); }
     .handoff {
       margin-top: 12px;
       padding: 10px 14px;
@@ -334,7 +364,9 @@
           <span class="chip chip-used">Claude.ai visualizer<span class="tip">Three interactive HTML artifacts generated inline in the conversation: contextual segment map, contextual variation dimensions explorer, and HMW design brief. Exported as standalone browser-compatible files with CSS variable fallbacks for light and dark mode.</span></span>
           <span class="chip chip-used">GitHub Pages<span class="tip">All three visual artifacts hosted at mcasey10.github.io/vanguard-ai-pipeline/pm/ — linked from Notion page 02b and embedded as interactive references accessible from the PRD workspace.</span></span>
           <span class="chip chip-skipped">Dovetail<span class="tip">Standard tool for qualitative research synthesis — skipped because this project used structured inference rather than real interview data. No repository of raw research to synthesize.</span></span>
+          <span class="chip chip-skipped">NotebookLM<span class="tip">Google's document synthesis tool — would be valuable for projects with real interview transcripts or large research corpora. Skipped here because structured inference replaced primary research. Strong candidate for future projects with real data.</span></span>
           <span class="chip chip-skipped">Notion AI<span class="tip">Could have been used for research synthesis — skipped in favor of Claude.ai which had full session context and was already producing the structured output needed.</span></span>
+          <span class="chip chip-skipped">Manus AI<span class="tip">Autonomous multi-step agent capable of browsing, research, and synthesis — interesting for competitive analysis at scale. Not evaluated for this project; worth considering for PM research phases that require broad web-based intelligence gathering.</span></span>
         </div>
       </div>
     </div>
@@ -436,6 +468,18 @@
   <!-- ═══════════════ PD PANEL ═══════════════ -->
   <div id="panel-pd" class="role-panel">
 
+    <div class="phase-inputs">
+      <div class="phase-inputs-lbl">Inputs for this phase</div>
+      <div class="phase-inputs-items">
+        <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace (12 pages)</a>
+        <a class="input-item" href="https://mcasey10.github.io/vanguard-ai-pipeline/pm/contextual_segment_map.html" target="_blank">Contextual segment map</a>
+        <a class="input-item" href="https://mcasey10.github.io/vanguard-ai-pipeline/pm/hmw_design_brief.html" target="_blank">HMW design brief</a>
+        <span class="input-item">Lovable logic validation prototype</span>
+        <span class="input-item">Sample dataset JSON (page 10)</span>
+        <span class="input-item">Jira backlog VSR-1 to VSR-69</span>
+      </div>
+    </div>
+
     <div class="step">
       <div class="step-head">
         <div class="step-num pd-num">1</div>
@@ -478,15 +522,15 @@
       <div class="step-head">
         <div class="step-num pd-num">3</div>
         <div class="step-main">
-          <div class="step-title">Screen generation</div>
-          <div class="step-desc">PRD, journey maps, and conversational design requirements become structured prompt inputs. Lovable prototype screenshots serve as visual fidelity reference for data-dense layouts. Build all screens before wiring. Figma Make is the primary tool; Galileo AI and Framer AI are alternates worth evaluating.</div>
+          <div class="step-title">Screen generation + data visualization planning</div>
+          <div class="step-desc">PRD, journey maps, and conversational design requirements become structured prompt inputs. Lovable prototype screenshots serve as visual fidelity reference for data-dense layouts. Build all screens before wiring. Data visualizations must be explicitly prompted — three features require deliberate chart design: the scenario comparison view (Tier 1 open question Q8), the allocation drift indicator in Workflow B, and the progressive disclosure of optimization scoring. Figma Make will not generate these automatically without specific prompts specifying chart type, data dimensions, and segment-aware reading order.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t2">T2</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-skipped">Figma Make<span class="tip">PD phase not yet started. Primary planned tool for screen generation.</span></span>
-          <span class="chip chip-skipped">Galileo AI<span class="tip">Alternate screen generation tool — evaluation planned but not yet run.</span></span>
+          <span class="chip chip-skipped">Figma Make<span class="tip">PD phase not yet started. Primary planned tool for screen generation. Requires explicit visualization prompts for the three data-heavy components — will not auto-generate charts from PRD text alone.</span></span>
+          <span class="chip chip-skipped">Galileo AI<span class="tip">Alternate screen generation tool — evaluation planned. Strong for component-level generation from text descriptions.</span></span>
           <span class="chip chip-skipped">Framer AI<span class="tip">Strong for interaction-rich prototypes — evaluation planned for the wiring phase.</span></span>
         </div>
       </div>
@@ -542,6 +586,19 @@
   <!-- ═══════════════ DEV PANEL ═══════════════ -->
   <div id="panel-dev" class="role-panel">
 
+    <div class="phase-inputs">
+      <div class="phase-inputs-lbl">Inputs for this phase</div>
+      <div class="phase-inputs-items">
+        <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace (12 pages)</a>
+        <span class="input-item">Figma Make prototype</span>
+        <span class="input-item">DESIGN_DECISIONS.md</span>
+        <span class="input-item">Sample dataset JSON (page 10)</span>
+        <span class="input-item">Lovable reference implementation</span>
+        <span class="input-item">Jira backlog VSR-1 to VSR-69</span>
+        <a class="input-item" href="https://github.com/mcasey10/vanguard-ai-pipeline" target="_blank">vanguard-ai-pipeline repo</a>
+      </div>
+    </div>
+
     <div class="step">
       <div class="step-head">
         <div class="step-num dev-num">1</div>
@@ -555,6 +612,8 @@
         <div class="tools-row">
           <span class="chip chip-skipped">v0 by Vercel<span class="tip">Dev phase not yet started. Strong candidate for React component scaffold from Figma specs.</span></span>
           <span class="chip chip-skipped">Lovable<span class="tip">Used in PM phase for logic validation — may be revisited for initial app scaffold before Claude Code takes over for business logic.</span></span>
+          <span class="chip chip-skipped">Replit<span class="tip">Full-stack application builder with database integration — worth evaluating for the initial scaffold, particularly if a hosted backend is needed from the start.</span></span>
+          <span class="chip chip-skipped">Base44<span class="tip">Newer entrant in the code-forward tier — not yet evaluated. Worth including in the scaffold comparison experiment alongside Lovable and v0.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
@@ -617,8 +676,30 @@
       <div class="step-head">
         <div class="step-num dev-num">5</div>
         <div class="step-main">
+          <div class="step-title">Deployment</div>
+          <div class="step-desc">Configure and execute deployment to a hosting platform. Claude Code writes deployment configuration files (Dockerfile, Vercel config, GitHub Actions workflows) in the same session as the application code. For a portfolio project, Vercel or Railway handle deployment on push — no separate DevOps role required. A separate DevOps role is only needed for complex infrastructure.</div>
+        </div>
+      </div>
+      <div class="step-footer">
+        <span class="tag t4">T4</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-skipped">Claude Code<span class="tip">Dev phase not yet started. Writes deployment configuration (Dockerfile, vercel.json, GitHub Actions) alongside application code in the same session.</span></span>
+        </div>
+        <span class="sep"></span>
+        <span class="tag t3">T3</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-skipped">Vercel<span class="tip">Primary deployment target — deploy-on-push from GitHub, zero-config for Next.js/React applications. Free tier sufficient for portfolio project.</span></span>
+          <span class="chip chip-skipped">Railway<span class="tip">Alternative to Vercel if a persistent backend (FastAPI, PostgreSQL) is needed alongside the React frontend.</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num dev-num">6</div>
+        <div class="step-main">
           <div class="step-title">PR creation + ticket management</div>
-          <div class="step-desc">Agents create GitHub PRs, update project tracking tickets, and post summaries — closing the loop back to the PM backlog without manual status updates.</div>
+          <div class="step-desc">Agents create GitHub PRs, update Jira tickets, and post summaries — closing the loop back to the PM backlog without manual status updates. n8n can orchestrate cross-system automation (Jira + GitHub + Slack) beyond what individual MCP connections support.</div>
         </div>
       </div>
       <div class="step-footer">
@@ -631,6 +712,7 @@
         <div class="tools-row">
           <span class="chip chip-skipped">GitHub MCP<span class="tip">Dev phase not yet started.</span></span>
           <span class="chip chip-skipped">Slack MCP<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-skipped">n8n<span class="tip">Open-source workflow automation — can orchestrate cross-system pipelines connecting Jira, GitHub, Slack, and Notion in ways that go beyond individual MCP connections. Strong candidate for T5 orchestration in the Dev phase.</span></span>
         </div>
       </div>
     </div>
@@ -641,7 +723,8 @@
         <span class="handoff-item">Deployed application</span>
         <span class="handoff-item">Test suite (15 coverage cases)</span>
         <span class="handoff-item">GitHub PRs</span>
-        <span class="handoff-item">Updated Notion backlog</span>
+        <span class="handoff-item">Updated Jira backlog</span>
+        <span class="handoff-item">Deployment configuration</span>
       </div>
     </div>
 
