@@ -524,15 +524,20 @@
         <div class="step-num pd-num">3</div>
         <div class="step-main">
           <div class="step-title">Screen generation + data visualization planning</div>
-          <div class="step-desc">PRD, journey maps, and conversational design requirements become structured prompt inputs. Lovable prototype screenshots serve as visual fidelity reference for data-dense layouts. Build all screens before wiring. Data visualizations must be explicitly prompted — three features require deliberate chart design: the scenario comparison view (Tier 1 open question Q8), the allocation drift indicator in Workflow B, and the progressive disclosure of optimization scoring. Figma Make will not generate these automatically without specific prompts specifying chart type, data dimensions, and segment-aware reading order.</div>
+          <div class="step-desc">PRD, journey maps, and conversational design requirements become structured prompt inputs. Lovable prototype screenshots serve as visual fidelity reference for data-dense layouts. Build all screens before wiring. Data visualizations must be explicitly prompted — three features require deliberate chart design: the scenario comparison view (Q8), the allocation drift indicator in Workflow B, and the progressive disclosure of optimization scoring. Key finding: Claude Code + Figma MCP generate_figma_design produces native Figma Design frames directly — superior to Figma Make for design-phase output because frames are Framer-importable with full layer fidelity. Figma Make evaluated for screen generation but replaced by the Claude Code path after discovering Make generates React prototypes (not Figma frames) and each prompt creates a new version rather than accumulating screens. Two-file architecture established: Design System file (library only) + Screens file (product screens referencing library).</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t2">T2</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-skipped">Figma Make<span class="tip">PD phase not yet started. Primary planned tool for screen generation. Requires explicit visualization prompts for the three data-heavy components — will not auto-generate charts from PRD text alone.</span></span>
-          <span class="chip chip-skipped">Galileo AI<span class="tip">Alternate screen generation tool — evaluation planned. Strong for component-level generation from text descriptions.</span></span>
-          <span class="chip chip-skipped">Framer AI<span class="tip">Strong for interaction-rich prototypes — evaluation planned for the wiring phase.</span></span>
+          <span class="chip chip-used">Figma Make<span class="tip">Evaluated for screen generation — produced correct content (portal shell, Workflow A screens A1–A6) as React prototypes in preview mode. Key limitation discovered: each prompt creates a new version replacing previous screens; screens are React components not native Figma frames; no direct path to Figma Design canvas. Evaluated and replaced by Claude Code + Figma MCP path for design-phase screen generation. Retained for Step 4 interaction wiring where React prototype output is appropriate.</span></span>
+          <span class="chip chip-skipped">Galileo AI<span class="tip">Parallel evaluation planned — alternate screen generation tool for comparison against Claude Code + Figma MCP output. Not yet evaluated.</span></span>
+          <span class="chip chip-skipped">Framer AI<span class="tip">Planned for Step 4 interaction wiring phase. Will import Figma Design frames from the Screens file and add real navigation routing between screens.</span></span>
+        </div>
+        <span class="sep"></span>
+        <span class="tag t4">T4</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-used">Claude Code<span class="tip">Primary screen generation tool for design phase. Used generate_figma_design Figma MCP tool to write 6 Workflow A screens (A1–A6) directly into Figma Design as native frames on a 1440px canvas. FIGMA_DESIGN_SYSTEM.md used as the prompt input document. Claude Code also identified and corrected a file architecture error autonomously — created separate Screens file (H06IX7e8BwKLU5wQHYpnS5), migrated all frames from the Design System file (vo5E9DDnLPzG4gFs3K8JHs), and confirmed the two-file structure. All Constellation tokens applied: ink-800 text, ink-300 labels, 0px border-radius inputs, 32px pill buttons, 159px content margin, portal shell on every frame.</span></span>
         </div>
       </div>
     </div>
@@ -577,9 +582,9 @@
         <span class="handoff-item">Notion page 14 — Design system (Constellation / c11n) ✅</span>
         <span class="handoff-item">FIGMA_DESIGN_SYSTEM.md (pd/ folder) ✅</span>
         <span class="handoff-item">Figma Constellation Design System file ✅</span>
-        <span class="handoff-item">Figma Make prototype</span>
+        <span class="handoff-item">Figma Screens file — Workflow A (A1–A6) ✅</span>
+        <span class="handoff-item">Figma Screens file — Workflow B + Scenario Comparison</span>
         <span class="handoff-item">Figma Design + Dev Mode</span>
-        <span class="handoff-item">Component library</span>
         <span class="handoff-item">Interaction spec</span>
         <span class="handoff-item">Data model (confirmed, page 07b)</span>
       </div>
