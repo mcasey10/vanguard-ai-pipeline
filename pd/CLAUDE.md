@@ -161,6 +161,10 @@ the reference screenshots. Address these in the next Claude Code session.
   Column labels and count are set at the screen level. Sort indicators must reflect
   three states per column: unsorted (both arrows, muted), sorted ascending (up arrow
   #040505, down arrow muted), sorted descending (down arrow #040505, up arrow muted).
+  Sort indicators must use filled SVG triangle vector nodes — NOT Unicode arrow
+  characters or text glyphs. Up triangle: 6px wide × 4px tall. Down triangle: same
+  dimensions, inverted. Active fill: #040505. Muted fill: #B0B0B0. The two triangles
+  stack vertically with 2px gap between them.
   Reference: data-table-holdings.png.
 
 ### Prompt to use in Claude Code for the gap audit
