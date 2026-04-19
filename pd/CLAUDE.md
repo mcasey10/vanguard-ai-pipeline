@@ -136,6 +136,18 @@ the reference screenshots. Address these in the next Claude Code session.
 - `Modal/Dialog` — the account routing number dialog. Reference: dialog-modal.png
 - `Pill/Time Range Selector` — verify against performance-graphs.png
 
+### Known structural notes — do not flag as errors
+- `Hero/Greeting Banner` contains a child frame "Banner background 1" (1440×1440, absolute
+  positioned, layout: NONE). This is the manually imported swoosh SVG from the live Vanguard
+  portal. Its large native dimensions are expected — the SVG coordinate system requires this
+  height to preserve the curve shape. Do not resize, restructure, or delete this frame.
+  The parent component height of 132px is correct. Any further swoosh refinement requires
+  manual Figma pen tool editing and is out of scope for Claude Code sessions.
+- `Nav/L2 Secondary Navigation` — single canonical component on page 4 — Navigation & Shell
+  (node 6:2, key 1a562774…). HORIZONTAL auto-layout, 1440×48px fixed, 24px left/right padding,
+  24px item spacing, active indicator (113×2, #C8102E) absolute-positioned at x=598 y=46,
+  aligned to "Sell & Rebalance" tab. Do not move, duplicate, or restructure this component.
+
 ### Components that need visual correction
 - `Table/Fund Row` — **known incorrect, must be rebuilt.** The current component
   does not match the portal. Correct spec: fund symbol 14px/700/#1255CC with underline;
@@ -146,10 +158,6 @@ the reference screenshots. Address these in the next Claude Code session.
 - `Table/Column Header Row` — verify column labels (Symbol, Name, Price,
   $ Unrealized gain/loss, % Unrealized gain/loss, Current balance), sort ↑↓ arrows,
   and header background against data-table-holdings.png
-- `Hero/Greeting Banner` — swoosh shape is approximated. The SVG has been
-  manually imported. Verify the left/right color split and text placement
-  against global-header.png. Do not attempt further programmatic fixes to
-  the swoosh path — it requires manual Figma pen tool editing if needed.
 
 ### Prompt to use in Claude Code for the gap audit
 ```
@@ -171,9 +179,8 @@ Wait for my confirmation before making any changes.
 ```
 
 ### Remaining manual-only items (cannot be done via Claude Code API)
-1. **Hero banner SVG** — curved swoosh is approximated. If further refinement is needed,
-   replace with exact SVG data URI from .vg-hero class in the HTML file. Requires manual
-   Figma pen tool editing — do not attempt programmatic fixes.
+1. **Hero banner SVG** — curved swoosh approximation is acceptable for portfolio project scope.
+   Further refinement requires manual Figma pen tool editing. Do not attempt programmatic fixes.
 2. **Drop shadow on header** — verify it is applied: Effect → Drop Shadow, rgba(4,5,5,0.06), X:0 Y:0 Blur:4
 3. **Font** — all text uses Inter (FF Mark substitute). Swap globally when FF Mark is licensed.
 
