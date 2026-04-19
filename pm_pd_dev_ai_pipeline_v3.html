@@ -29,6 +29,7 @@
 
       /* status */
       --used-bg:    #EAF3DE; --used-txt: #3B6D11; --used-bdr: #97C459;
+      --eval-bg:    #F0ECF8; --eval-txt: #5B3A8A; --eval-bdr: #A882D4;
       --skipped-bg: #F1EFE8; --skipped-txt: #888780; --skipped-bdr: #B4B2A9;
     }
 
@@ -43,6 +44,7 @@
         --t4-bg: #412402; --t4-txt: #FAC775; --t4-bdr: #854F0B;
         --t5-bg: #4A1B0C; --t5-txt: #F5C4B3; --t5-bdr: #993C1D;
         --used-bg: #173404; --used-txt: #C0DD97; --used-bdr: #3B6D11;
+        --eval-bg: #251040; --eval-txt: #C4A0F0; --eval-bdr: #6B44A8;
         --skipped-bg: #2C2C2A; --skipped-txt: #73726c; --skipped-bdr: #444441;
       }
     }
@@ -115,6 +117,14 @@
       border-color: var(--skipped-bdr);
       text-decoration: line-through;
       text-decoration-color: var(--skipped-txt);
+      cursor: help;
+    }
+    .chip-evaluated {
+      background: var(--eval-bg);
+      color: var(--eval-txt);
+      border-color: var(--eval-bdr);
+      text-decoration: line-through;
+      text-decoration-color: var(--eval-txt);
       cursor: help;
     }
     .chip-used { cursor: help; }
@@ -316,8 +326,12 @@
       used in this project — hover for how it was used
     </div>
     <div class="sk-item">
+      <span class="chip chip-evaluated" style="pointer-events:none;cursor:default;text-decoration:none">Tool name</span>
+      evaluated, tested, not selected — hover for reason
+    </div>
+    <div class="sk-item">
       <span class="chip chip-skipped" style="pointer-events:none;cursor:default;text-decoration:none">Tool name</span>
-      evaluated / skipped — hover for reason
+      not started / not applicable — hover for context
     </div>
   </div>
 
@@ -442,7 +456,7 @@
         <span class="tag t3">T3</span><span class="sep"></span>
         <div class="tools-row">
           <span class="chip chip-used">Lovable<span class="tip">Primary logic validation tool. Produced correct output in one correction prompt: 32 lots accurate, both Tax-First and Balance-First optimization modes working from the first prompt, all harvestable loss alerts firing, Wait & Save correct, FIFO vs specific lot ID contrast validated, Case 8 large withdrawal notice working. Selected as the reference implementation.</span></span>
-          <span class="chip chip-used">Bolt.new<span class="tip">Evaluated in parallel with Lovable using identical prompts. Bolt produced wrong lot count (43 vs 32 correct), missing optimization modes, and wrong account priority order (Roth IRA selected first). Bolt's free token allocation was exhausted before corrections could be applied. Evaluated but not selected as the reference implementation.</span></span>
+          <span class="chip chip-evaluated">Bolt.new<span class="tip">Evaluated in parallel with Lovable using identical prompts. Bolt produced wrong lot count (43 vs 32 correct), missing optimization modes, and wrong account priority order (Roth IRA selected first). Bolt's free token allocation was exhausted before corrections could be applied. Evaluated but not selected as the reference implementation.</span></span>
           <span class="chip chip-skipped">v0 by Vercel<span class="tip">Strong candidate for React component generation — not evaluated at this stage. Better suited for the PD phase (translating Figma components to code) than for data-logic validation prototypes.</span></span>
         </div>
       </div>
@@ -492,7 +506,7 @@
       <div class="step-footer">
         <span class="tag t1">T1</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude.ai<span class="tip">Tier 1 open design questions Q1–Q5 resolved in Claude.ai PD thread. Resolutions recorded in Notion page 13 (PD decisions log) before any screen design began. Q1: two-layer recommendation display with outcome-language rationale sentence + metric pills. Q2: inline disclosure tax bracket selector with Default/Adjusted badge. Q3: balance-prioritized alternative as secondary card below primary. Q4: persistent footer bar control with label transition at Step B3. Q5: tax-only mode notice at Step A2 with collapsed inline allocation editor. Also resolved: portal shell Option B framing, data visualization component register (DV-1/DV-2/DV-3), Q5 allocation editor visual component amendment referencing Portfolio Watch pattern.</span></span>
+          <span class="chip chip-used">Claude.ai<span class="tip">Five Tier 1 open questions resolved in the PD thread before screen design began. Decisions recorded in Notion page 13 — PD decisions log. Key resolutions: portal shell Option B (transactional shell, no hero banner); L1 active tab = Portfolio; Q8 scenario comparison defaults to summary sentence with toggle to numbers-first view; DV-2 allocation drift rendered as horizontal stacked bar.</span></span>
         </div>
       </div>
     </div>
@@ -502,19 +516,19 @@
         <div class="step-num pd-num">2</div>
         <div class="step-main">
           <div class="step-title">Design system extraction</div>
-          <div class="step-desc">Document Vanguard design tokens from the existing portal via DevTools inspection. Build a token reference for Figma Make prompts. Claude Code + Figma MCP can scaffold the library automatically from the extracted tokens.</div>
+          <div class="step-desc">Vanguard Constellation design tokens extracted from the live portal via DevTools inspection. Token reference compiled as a rendered HTML document (hosted on GitHub Pages) covering all color swatches, typography specimens, and component examples with CSS implementation detail. Claude Code + Figma MCP scaffolded the component library directly from the extracted tokens, creating 22 components across 7 pages. Reference screenshots from the live portal served as the primary visual ground truth alongside the token document. Key finding: DevTools captures token values but not visual design — icon SVG paths, logo, and swoosh shape required manual extraction from the portal's rendered HTML.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t1">T1</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude.ai<span class="tip">Design system extracted via DevTools console scripts across 7 portal pages (Dashboard, Holdings, Activity, Transact pre/post account selection, Portfolio Watch main + allocation view). Shadow DOM walker scripts targeted VG-VGN-NAV, GYD-SECONDARY-NAV-WIDGET, GYD-GREETINGS-WIDGET, and c11n-* components. 28 color tokens, 8 type scale entries, 27 component families documented in Notion page 14. Key finding: Vanguard portal is built entirely on Stencil.js web components with shadow DOM encapsulation — conventional CSS selectors return empty. Architecture is segmented between reporting apps (GYD-* Stencil widgets) and transactional apps (Angular + Constellation), explaining why the portal shell differs between Holdings and Transact views.</span></span>
+          <span class="chip chip-used">Claude.ai<span class="tip">Used in the PD thread to plan token extraction strategy, draft the rendered HTML design system document, and coordinate gap audit findings across sessions. Notion pages 13 and 14 authored via Claude.ai with Notion MCP.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude Code<span class="tip">Read Notion page 14 via Notion MCP and wrote to Figma via write-capable figma-api MCP (npm figma-mcp package, PAT added to ~/.claude.json under vanguard-ai-pipeline/pd project scope). Created Figma file vo5E9DDnLPzG4gFs3K8JHs — 28 color styles (Core/8, CSS Vars/11, Color Scheme/4, Form/3), 8 text styles (xs→xl, regular + bold variants, Inter placeholder for FF Mark), 10 Section 6 navigation/layout component frames, 9 Section 12 transaction form component frames. Ran figma-desktop:create_design_system_rules and saved FIGMA_DESIGN_SYSTEM.md to pd/ folder with 10 implementation rules for PD Step 3.</span></span>
-          <span class="chip chip-used">Figma MCP<span class="tip">Three Figma MCP servers active in Claude Code: figma-desktop (read-only, local HTTP at 127.0.0.1:3845 — Figma Desktop app), figma (official cloud MCP at mcp.figma.com — includes write tools create_new_file and generate_figma_design), figma-api (npm figma-mcp, PAT-authenticated — added as redundant write path). Write access enabled by generating Figma Personal Access Token with scopes: file_content:read, file_metadata:read, library_assets:read, library_content:read, file_dev_resources:read, file_dev_resources:write. Token stored as env var FIGMA_API_KEY in ~/.claude.json.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Primary tool for Design System component creation. Used mcp_figma__use_figma and mcp_figma__get_metadata to read and write native Figma frames directly. Created 22 components across 7 pages including full auto-layout, color styles, text styles, and spacing tokens. Gap audit run by reading reference screenshots against live file state.</span></span>
+          <span class="chip chip-used">Figma MCP<span class="tip">Connected to Claude Code via settings.local.json. Provided mcp_figma__use_figma (read/write components), mcp_figma__get_metadata (file structure), and mcp_figma__create_design_system_rules tools. Key finding: component search returns community library results — direct node ID access via use_figma is more reliable for file-specific components.</span></span>
         </div>
       </div>
     </div>
@@ -524,20 +538,19 @@
         <div class="step-num pd-num">3</div>
         <div class="step-main">
           <div class="step-title">Screen generation + data visualization planning</div>
-          <div class="step-desc">PRD, journey maps, and conversational design requirements become structured prompt inputs. Lovable prototype screenshots serve as visual fidelity reference for data-dense layouts. Build all screens before wiring. Data visualizations must be explicitly prompted — three features require deliberate chart design: the scenario comparison view (Q8), the allocation drift indicator in Workflow B, and the progressive disclosure of optimization scoring. Key finding: Claude Code + Figma MCP generate_figma_design produces native Figma Design frames directly — superior to Figma Make for design-phase output because frames are Framer-importable with full layer fidelity. Figma Make evaluated for screen generation but replaced by the Claude Code path after discovering Make generates React prototypes (not Figma frames) and each prompt creates a new version rather than accumulating screens. Two-file architecture established: Design System file (library only) + Screens file (product screens referencing library).</div>
+          <div class="step-desc">PRD, journey maps, and conversational design requirements used as structured prompt inputs for screen generation. Claude Code + Figma MCP generate_figma_design produces native Figma frames directly — this path replaced Figma Make after discovering Make generates React prototypes (not Figma frames), with each prompt creating a new version rather than accumulating screens. Two-file architecture established: Design System file (library only, published as shared library) + Screens file (product screens referencing library). Data visualizations require explicit prompting — three features need deliberate chart design: scenario comparison view (Q8), allocation drift indicator in Workflow B, and optimization scoring progressive disclosure. Missing component protocol enforced: Claude Code must stop and report any required component not in the library before proceeding.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t2">T2</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Figma Make<span class="tip">Evaluated for screen generation — produced correct content (portal shell, Workflow A screens A1–A6) as React prototypes in preview mode. Key limitation discovered: each prompt creates a new version replacing previous screens; screens are React components not native Figma frames; no direct path to Figma Design canvas. Evaluated and replaced by Claude Code + Figma MCP path for design-phase screen generation. Retained for Step 4 interaction wiring where React prototype output is appropriate.</span></span>
-          <span class="chip chip-skipped">Galileo AI<span class="tip">Parallel evaluation planned — alternate screen generation tool for comparison against Claude Code + Figma MCP output. Not yet evaluated.</span></span>
-          <span class="chip chip-skipped">Framer AI<span class="tip">Planned for Step 4 interaction wiring phase. Will import Figma Design frames from the Screens file and add real navigation routing between screens.</span></span>
+          <span class="chip chip-evaluated">Figma Make<span class="tip">Evaluated — not used for screen generation. Key finding: Figma Make generates React prototypes, not native Figma frames. Each prompt creates a new version replacing prior screens rather than accumulating them. Replaced by Claude Code + Figma MCP path which writes native Figma frames directly with full layer fidelity.</span></span>
+          <span class="chip chip-skipped">Galileo AI<span class="tip">Alternate screen generation tool — evaluation planned for comparison against Claude Code path. Strong for component-level generation from text descriptions.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude Code<span class="tip">Primary screen generation tool for design phase. Used generate_figma_design Figma MCP tool to write 6 Workflow A screens (A1–A6) directly into Figma Design as native frames on a 1440px canvas. FIGMA_DESIGN_SYSTEM.md used as the prompt input document. Claude Code also identified and corrected a file architecture error autonomously — created separate Screens file (H06IX7e8BwKLU5wQHYpnS5), migrated all frames from the Design System file (vo5E9DDnLPzG4gFs3K8JHs), and confirmed the two-file structure. All Constellation tokens applied: ink-800 text, ink-300 labels, 0px border-radius inputs, 32px pill buttons, 159px content margin, portal shell on every frame.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Primary screen generation tool. Used generate_figma_design via Figma MCP to write native Figma frames directly into the Screens file. Workflow A (A1–A6) and Workflow B (B1, B2, B-WS, B3, B4, Scenario Comparison) frames all generated this way. Missing component protocol enforced: Claude Code stops and reports when a required component is absent from the library rather than inventing substitutes.</span></span>
         </div>
       </div>
     </div>
@@ -553,8 +566,8 @@
       <div class="step-footer">
         <span class="tag t2">T2</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-skipped">Figma Make<span class="tip">PD phase not yet started.</span></span>
-          <span class="chip chip-skipped">Framer AI<span class="tip">PD phase not yet started.</span></span>
+          <span class="chip chip-evaluated">Figma Make<span class="tip">Not used for interaction wiring — evaluated in Step 3 and found to generate React prototypes rather than Figma frames. Not applicable to this step.</span></span>
+          <span class="chip chip-skipped">Framer AI<span class="tip">Planned for this step. Framer can import Figma frames from the Screens file and add real interactions, transitions, scroll behaviors, coach mark overlays, and micro-animations — capabilities Figma prototyping handles poorly. Works with Claude Code–generated frames, not specific to Figma Make. Evaluation pending.</span></span>
         </div>
       </div>
     </div>
@@ -570,7 +583,7 @@
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Notion MCP<span class="tip">Active throughout PD phase — decisions recorded incrementally, not compiled at end. Notion page 13 (PD decisions log) updated with: Tier 1 Q1–Q5 resolutions, data visualization component register (DV-1/DV-2/DV-3), Q5 allocation editor visual component amendment, portal shell framing decision (architectural rationale for hero banner omission based on reporting vs. transactional app segmentation). Notion page 14 (Design system) created and updated with full Constellation token set, Option B shell specification, component coverage summary, and Figma file reference. Table of contents (page 00) updated to include page 14.</span></span>
+          <span class="chip chip-skipped">Notion MCP<span class="tip">Planned for this step. Notion pages 13 and 14 are being updated incrementally throughout the PD phase via Claude.ai in the dedicated PD thread. Full Notion MCP agentic write (as used in PM phase) will be used to compile the final PD decisions log at handoff to Dev.</span></span>
         </div>
       </div>
     </div>
@@ -578,14 +591,11 @@
     <div class="handoff">
       <div class="handoff-lbl">PD → Dev handoff artifacts (in progress)</div>
       <div class="handoff-items">
-        <span class="handoff-item">Notion page 13 — PD decisions log ✅</span>
-        <span class="handoff-item">Notion page 14 — Design system (Constellation / c11n) ✅</span>
-        <span class="handoff-item">FIGMA_DESIGN_SYSTEM.md (pd/ folder) ✅</span>
-        <span class="handoff-item">Figma Constellation Design System file ✅</span>
-        <span class="handoff-item">Figma Screens file — Workflow A (A1–A6) ✅</span>
-        <span class="handoff-item">Figma Screens file — Workflow B + Scenario Comparison</span>
-        <span class="handoff-item">Figma Design + Dev Mode</span>
-        <span class="handoff-item">Interaction spec</span>
+        <span class="handoff-item">Notion page 13 — PD decisions log</span>
+        <span class="handoff-item">Notion page 14 — Design system specs</span>
+        <span class="handoff-item">Figma Design System file (22 components, published library)</span>
+        <span class="handoff-item">Figma Screens file (A1–A6, B1–B4, B-WS, Scenario Comparison)</span>
+        <span class="handoff-item">Interaction spec (Framer AI — planned)</span>
         <span class="handoff-item">Data model (confirmed, page 07b)</span>
       </div>
     </div>
@@ -599,7 +609,7 @@
       <div class="phase-inputs-lbl">Inputs for this phase</div>
       <div class="phase-inputs-items">
         <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace (12 pages)</a>
-        <span class="input-item">Figma Make prototype</span>
+        <span class="input-item">Figma Screens file (Claude Code + Figma MCP)</span>
         <span class="input-item">Notion page 13 — PD decisions log</span>
         <span class="input-item">Sample dataset JSON (page 10)</span>
         <span class="input-item">Lovable reference implementation</span>
