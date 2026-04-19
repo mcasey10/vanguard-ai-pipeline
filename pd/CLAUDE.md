@@ -196,6 +196,26 @@ Wait for my confirmation before making any changes.
 - `pd/FIGMA_DESIGN_SYSTEM_DEPRECATED.md` — superseded by Notion page 14 and the rendered
   HTML at the GitHub Pages URL above. Do not use as a design reference.
 
+## Canonical sample dataset
+Always read these files before generating any screen or writing any code
+that involves portfolio data, fund names, lot counts, tax figures, or account
+balances. Do not use inline values from prompts — the files are the single
+source of truth.
+
+- `pm/08-sample-dataset.json` — full lot-level dataset: 32 lots, 5 funds,
+  3 accounts, $849,851.40 total portfolio value
+- `pm/08-sample-dataset-verification.md` — verification tables, 15 coverage
+  cases, special condition flags
+
+Key values for quick reference (verify against file before use):
+- Portfolio total: $849,851.40
+- Target withdrawal used in screens: $50,000
+- Tax assumption: 24% ST / 15% LT (default bracket)
+- YTD realized: ST $1,245 / LT $8,750
+- Wait & Save lot: T-VBIRX-07, 14 days to LT conversion, $55.80 tax difference
+- Funds: VTSAX (Brokerage ...4782), VBTLX (Brokerage ...4782), VBIRX (IRA ...2973),
+  VTIAX (Brokerage ...4782), VFIAX (Roth IRA ...8148)
+
 ## Screen generation rules
 - All frames: 1440px wide
 - Portal shell on every screen: Global Header (100px) + L2 Nav (48px) + white content area
@@ -211,10 +231,4 @@ Stop and report: "Screen [name] requires [component name] which is not in the
 library. Add it before proceeding?" Wait for explicit confirmation before continuing.
 This applies to every screen generation task regardless of how the prompt is worded.
 
-## Workflow B data (for screen generation)
-Portfolio total: $849,851.40
-5 funds: VTSAX (Brokerage ...4782), VBTLX (Brokerage ...4782), VBIRX (IRA ...2973),
-         VTIAX (Brokerage ...4782), VFIAX (Roth IRA ...8148)
-Wait & Save lot: T-VBIRX-07, 14 days to LT conversion, $55.80 tax difference
-Tax assumption: 24% ST / 15% LT (default)
-YTD realized: ST $1,245 / LT $8,750
+
