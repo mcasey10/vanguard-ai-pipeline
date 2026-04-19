@@ -1,0 +1,126 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.finding-row{margin-bottom:10px}
+.finding-head{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);cursor:pointer;background:var(--color-background-primary);transition:border-color .15s}
+.finding-head:hover{border-color:var(--color-border-secondary)}
+.finding-head.open{border-color:var(--color-border-primary);border-radius:var(--border-radius-md) var(--border-radius-md) 0 0;border-bottom-color:transparent}
+.finding-num{font-size:10px;font-weight:500;padding:2px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.finding-text{font-size:12px;color:var(--color-text-primary);line-height:1.5;flex:1}
+.finding-arrow{font-size:11px;color:var(--color-text-tertiary);flex-shrink:0;margin-top:2px;transition:transform .2s}
+.finding-head.open .finding-arrow{transform:rotate(90deg)}
+.hmw-panel{border:0.5px solid var(--color-border-primary);border-top:none;border-radius:0 0 var(--border-radius-md) var(--border-radius-md);padding:10px 12px;background:var(--color-background-secondary);display:none}
+.hmw-panel.open{display:block}
+.hmw-item{margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.hmw-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.hmw-q{font-size:12px;color:var(--color-text-primary);line-height:1.5;margin-bottom:5px}
+.hmw-tension-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:3px}
+.hmw-tension{font-size:11px;color:var(--color-text-secondary);line-height:1.4}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.leg-pill{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px}
+</style>
+
+<div style="padding:1rem 0">
+<div class="legend">
+  <span class="leg-pill" style="background:#E6F1FB;color:#0C447C">F1–F6 findings</span>
+  <span class="leg-pill" style="background:#EEEDFE;color:#3C3489">F1+F3 combined</span>
+  <span style="font-size:11px;color:var(--color-text-tertiary);padding-top:2px">Click a finding to expand its HMW question(s)</span>
+</div>
+<div id="finding-list"></div>
+</div>
+
+<script>
+const data=[
+  {
+    fNum:'F1',
+    finding:'Tax optimization and portfolio rebalancing are cognitively separate tasks for most users, even when they occur simultaneously.',
+    bg:'#E6F1FB',color:'#0C447C',
+    hmws:[{
+      q:'How might we present tax and rebalancing as a single integrated recommendation without requiring users to first understand that these are two separate problems being solved simultaneously?',
+      tension:'A unified output obscures the reasoning; a two-part explanation restores reasoning but reintroduces the cognitive separation the tool is trying to collapse.'
+    }]
+  },
+  {
+    fNum:'F2',
+    finding:'The moment of withdrawal carries disproportionate emotional weight relative to its financial complexity.',
+    bg:'#E6F1FB',color:'#0C447C',
+    hmws:[{
+      q:'How might we reduce execution hesitation at the point of commitment without undermining the user\'s sense that they are making a considered, reversible-feeling decision?',
+      tension:'Friction reduction conflicts with the user\'s need to feel that something consequential is being treated with appropriate weight. Removing friction may remove the reassurance that friction inadvertently provides.'
+    }]
+  },
+  {
+    fNum:'F3',
+    finding:'A significant subset of users has already built a personal workaround system, and those systems set the benchmark against which any tool will be evaluated.',
+    bg:'#E6F1FB',color:'#0C447C',
+    hmws:[{
+      q:'How might we earn the trust of users who arrive with an existing decision-making system, in cases where our recommendation diverges from what their system would produce?',
+      tension:'Explaining the divergence in enough detail to satisfy a sophisticated user risks overwhelming a less sophisticated one. Summarizing risks appearing to hide reasoning from sophisticated users.'
+    }]
+  },
+  {
+    fNum:'F4',
+    finding:'Users\' ability to act on tax impact information is contingent on having tax context the tool cannot assume they possess.',
+    bg:'#E6F1FB',color:'#0C447C',
+    hmws:[{
+      q:'How might we present tax impact information in a way that is useful to users who have their tax context, without being misleading to users who do not?',
+      tension:'Qualifying every tax figure with uncertainty language protects uninformed users but degrades the signal for informed ones. Presenting figures without qualification may produce false confidence in uninformed users.'
+    }]
+  },
+  {
+    fNum:'F5',
+    finding:'The population contains users for whom the withdrawal decision is also a first experience of financial self-direction, with fundamentally different orientation needs.',
+    bg:'#E6F1FB',color:'#0C447C',
+    hmws:[{
+      q:'How might we sequence the tool\'s output so that users who need orientation before they can evaluate a recommendation receive it, without forcing users who don\'t need it to sit through it?',
+      tension:'Adaptive sequencing based on inferred user state risks misclassifying users. Offering an explicit choice of path adds a decision before the first decision, which may itself be disorienting to the users who most need guidance.'
+    }]
+  },
+  {
+    fNum:'F6',
+    finding:'Withdrawal triggers vary enough in urgency, emotional load, and decision latitude that a single interaction model cannot serve all of them well.',
+    bg:'#E6F1FB',color:'#0C447C',
+    hmws:[{
+      q:'How might we allow the same tool to serve a high-urgency, low-bandwidth session and a low-urgency, high-engagement session without requiring the user to declare which mode they are in?',
+      tension:'Designing for the urgent session produces a tool that feels too simple for the deliberate one. Designing for the deliberate session is too slow for the urgent one. Mode-selection solves it logically but adds a step the urgent user is least equipped to navigate.'
+    }]
+  },
+  {
+    fNum:'F1+F3',
+    finding:'Combined: users don\'t think in integrated terms AND arrive with existing systems they\'ll benchmark the tool against.',
+    bg:'#EEEDFE',color:'#3C3489',
+    hmws:[{
+      q:'How might we design the manual workflow so that it functions as a genuine learning environment for users building their own intuition, rather than just a data entry interface for users who already know what they want to do?',
+      tension:'A learning-oriented manual workflow adds contextual guidance and real-time feedback — all of which increase cognitive load and reduce efficiency for users using the manual workflow precisely because they want direct control without mediation.'
+    }]
+  },
+];
+
+let open=null;
+
+function render(){
+  document.getElementById('finding-list').innerHTML=data.map((d,i)=>`
+    <div class="finding-row">
+      <div class="finding-head${open===i?' open':''}" onclick="toggle(${i})">
+        <span class="leg-pill finding-num" style="background:${d.bg};color:${d.color}">${d.fNum}</span>
+        <span class="finding-text">${d.finding}</span>
+        <span class="finding-arrow">▶</span>
+      </div>
+      <div class="hmw-panel${open===i?' open':''}">
+        ${d.hmws.map(h=>`
+          <div class="hmw-item">
+            <div class="hmw-q">${h.q}</div>
+            <div class="hmw-tension-label">Design tension</div>
+            <div class="hmw-tension">${h.tension}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function toggle(i){
+  open=open===i?null:i;
+  render();
+}
+
+render();
+</script>
