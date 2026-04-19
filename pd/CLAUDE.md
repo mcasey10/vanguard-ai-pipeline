@@ -155,9 +155,13 @@ the reference screenshots. Address these in the next Claude Code session.
   gain/loss values with green ↑ or red ↓ arrow prefix; % gain column; current balance;
   "Transact" ghost link; kebab dot button (3×15 ellipse). Reference: data-table-holdings.png.
   Do not attempt to patch the existing component — replace it.
-- `Table/Column Header Row` — verify column labels (Symbol, Name, Price,
-  $ Unrealized gain/loss, % Unrealized gain/loss, Current balance), sort ↑↓ arrows,
-  and header background against data-table-holdings.png
+- `Table/Column Header Row` — treat as a reusable structural template, not a
+  content prescription. Do not hardcode specific column labels — use placeholder
+  names (Column 1, Column 2, etc.) with correct typography (12px/600, sentence case).
+  Column labels and count are set at the screen level. Sort indicators must reflect
+  three states per column: unsorted (both arrows, muted), sorted ascending (up arrow
+  #040505, down arrow muted), sorted descending (down arrow #040505, up arrow muted).
+  Reference: data-table-holdings.png.
 
 ### Prompt to use in Claude Code for the gap audit
 ```
@@ -195,6 +199,13 @@ Wait for my confirmation before making any changes.
 - L1 active tab: "Portfolio" with black underline
 - No hero/greeting banner on transactional screens
 - Horizontal arrangement with 80px gaps between frames
+
+### Missing component protocol
+If a screen requires a component that does not exist in the Design System library
+(krtNgOD3jL5U6WmUMT32u6), do not invent a substitute or use raw shapes inline.
+Stop and report: "Screen [name] requires [component name] which is not in the
+library. Add it before proceeding?" Wait for explicit confirmation before continuing.
+This applies to every screen generation task regardless of how the prompt is worded.
 
 ## Workflow B data (for screen generation)
 Portfolio total: $849,851.40
