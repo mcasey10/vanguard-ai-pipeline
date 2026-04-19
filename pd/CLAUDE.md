@@ -6,7 +6,40 @@ All screens must match the Vanguard Constellation design system extracted from t
 
 ## Source of truth — read these before any PD task
 
-### Visual design reference (primary — for visual fidelity)
+### Reference screenshots (primary visual source — use these first)
+Location: `pd/reference-screenshots/` in the local repo
+These are actual screenshots from the live Vanguard portal. They are the
+ground truth for all visual design decisions. When building or correcting
+any Figma component, read the relevant screenshot(s) first.
+
+| Filename | What it shows |
+|---|---|
+| global-header.png | Full portal header: V-mark logo, Personal investors, 6 utility icons, L1 nav, hero banner, L2 nav with Balances active |
+| l1-nav-portfolio-dropdown.png | L1 nav with Portfolio dropdown open showing sub-menu items |
+| l1-nav-transact-dropdown.png | L1 nav with Transact dropdown open showing sub-menu items |
+| dropdown-holdings-menu.png | Holdings page Show dropdown open with grouped options (Summary info, Cost basis, Dividends & capital gains) |
+| dropdown-date-input.png | Date input dropdown field in default/open state |
+| data-table-holdings.png | Holdings grid: fund rows with symbol, name, price, gain/loss values, Transact + kebab menu open |
+| data-table-unrealized-gains.png | Lot-level table: expanded VFIAX row showing individual lot detail with date, cost basis, gain/loss per lot |
+| portfolio-analysis.png | Portfolio Watch: asset mix stacked bar chart, stock/bond donut charts, expense ratio bars |
+| performance-graphs.png | Performance page: area chart with positive/negative fill, time range pill selector, balances line chart |
+| segmented-controls-bar-chart-card-list.png | Segmented control component: Bar chart / Card / List toggle variants |
+| order-status-page.png | Activity page: Order status with 4 filter dropdowns, empty table state |
+| form-inputs-default.png | Message Center compose form: text input, select dropdowns, textarea in default state |
+| form-inputs-validation.png | Same compose form with all fields in error state: red borders, error icon + message below each field |
+| dialog-modal.png | Cash Plus Account routing numbers modal: title, label/value rows with dividers, Close pill button |
+| alert-warning-banner.png | Warning alert banner: amber left border, triangle icon, bold title, body text, dismiss × button |
+| kebab-menu.png | Three-dot kebab menu in three states: default dot, hover dot (filled), open with Withdraw/Deposit options |
+| logoff-page.png | Post-logout confirmation: green checkmark, "You've successfully logged off", Log in pill button |
+| accordion-collapsed.png | Accordion component in collapsed state: chevron right, label, border |
+| accordion-expanded.png | Accordion component in expanded state: chevron down, content revealed |
+| sell-mutual-funds.png | Sell mutual funds flow: fund selection list with checkboxes and account info |
+| sell-VFIAX-fund.png | Sell flow for a specific fund (VFIAX): amount entry, lot detail, accounting method selector |
+| buy-sell-landing-page.png | Buy/Sell transaction landing page: entry point, account selector, fund list |
+| buy-sell-agreement-terms.png | Buy/Sell agreement terms screen: terms text, confirm checkbox, Submit button |
+| buy-sell-agreement-prompt.png | Buy/Sell agreement prompt/modal: brief summary with Accept/Decline actions |
+
+### Visual design reference (secondary — rendered HTML document)
 https://mcasey10.github.io/vanguard-ai-pipeline/pd/vanguard-design-system.html
 This is the rendered HTML design system document. It contains:
 - All color swatches with hex values and confidence badges (Confirmed/Inferred)
@@ -27,8 +60,8 @@ data visualization register (DV-1, DV-2, DV-3), portal shell framing decision.
 ## Figma files
 | File | Key | Purpose |
 |---|---|---|
-| Vanguard Constellation — Design System (NEW) | krtNgOD3jL5U6WmUMT32u6 | Component library — publish as shared library |
-| Vanguard Constellation — Design System (OLD) | vo5E9DDnLPzG4gFs3K8JHs | Previous attempt — do not use for new work |
+| Vanguard Constellation — Design System (ACTIVE) | krtNgOD3jL5U6WmUMT32u6 | Component library — publish as shared library |
+| Vanguard Constellation — Design System (OLD) | vo5E9DDnLPzG4gFs3K8JHs | Deprecated — do not use for new work |
 | Vanguard Sell & Rebalance — Screens | H06IX7e8BwKLU5wQHYpnS5 | Product screens — references library |
 
 **Always use krtNgOD3jL5U6WmUMT32u6 as the active Design System file.**
@@ -74,7 +107,7 @@ These are the most critical values. Verify against the HTML file for full detail
 - L1 nav: active tab has BLACK 3px bottom border (#040505)
 - L2 nav: active tab has RED 2px bottom border (#C8102E) — NOT black
 - Header: two-row, ~100px total (Row 1: brand+icons 60px, Row 2: L1 nav 40px)
-- Utility icons: monochrome black SVG glyphs, ~24px, stacked above 11px label
+- Utility icons: monochrome black SVG glyphs, ~24px, stacked above 11px label — SVG paths already applied manually
 - Messages badge: red dot only, NO count number
 
 ### Inputs
@@ -88,16 +121,65 @@ These are the most critical values. Verify against the HTML file for full detail
 - Left content margin: 24-32px (NOT 159px — that was a viewport-specific extraction artifact)
 - Content max width: ~1296px
 
-## Known manual completion gaps in Design System file
-These items in krtNgOD3jL5U6WmUMT32u6 require manual Figma work:
-1. **Icon SVGs** — 6 utility nav icons are placeholder ellipses. Replace with actual SVG paths
-   from the HTML file's .vg-topnav-icon-glyph SVG definitions (search, support, messages,
-   documents, profile, log off)
-2. **Hero banner SVG** — curved swoosh is approximated. Replace with exact SVG data URI
-   from .vg-hero class in the HTML file
-3. **Drop shadow on header** — add manually: Effect → Drop Shadow, rgba(4,5,5,0.06), X:0 Y:0 Blur:4
-4. **Auto-layout** — components use absolute positioning. Apply auto-layout per component
-   after confirming visual correctness
+## Design System gap audit — items to address
+These gaps were identified by comparing the current Design System file against
+the reference screenshots. Address these in the next Claude Code session.
+
+### Completed / already resolved
+- `Nav/L2 Nav Bar` — deleted (was redundant). `Nav/L2 Secondary Navigation` with red underline is the canonical component.
+- Utility icon SVGs — real SVG paths applied manually to Global Header. Placeholder ellipses removed.
+
+### Components missing entirely
+- `Dropdown/Select — Open state` — the Holdings page dropdown with grouped
+  options (Cost basis, Unrealized gains/losses, etc.). Reference: dropdown-holdings-menu.png
+- `Table/Lot Detail Row` — the expanded lot-level row shown in data-table-unrealized-gains.png
+- `Modal/Dialog` — the account routing number dialog. Reference: dialog-modal.png
+- `Pill/Time Range Selector` — verify against performance-graphs.png
+
+### Components that need visual correction
+- `Table/Fund Row` — **known incorrect, must be rebuilt.** The current component
+  does not match the portal. Correct spec: fund symbol 14px/700/#1255CC with underline;
+  full fund name 11px/400/#555 uppercase below symbol; price column 14px/400;
+  gain/loss values with green ↑ or red ↓ arrow prefix; % gain column; current balance;
+  "Transact" ghost link; kebab dot button (3×15 ellipse). Reference: data-table-holdings.png.
+  Do not attempt to patch the existing component — replace it.
+- `Table/Column Header Row` — verify column labels (Symbol, Name, Price,
+  $ Unrealized gain/loss, % Unrealized gain/loss, Current balance), sort ↑↓ arrows,
+  and header background against data-table-holdings.png
+- `Hero/Greeting Banner` — swoosh shape is approximated. The SVG has been
+  manually imported. Verify the left/right color split and text placement
+  against global-header.png. Do not attempt further programmatic fixes to
+  the swoosh path — it requires manual Figma pen tool editing if needed.
+
+### Prompt to use in Claude Code for the gap audit
+```
+Read pd/CLAUDE.md. Then read each reference screenshot in pd/reference-screenshots/
+one at a time and compare what you see against the current components in the
+Design System file (krtNgOD3jL5U6WmUMT32u6).
+
+For each component that exists in the screenshots but is missing from the file,
+or that visually differs significantly from the screenshot, document the gap.
+Pay particular attention to Table/Fund Row — this component is a known rebuild
+target and should be flagged as incorrect regardless of superficial similarity.
+
+Do not make any changes yet. Output a gap report organized by page
+(Navigation & Shell, Buttons & Controls, Form Inputs, Data & Alerts)
+showing: component name, gap type (missing / incorrect / needs verification),
+and the specific reference screenshot to use for correction.
+
+Wait for my confirmation before making any changes.
+```
+
+### Remaining manual-only items (cannot be done via Claude Code API)
+1. **Hero banner SVG** — curved swoosh is approximated. If further refinement is needed,
+   replace with exact SVG data URI from .vg-hero class in the HTML file. Requires manual
+   Figma pen tool editing — do not attempt programmatic fixes.
+2. **Drop shadow on header** — verify it is applied: Effect → Drop Shadow, rgba(4,5,5,0.06), X:0 Y:0 Blur:4
+3. **Font** — all text uses Inter (FF Mark substitute). Swap globally when FF Mark is licensed.
+
+## Deprecated files
+- `pd/FIGMA_DESIGN_SYSTEM_DEPRECATED.md` — superseded by Notion page 14 and the rendered
+  HTML at the GitHub Pages URL above. Do not use as a design reference.
 
 ## Screen generation rules
 - All frames: 1440px wide

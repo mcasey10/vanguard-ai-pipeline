@@ -1,0 +1,16 @@
+# ── Reference screenshots ──────────────────────────────
+# Contains actual screenshots from the live Vanguard portal.
+# Not committed — personal financial data may be visible.
+reference-screenshots/
+
+# ── Claude Code local config ───────────────────────────
+.claude/settings.local.json
+
+# ── Figma export scratch ───────────────────────────────
+# Temporary exports from Figma — not source of truth
+figma-exports/
+*.fig
+
+# ── OS ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
