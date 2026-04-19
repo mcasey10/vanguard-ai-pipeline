@@ -1,0 +1,58 @@
+[GEMINI RECONCILIATION REPORT]
+
+This reconciliation report identifies the structural tensions and misalignments across your PRD foundation. While the documents are high-quality, there is a fundamental "empathy gap" between the functional focus of the Problem Statement and the emotional volatility surfaced in the Research.
+
+---
+
+## 1. Problem Statement vs. User Research
+
+**The Issue: The "Data-Driven" Fallacy**
+* **The Gap:** The Problem Statement (01) frames the user need as a purely mathematical optimization problem ("a solvable, data-driven question"). However, the Research (02b) identifies **Segment C (Reactive Withdrawer)** and **Segment D (Newly Self-Directed)**, for whom the primary hurdle is not "data integration" but **cognitive bandwidth** and **emotional paralysis**.
+* **The Tension:** The Problem Statement ignores the "unanticipated" and "relational" triggers (medical emergencies, death of a spouse) where optimization is actually a *secondary* concern to speed or orientation. 
+* **Resolution:** Revise the Problem Statement to acknowledge that the tool must provide "variable-friction paths"—solving for both mathematical optimization for the strategist and cognitive relief for the stressed.
+
+**The Issue: Absence of the Feedback Loop**
+* **The Gap:** Research Finding 7 highlights a "post-hoc regret pattern" where users only understand their mistakes at tax filing time. The Problem Statement is strictly transactional, focusing only on the *moment* of withdrawal.
+* **Resolution:** Expand the "Today, Vanguard's portal..." section of the Problem Statement to include the lack of visibility into the long-term consequences of past decisions.
+
+---
+
+## 2. Success Metrics vs. Contextual Segments
+
+**The Issue: The "Scenario Comparison" Paradox**
+* **The Contradiction:** Metric 5 sets a 35% target for **Scenario Comparison Utilization**.
+* **The Conflict:** Research indicates that for **Segment B (Routine)** and **Segment C (Reactive)**, creating multiple scenarios is a sign of **product failure or unnecessary friction**. If 35% of users are forced into scenarios, you are likely aggravating the "high-urgency" users.
+* **Resolution:** Segment the metrics. Success for Segment A is scenario usage; success for Segment C is **Zero-Scenario Execution** (trusting the first recommendation).
+
+**The Issue: Misleading Acceptance Rates**
+* **The Contradiction:** Metric 3 targets a 40–60% **Recommendation Acceptance Rate**.
+* **The Conflict:** For Segment A (Optimizer), a high acceptance rate might indicate the tool is too simplistic to be scrutinized (trust-building failure). For Segment C, an acceptance rate below 90% indicates a failure to provide a "credible path" during a crisis.
+* **Resolution:** Define "Optimal Acceptance" ranges by user segment or session type (Urgent vs. Strategic) rather than an aggregate portfolio-wide average.
+
+---
+
+## 3. How Might We (HMW) vs. Current Framing
+
+**The Issue: The Longitudinal Requirement (HMW 7)**
+* **The New Requirement:** HMW 7 introduces the need for a "feedback loop" between the withdrawal and eventual tax outcomes (potentially months later).
+* **The Conflict:** This implies a **Persistence and Reporting requirement** that is absent from the Problem Statement and not captured by the 90-day Success Metrics.
+* **Resolution:** Add a "Learning & Capability" section to the Success Metrics to track if users make *better* decisions over a 12-to-18-month cycle.
+
+**The Issue: The "Manual Learning" Conflict (HMW 8)**
+* **The New Requirement:** HMW 8 suggests the manual workflow should be a "learning environment."
+* **The Conflict:** This contradicts Finding 3, which states that sophisticated users (the primary users of manual workflows) use them for **speed and direct control**. Turning a "power user" manual tool into a "learning tool" creates a major UI tension.
+* **Resolution:** Decide if the manual workflow is a "Power User Interface" or a "Sandbox." You likely need two distinct manual modes.
+
+---
+
+## 4. Internal Research Contradictions
+
+**The Issue: Finding 1 vs. Segment A Definitions**
+* **The Contradiction:** **Finding 1** states that tax and rebalancing are "cognitively separate tasks for **most** users." Yet, **Segment A (Strategic Optimizer)** is defined by their ability to see these as a "single integrated opportunity."
+* **The Risk:** If the tool is built primarily to solve the "unified problem" described in the Problem Statement, it may only serve Segment A (the minority), while confusing Segments B, C, and D (the majority).
+* **Resolution:** The Research needs to clarify if the tool’s job is to *force* integration on users who don't want it, or to *silently* handle it for them.
+
+**The Issue: The "First Session" Assumption**
+* **The Contradiction:** The Dimension 5 analysis says returning users want to skip orientation. However, the **Segment D (Newly Self-Directed)** definition states that "virtually every session... is a first-session experience."
+* **The Tension:** This creates a logic loop: a user can be a "Returning User" by data (Dimension 5) but a "First-Time User" by emotional state (Segment D).
+* **Resolution:** The tool cannot rely on "Login Count" to determine UI complexity. It must use **Session Velocity** or **Trigger Selection** (e.g., selecting "Emergency" or "Inheritance") to trigger the appropriate guidance level.

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); text=data[0]['text']; print\\(text[2000:6000]\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(claude mcp:*)",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); if\\(j.mcpServers && j.mcpServers['figma-api']\\) { const s={...j.mcpServers['figma-api']}; if\\(s.env\\) Object.keys\\(s.env\\).forEach\\(k=>s.env[k]='[REDACTED]'\\); console.log\\(JSON.stringify\\({mcpServers:{'figma-api':s}},null,2\\)\\); } else console.log\\(JSON.stringify\\(j,null,2\\)\\);\")",
+      "mcp__figma__whoami",
+      "mcp__figma__create_new_file",
+      "mcp__figma__use_figma",
+      "mcp__figma-desktop__create_design_system_rules",
+      "mcp__figma__create_design_system_rules",
+      "WebFetch(domain:mcasey10.github.io)"
+    ]
+  }
+}

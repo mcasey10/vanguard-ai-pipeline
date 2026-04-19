@@ -1,0 +1,4 @@
+**REQ-EC-002:** The tax professional advisory notice must appear on the confirmation screen. The notice must be worded to normalize the decision rather than amplify uncertainty — it should convey that consultation is available, not that it is urgently required. For Newly Self-Directed users, this notice functions as active reassurance at the highest-anxiety moment in the workflow, not only as a compliance disclosure. Wording must be reviewed and approved by legal and compliance before implementation.
+Priority: Must
+Source: Step A6, PM Decision 5, Output 04 amendment (Gemini parallel experiment finding)
+⚠️ REVIEW: Notice wording must balance compliance disclosure requirements against the risk of amplifying anxiety for vulnerable user segments. Legal and compliance approval required before implementation.

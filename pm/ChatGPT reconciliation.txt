@@ -1,0 +1,426 @@
+[CHATGPT RECONCILIATION REPORT]
+
+Here is a structured reconciliation of contradictions, gaps, and tensions across the three documents.
+
+---
+
+# 1. Problem Statement vs. User Research
+
+### Issue 1.1 — Over-indexing on “optimization” vs. emotional and behavioral reality
+
+**Gap:**
+
+* The problem statement frames the user need as a *data optimization problem* (tax minimization + rebalancing).
+* Research shows the dominant friction is often **emotional (irreversibility, anxiety, self-doubt)** and **behavioral (avoidance, urgency, low cognitive bandwidth)** — not just computational complexity.
+
+**Documents involved:**
+
+* Problem Statement ↔ Findings 2, Segment C & D (User Research)
+
+**Why it matters:**
+The tool risks solving the “math problem” while missing the *actual barrier to action*, especially for Reactive Withdrawers and Newly Self-Directed users.
+
+**Resolution:**
+Explicitly expand the problem framing to include:
+
+* Reducing **decision anxiety at execution**
+* Supporting **low-bandwidth / high-stress decisions**
+* Enabling **confidence, not just optimization**
+
+---
+
+### Issue 1.2 — Assumes unified mental model that research says does not exist
+
+**Gap:**
+
+* Problem statement assumes users want a *combined tax + rebalancing answer*.
+* Research (Finding 1) shows users **do not naturally think in this integrated way**.
+
+**Documents involved:**
+
+* Problem Statement ↔ Finding 1 (User Research)
+
+**Why it matters:**
+Users may perceive the tool as **more complex**, not more helpful.
+
+**Resolution:**
+Reframe the problem as:
+
+* Helping users make *a withdrawal decision they already think they’re making*
+* While *quietly optimizing across both dimensions*
+* Not requiring users to conceptually unify them
+
+---
+
+### Issue 1.3 — Missing need: speed and decisiveness under urgency
+
+**Gap:**
+
+* Problem statement assumes a deliberative decision process.
+* Research highlights a major segment (Reactive Withdrawer) that needs **fast, single-answer execution**.
+
+**Documents involved:**
+
+* Problem Statement ↔ Segment C, Dimension 1 (User Research)
+
+**Resolution:**
+Add explicit acknowledgment that:
+
+* Some users need **“just tell me what to do” outputs**
+* Optimization must sometimes be **subordinate to speed and clarity**
+
+---
+
+### Issue 1.4 — Missing need: orientation and learning
+
+**Gap:**
+
+* Problem statement assumes users can evaluate recommendations.
+* Research shows a segment (Newly Self-Directed) needs **basic comprehension before action**.
+
+**Documents involved:**
+
+* Problem Statement ↔ Segment D, Finding 5 (User Research)
+
+**Resolution:**
+Include a second job-to-be-done:
+
+* “Help me understand what I’m doing” (not just “tell me what to do”)
+
+---
+
+### Issue 1.5 — Missing need: post-decision feedback loop
+
+**Gap:**
+
+* Problem statement is purely decision-time focused.
+* Research (Finding 7) identifies need for **post-hoc learning and outcome visibility**.
+
+**Documents involved:**
+
+* Problem Statement ↔ Finding 7 (User Research)
+
+**Resolution:**
+Expand scope (or explicitly defer) the need for:
+
+* Connecting decisions → tax outcomes → future improvement
+
+---
+
+# 2. Success Metrics vs. Contextual Segments
+
+### Issue 2.1 — Workflow Completion Rate conflicts with high-urgency behavior
+
+**Contradiction:**
+
+* Metric defines completion as reaching **Scenario Comparison view (65%)**.
+* Reactive Withdrawers explicitly **should not engage in scenario comparison**.
+
+**Documents involved:**
+
+* Success Metrics (Metric 2) ↔ Segment C, Dimension 1
+
+**Why it matters:**
+You are measuring **good behavior as failure** for a key segment.
+
+**Resolution:**
+Redefine completion as:
+
+* “Reached a recommendation and executed (with or without comparison)”
+  Segment-aware completion paths.
+
+---
+
+### Issue 2.2 — Scenario Comparison Utilization is misaligned with most segments
+
+**Contradiction:**
+
+* Target: 35% of sessions use scenario comparison.
+* Only **Strategic Optimizers** consistently value this behavior.
+
+**Documents involved:**
+
+* Success Metrics (Metric 5) ↔ Segments A–D
+
+**Why it matters:**
+This metric incentivizes pushing complexity onto users who don’t want it.
+
+**Resolution:**
+Segment the metric:
+
+* High for Segment A
+* Low/neutral for B, C, D
+  Or replace with: “users engage at appropriate depth for context”
+
+---
+
+### Issue 2.3 — Recommendation Acceptance Rate conflicts with learning + trust needs
+
+**Tension:**
+
+* High acceptance = success
+* But research shows:
+
+  * Some users must **understand before accepting** (Segment D)
+  * Some users will **intentionally modify** (Segment A)
+
+**Documents involved:**
+
+* Success Metrics (Metric 3) ↔ Segments A & D, Finding 3
+
+**Why it matters:**
+You risk optimizing for **passive acceptance over informed decision-making**.
+
+**Resolution:**
+Split metric into:
+
+* Acceptance with understanding (qualitative or proxy)
+* Modification rate by segment (healthy vs unhealthy)
+
+---
+
+### Issue 2.4 — Advisor Escalation Reduction may conflict with trust-building
+
+**Tension:**
+
+* Goal: reduce advisor calls by 15%
+* Research: users (especially sophisticated ones) use advisors for **validation, not lack of tools**
+
+**Documents involved:**
+
+* Success Metrics (Metric 7) ↔ Finding 3
+
+**Why it matters:**
+Reducing advisor usage too aggressively may indicate **reduced trust**, not success.
+
+**Resolution:**
+Refine metric to:
+
+* Reduction in *routine* inquiries
+* Maintain or allow *validation behavior*
+
+---
+
+### Issue 2.5 — Return Usage Rate ignores episodic nature of need
+
+**Gap:**
+
+* Metric assumes repeated usage = success
+* Research shows many triggers are **infrequent or event-driven**
+
+**Documents involved:**
+
+* Success Metrics (Metric 4) ↔ Withdrawal Triggers
+
+**Resolution:**
+Normalize by:
+
+* “Return usage when a relevant withdrawal event occurs”
+  Not raw annual reuse
+
+---
+
+# 3. HMW Questions vs. Problem Statement & Metrics
+
+### Issue 3.1 — HMWs imply adaptive system; problem/metrics assume static workflow
+
+**Tension:**
+
+* HMW 5 & 6 require **adaptive, context-aware experiences**
+* Metrics assume a **single linear funnel (→ scenario comparison)**
+
+**Documents involved:**
+
+* HMW 5, 6 ↔ Success Metrics 2, 5
+
+**Resolution:**
+Shift metrics to:
+
+* Multiple valid user journeys
+* Context-dependent success definitions
+
+---
+
+### Issue 3.2 — HMW on emotional friction not reflected in success metrics
+
+**Gap:**
+
+* HMW 2 focuses on **reducing hesitation at execution**
+* No metric captures:
+
+  * Time-to-decision
+  * Abandonment at execution
+  * Confidence
+
+**Documents involved:**
+
+* HMW 2 ↔ Success Metrics (all)
+
+**Resolution:**
+Add metrics like:
+
+* Execution drop-off rate
+* Time from recommendation → execution
+* Confidence proxy (e.g., reversals, cancellations)
+
+---
+
+### Issue 3.3 — HMW on tax uncertainty not reflected in metrics
+
+**Gap:**
+
+* HMW 4 highlights risk of **misleading tax estimates**
+* No metric tracks:
+
+  * Misinterpretation
+  * User correction behavior
+  * downstream tax regret
+
+**Documents involved:**
+
+* HMW 4 ↔ Success Metrics
+
+**Resolution:**
+Add guardrail metrics:
+
+* % users adjusting tax assumptions
+* Post-tax-season satisfaction / regret signals
+
+---
+
+### Issue 3.4 — HMW 7 (feedback loop) not represented at all
+
+**Gap:**
+
+* Introduces a **longitudinal product requirement**
+* Completely absent from:
+
+  * Problem statement
+  * Success metrics
+
+**Documents involved:**
+
+* HMW 7 ↔ Problem Statement & Metrics
+
+**Resolution:**
+Either:
+
+* Expand scope to include post-decision insights
+  OR
+* Explicitly defer and remove from current HMW set
+
+---
+
+### Issue 3.5 — HMW 8 implies “learning system” not captured in framing
+
+**Gap:**
+
+* Suggests tool should **build user capability over time**
+* Problem statement frames tool as **decision engine only**
+
+**Documents involved:**
+
+* HMW 8 ↔ Problem Statement
+
+**Resolution:**
+Clarify product stance:
+
+* Is this a **calculator**, **advisor**, or **learning system**?
+
+---
+
+# 4. Internal Contradictions Within Research
+
+### Issue 4.1 — “Unified recommendation” vs. “need for explainability” tension not resolved
+
+**Contradiction:**
+
+* Finding 1: users don’t think in integrated terms
+* Finding 3: sophisticated users demand **deep reasoning transparency**
+
+**Where it breaks:**
+
+* HMW 1 vs HMW 3 create opposing requirements:
+
+  * Hide complexity vs expose it
+
+**Resolution:**
+Explicitly define:
+
+* Dual-layer system:
+
+  * Default: unified/simple
+  * Expandable: detailed reasoning
+
+---
+
+### Issue 4.2 — “Do not require user input” vs. “tax context dependency”
+
+**Contradiction:**
+
+* Segment C: must not require inputs
+* Finding 4: tax accuracy depends on inputs
+
+**Documents involved:**
+
+* Dimension 4 + Segment C ↔ Finding 4
+
+**Resolution:**
+Define hierarchy:
+
+* Default assumptions for speed
+* Optional refinement for accuracy
+* Clear labeling of confidence levels
+
+---
+
+### Issue 4.3 — Segment definitions vs. HMW “no mode selection” constraint
+
+**Tension:**
+
+* Segments clearly require **different interaction models**
+* HMW 6 forbids explicit mode selection
+
+**Why it matters:**
+This creates an **unspecified mechanism problem**:
+How does the system adapt?
+
+**Resolution:**
+Introduce a design principle:
+
+* Implicit adaptation via behavior signals
+* OR minimal explicit branching (e.g., “quick vs explore”)
+
+---
+
+### Issue 4.4 — Learning vs efficiency conflict not resolved across segments
+
+**Contradiction:**
+
+* Segment A wants **control & efficiency**
+* Segment D wants **guidance & learning**
+* HMW 8 surfaces tension but no structural resolution
+
+**Resolution:**
+Define:
+
+* Separate interaction layers (not just UI tweaks)
+
+  * Recommendation mode
+  * Exploration mode
+  * Learning mode
+
+---
+
+# Bottom Line
+
+Across the three documents, the core tension is this:
+
+> The problem is framed as an optimization engine,
+> while the research defines it as a context-sensitive decision experience spanning emotion, urgency, trust, and learning.
+
+And the metrics currently **overweight engagement with complexity (scenario comparison)** instead of **successful decision-making across contexts**.
+
+---
+
+If you want, I can translate this into **specific PRD revisions** (problem statement rewrite + updated metrics + product principles).
