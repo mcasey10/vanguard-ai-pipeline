@@ -1,3 +1,6 @@
+> ⚠️ DEPRECATED — This file references the old Design System file (vo5E9DDnLPzG4gFs3K8JHs).
+> The active Design System file is krtNgOD3jL5U6WmUMT32u6.
+> For all design system context, read pd/CLAUDE.md instead.
 # FIGMA_DESIGN_SYSTEM.md
 # Vanguard Constellation Design System Rules
 
