@@ -224,6 +224,43 @@ Key values for quick reference (verify against file before use):
 - No hero/greeting banner on transactional screens
 - Horizontal arrangement with 80px gaps between frames
 
+### Screen auto-layout rules
+Every screen frame and every container within it must use auto-layout.
+Absolute positioning is not acceptable anywhere in a screen frame.
+
+**Top-level screen frame:**
+- VERTICAL auto-layout, width Fixed 1440px, height Hug contents
+- Children in order: Global Header, Nav/L2 Secondary Navigation, Content Area
+- No padding on the screen frame itself
+
+**Content area frame (below the nav):**
+- VERTICAL auto-layout, width Fill, height Hug contents
+- Padding: 40px top, 24px left/right (matching portal content margin)
+- Gap between content sections: 24px
+
+**Section frames (TAX BRACKET, YTD REALIZED GAINS, etc.):**
+- VERTICAL auto-layout, width Fill, height Hug contents
+- Gap between label and content: 8px
+
+**Card/table frames (the white-bg data cards):**
+- HORIZONTAL auto-layout for side-by-side columns, width Fill, height Hug
+- Each column cell: VERTICAL auto-layout, width Fill, height Hug
+- Padding inside cards: 16px all sides
+- Gap between cells: 1px (border acts as divider)
+
+**Row frames within tables:**
+- HORIZONTAL auto-layout, width Fill, height Fixed (48px standard row)
+- Padding: 0 12px
+- Align items: Center
+
+**All text and value pairs (label + value stacked):**
+- VERTICAL auto-layout, width Fill, height Hug
+- Gap: 4px
+
+**The rule in one sentence:** if a child element's position would need
+to be manually adjusted when the parent is resized, auto-layout has
+not been applied correctly.
+
 ### Missing component protocol
 If a screen requires a component that does not exist in the Design System library
 (krtNgOD3jL5U6WmUMT32u6), do not invent a substitute or use raw shapes inline.
