@@ -220,7 +220,7 @@ Key values for quick reference (verify against file before use):
 - All frames: 1440px wide
 - Portal shell on every screen: Global Header (100px) + L2 Nav (48px) + white content area
 - L2 active tab: "Sell & Rebalance" with RED #C8102E underline
-- L1 active tab: "Portfolio" with black underline
+- L1 active tab: Transact — set via "L1 Active Tab" component property on Header/Global Header
 - No hero/greeting banner on transactional screens
 - Horizontal arrangement with 80px gaps between frames
 
@@ -230,5 +230,41 @@ If a screen requires a component that does not exist in the Design System librar
 Stop and report: "Screen [name] requires [component name] which is not in the
 library. Add it before proceeding?" Wait for explicit confirmation before continuing.
 This applies to every screen generation task regardless of how the prompt is worded.
+
+### Component instance rules
+- Never detach a component instance to work around a library publishing gap
+  or property limitation
+- If a required component property is unavailable because the library has not
+  been published, stop and report it — do not detach or approximate with raw shapes
+- All header instances must use setProperties to set "L1 Active Tab": "Transact"
+  — never manually reposition the indicator rectangle
+
+### Auto-layout requirements
+Every component added to the Design System library must have auto-layout applied
+before being committed. No exceptions. A component without auto-layout is not
+acceptable for library use.
+
+**By component type:**
+- Row-level components (buttons, input fields, nav tabs, table rows, chips):
+  HORIZONTAL auto-layout
+- Container components (cards, dropdowns, form groups, modals, alert banners):
+  VERTICAL auto-layout
+- Complex components with both axes (fund rows, dialog boxes): nested auto-layout
+  — outer frame VERTICAL, inner rows HORIZONTAL
+
+**Resizing behavior:**
+- Full-width components (dropdowns, banners, table rows, nav bars):
+  width = Fill container, height = Fixed at prescribed px value
+- Form inputs (text, select, dollar amount): width = Fixed 320px base
+  (overridden at instance level on screens), height = Fixed 48px for the
+  input field itself, Hug for the label+input group
+- Buttons: width = Hug contents, height = Fixed 48px
+- Content that grows with text (alert bodies, modal text, tooltips):
+  height = Hug contents
+
+**Before adding any component to the library:**
+1. Confirm auto-layout is applied at every frame level
+2. Confirm resizing behavior is set correctly (not left as Fixed/Fixed by default)
+3. Verify the component resizes correctly when width is changed before publishing
 
 
