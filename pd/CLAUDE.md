@@ -78,7 +78,7 @@ data visualization register (DV-1, DV-2, DV-3), portal shell framing decision.
 | ----------------------------------------------- | ---------------------- | --------------------------------------------- |
 | Vanguard Constellation — Design System (ACTIVE) | krtNgOD3jL5U6WmUMT32u6 | Component library — publish as shared library |
 | Vanguard Constellation — Design System (OLD)    | vo5E9DDnLPzG4gFs3K8JHs | Deprecated — do not use for new work          |
-| Vanguard Sell & Rebalance — Screens             | *(to be created)* | Product screens — references library          |
+| Vanguard Sell & Rebalance — Screens             | jz82GrOp8RE2QGh81V0qbs | Product screens — references library          |
 
 **Always use krtNgOD3jL5U6WmUMT32u6 as the active Design System file.**
 
