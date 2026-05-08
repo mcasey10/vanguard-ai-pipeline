@@ -154,14 +154,21 @@ the reference screenshots. Address these in the next Claude Code session.
 
 - `Nav/L2 Nav Bar` — deleted (was redundant). `Nav/L2 Secondary Navigation` with red underline is the canonical component.
 - Utility icon SVGs — real SVG paths applied manually to Global Header. Placeholder ellipses removed.
+- `Modal/Dialog` — exists on page 7, id 69:2.
+- `Pill/Time Range Selector` — exists on page 5, id 9:18, key `46a72c8c499ae9dca74984d3192349c1db1eebb2`.
+- `Controls/Mode Toggle` — added 2026-05-08, page 5, key `8f380b07dde64440fa2e44a88207666b09e0e9e2`.
+  Variants: `Active=Automated`, `Active=Manual`. 36px height, 100px radius pill.
+- `Controls/View Toggle` — added 2026-05-08, page 5, key `3eb7dca7ea5bb2f6d92cb219b372e38eb0ada06e`.
+  Variants: `Active=Table`, `Active=Cards`. Same spec as Mode Toggle.
+- `Table/Fund Row` — rebuilt 2026-05-08, page 7, key `5988d1156d6ee2c4df03443f15753ec4ca60cc58`.
+  Columns: Symbol+Name (216px), Price (88px), $ Unrealized G/L (140px), % Unrealized G/L (100px),
+  _spacer (FILL), Current Balance (130px), Transact+Actions (116px). Bottom border 1px #e0e0e0.
 
 ### Components missing entirely
 
 - `Dropdown/Select — Open state` — the Holdings page dropdown with grouped
   options (Cost basis, Unrealized gains/losses, etc.). Reference: dropdown-holdings-menu.png
 - `Table/Lot Detail Row` — the expanded lot-level row shown in data-table-unrealized-gains.png
-- `Modal/Dialog` — the account routing number dialog. Reference: dialog-modal.png
-- `Pill/Time Range Selector` — verify against performance-graphs.png
 
 ### Known structural notes — do not flag as errors
 
@@ -178,12 +185,7 @@ the reference screenshots. Address these in the next Claude Code session.
 
 ### Components that need visual correction
 
-- `Table/Fund Row` — **known incorrect, must be rebuilt.** The current component
-  does not match the portal. Correct spec: fund symbol 14px/700/#1255CC with underline;
-  full fund name 11px/400/#555 uppercase below symbol; price column 14px/400;
-  gain/loss values with green ↑ or red ↓ arrow prefix; % gain column; current balance;
-  "Transact" ghost link; kebab dot button (3×15 ellipse). Reference: data-table-holdings.png.
-  Do not attempt to patch the existing component — replace it.
+- `Table/Fund Row` — rebuilt 2026-05-08 (see Completed section above). No further action needed.
 - `Table/Column Header Row` — treat as a reusable structural template, not a
   content prescription. Do not hardcode specific column labels — use placeholder
   names (Column 1, Column 2, etc.) with correct typography (12px/600, sentence case).

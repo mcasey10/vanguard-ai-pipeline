@@ -25,6 +25,8 @@ out/
 # ── Claude Code ────────────────────────────────────────
 # settings.local.json is machine-specific — never commit
 **/.claude/settings.local.json
+# worktree directories are ephemeral — never commit
+**/.claude/worktrees/
 
 # ── Python ─────────────────────────────────────────────
 __pycache__/
