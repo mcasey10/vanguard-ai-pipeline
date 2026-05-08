@@ -1,75 +1,93 @@
 # PD Phase — Context for Claude Code
 
 ## What this phase produces
+
 Figma Design System file + Figma Screens file for the Vanguard Sell & Rebalance tool.
 All screens must match the Vanguard Constellation design system extracted from the live portal.
 
 ## Source of truth — read these before any PD task
 
 ### Reference screenshots (primary visual source — use these first)
+
 Location: `pd/reference-screenshots/` in the local repo
 These are actual screenshots from the live Vanguard portal. They are the
 ground truth for all visual design decisions. When building or correcting
 any Figma component, read the relevant screenshot(s) first.
 
-| Filename | What it shows |
-|---|---|
-| global-header.png | Full portal header: V-mark logo, Personal investors, 6 utility icons, L1 nav, hero banner, L2 nav with Balances active |
-| l1-nav-portfolio-dropdown.png | L1 nav with Portfolio dropdown open showing sub-menu items |
-| l1-nav-transact-dropdown.png | L1 nav with Transact dropdown open showing sub-menu items |
-| dropdown-holdings-menu.png | Holdings page Show dropdown open with grouped options (Summary info, Cost basis, Dividends & capital gains) |
-| dropdown-date-input.png | Date input dropdown field in default/open state |
-| data-table-holdings.png | Holdings grid: fund rows with symbol, name, price, gain/loss values, Transact + kebab menu open |
-| data-table-unrealized-gains.png | Lot-level table: expanded VFIAX row showing individual lot detail with date, cost basis, gain/loss per lot |
-| portfolio-analysis.png | Portfolio Watch: asset mix stacked bar chart, stock/bond donut charts, expense ratio bars |
-| performance-graphs.png | Performance page: area chart with positive/negative fill, time range pill selector, balances line chart |
-| segmented-controls-bar-chart-card-list.png | Segmented control component: Bar chart / Card / List toggle variants |
-| order-status-page.png | Activity page: Order status with 4 filter dropdowns, empty table state |
-| form-inputs-default.png | Message Center compose form: text input, select dropdowns, textarea in default state |
-| form-inputs-validation.png | Same compose form with all fields in error state: red borders, error icon + message below each field |
-| dialog-modal.png | Cash Plus Account routing numbers modal: title, label/value rows with dividers, Close pill button |
-| alert-warning-banner.png | Warning alert banner: amber left border, triangle icon, bold title, body text, dismiss × button |
-| kebab-menu.png | Three-dot kebab menu in three states: default dot, hover dot (filled), open with Withdraw/Deposit options |
-| logoff-page.png | Post-logout confirmation: green checkmark, "You've successfully logged off", Log in pill button |
-| accordion-collapsed.png | Accordion component in collapsed state: chevron right, label, border |
-| accordion-expanded.png | Accordion component in expanded state: chevron down, content revealed |
-| sell-mutual-funds.png | Sell mutual funds flow: fund selection list with checkboxes and account info |
-| sell-VFIAX-fund.png | Sell flow for a specific fund (VFIAX): amount entry, lot detail, accounting method selector |
-| buy-sell-landing-page.png | Buy/Sell transaction landing page: entry point, account selector, fund list |
-| buy-sell-agreement-terms.png | Buy/Sell agreement terms screen: terms text, confirm checkbox, Submit button |
-| buy-sell-agreement-prompt.png | Buy/Sell agreement prompt/modal: brief summary with Accept/Decline actions |
+| Filename                                   | What it shows                                                                                                          |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| global-header.png                          | Full portal header: V-mark logo, Personal investors, 6 utility icons, L1 nav, hero banner, L2 nav with Balances active |
+| l1-nav-portfolio-dropdown.png              | L1 nav with Portfolio dropdown open showing sub-menu items                                                             |
+| l1-nav-transact-dropdown.png               | L1 nav with Transact dropdown open showing sub-menu items                                                              |
+| dropdown-holdings-menu.png                 | Holdings page Show dropdown open with grouped options (Summary info, Cost basis, Dividends & capital gains)            |
+| dropdown-date-input.png                    | Date input dropdown field in default/open state                                                                        |
+| data-table-holdings.png                    | Holdings grid: fund rows with symbol, name, price, gain/loss values, Transact + kebab menu open                        |
+| data-table-unrealized-gains.png            | Lot-level table: expanded VFIAX row showing individual lot detail with date, cost basis, gain/loss per lot             |
+| portfolio-analysis.png                     | Portfolio Watch: asset mix stacked bar chart, stock/bond donut charts, expense ratio bars                              |
+| performance-graphs.png                     | Performance page: area chart with positive/negative fill, time range pill selector, balances line chart                |
+| segmented-controls-bar-chart-card-list.png | Segmented control component: Bar chart / Card / List toggle variants                                                   |
+| order-status-page.png                      | Activity page: Order status with 4 filter dropdowns, empty table state                                                 |
+| form-inputs-default.png                    | Message Center compose form: text input, select dropdowns, textarea in default state                                   |
+| form-inputs-validation.png                 | Same compose form with all fields in error state: red borders, error icon + message below each field                   |
+| dialog-modal.png                           | Cash Plus Account routing numbers modal: title, label/value rows with dividers, Close pill button                      |
+| alert-warning-banner.png                   | Warning alert banner: amber left border, triangle icon, bold title, body text, dismiss × button                        |
+| kebab-menu.png                             | Three-dot kebab menu in three states: default dot, hover dot (filled), open with Withdraw/Deposit options              |
+| logoff-page.png                            | Post-logout confirmation: green checkmark, "You've successfully logged off", Log in pill button                        |
+| accordion-collapsed.png                    | Accordion component in collapsed state: chevron right, label, border                                                   |
+| accordion-expanded.png                     | Accordion component in expanded state: chevron down, content revealed                                                  |
+| sell-mutual-funds.png                      | Sell mutual funds flow: fund selection list with checkboxes and account info                                           |
+| sell-VFIAX-fund.png                        | Sell flow for a specific fund (VFIAX): amount entry, lot detail, accounting method selector                            |
+| buy-sell-landing-page.png                  | Buy/Sell transaction landing page: entry point, account selector, fund list                                            |
+| buy-sell-agreement-terms.png               | Buy/Sell agreement terms screen: terms text, confirm checkbox, Submit button                                           |
+| buy-sell-agreement-prompt.png              | Buy/Sell agreement prompt/modal: brief summary with Accept/Decline actions                                             |
 
 ### Visual design reference (secondary — rendered HTML document)
+
 https://mcasey10.github.io/vanguard-ai-pipeline/pd/vanguard-design-system.html
 This is the rendered HTML design system document. It contains:
+
 - All color swatches with hex values and confidence badges (Confirmed/Inferred)
 - Typography specimens at actual size and weight
 - Rendered component examples (navigation, hero banner, buttons, forms, alerts, tables)
 - CSS implementation details for complex components (hero banner SVG, icon SVG paths)
 
+### Canonical workflow reference
+
+https://mcasey10.github.io/vanguard-ai-pipeline/pm/sell_rebalance_workflow.html
+Read this before any screen generation or redesign work. It defines the
+4-stage workflow architecture (Fund Selection → Scenario Analysis →
+Order Confirmation → Execution Summary), all inputs vs. read-only fields,
+available actions per stage, and the Automated/Manual mode toggle behavior.
+This is a PM artifact — the authoritative workflow reference for PD and Dev.
+
 ### Notion page 14 — supplementary specs and corrections
+
 ID: 341dcac9574a8171a21bc681ca4190ae
 Contains: corrected component specifications (Section 6), file architecture decisions,
 screen generation progress, and the gap between DevTools extraction and visual reality.
 
 ### Notion page 13 — PD decisions log
+
 ID: 340dcac9574a8141a170de6bc25d9750
 Contains: all design decisions made during PD phase, Tier 1 question resolutions,
 data visualization register (DV-1, DV-2, DV-3), portal shell framing decision.
 
 ## Figma files
-| File | Key | Purpose |
-|---|---|---|
+
+| File                                            | Key                    | Purpose                                       |
+| ----------------------------------------------- | ---------------------- | --------------------------------------------- |
 | Vanguard Constellation — Design System (ACTIVE) | krtNgOD3jL5U6WmUMT32u6 | Component library — publish as shared library |
-| Vanguard Constellation — Design System (OLD) | vo5E9DDnLPzG4gFs3K8JHs | Deprecated — do not use for new work |
-| Vanguard Sell & Rebalance — Screens | H06IX7e8BwKLU5wQHYpnS5 | Product screens — references library |
+| Vanguard Constellation — Design System (OLD)    | vo5E9DDnLPzG4gFs3K8JHs | Deprecated — do not use for new work          |
+| Vanguard Sell & Rebalance — Screens             | H06IX7e8BwKLU5wQHYpnS5 | Product screens — references library          |
 
 **Always use krtNgOD3jL5U6WmUMT32u6 as the active Design System file.**
 
 ## Design tokens — quick reference
+
 These are the most critical values. Verify against the HTML file for full detail.
 
 ### Colors
+
 - Primary text: #040505 (near-black, NOT pure black)
 - Secondary text: rgb(113,119,119) / #717777
 - Link blue: rgb(20,91,255) / #1255FF
@@ -83,6 +101,7 @@ These are the most critical values. Verify against the HTML file for full detail
 - Chart bonds: #c8902a
 
 ### Typography (Inter substituting for FF Mark)
+
 - Page title: 30px/700
 - Hero title: 26px/700
 - Section heading: 16px/700
@@ -94,16 +113,19 @@ These are the most critical values. Verify against the HTML file for full detail
 - Timestamps/captions: 11px/400/#555
 
 ### Shape
+
 - Button border-radius: 100px (pill) — ALL buttons
 - Card/input border-radius: 4px
 - Badge border-radius: 50% (circle)
 
 ### Buttons
+
 - Primary: bg #040505, white text, 100px radius, 48px height, 11px/28px padding, weight 700
 - Secondary: white bg, #040505 border 1.5px, same geometry
 - Ghost/link: #1255CC, underline, no background
 
 ### Navigation
+
 - L1 nav: active tab has BLACK 3px bottom border (#040505)
 - L2 nav: active tab has RED 2px bottom border (#C8102E) — NOT black
 - Header: two-row, ~100px total (Row 1: brand+icons 60px, Row 2: L1 nav 40px)
@@ -111,6 +133,7 @@ These are the most critical values. Verify against the HTML file for full detail
 - Messages badge: red dot only, NO count number
 
 ### Inputs
+
 - All inputs: square corners (0px border-radius via 4px card, but inputs specifically 4px)
 - Default border: 1px solid #767676
 - Focus border: 2px solid #1255CC
@@ -118,18 +141,22 @@ These are the most critical values. Verify against the HTML file for full detail
 - Height: 48px
 
 ### Content layout (at 1440px canvas)
+
 - Left content margin: 24-32px (NOT 159px — that was a viewport-specific extraction artifact)
 - Content max width: ~1296px
 
 ## Design System gap audit — items to address
+
 These gaps were identified by comparing the current Design System file against
 the reference screenshots. Address these in the next Claude Code session.
 
 ### Completed / already resolved
+
 - `Nav/L2 Nav Bar` — deleted (was redundant). `Nav/L2 Secondary Navigation` with red underline is the canonical component.
 - Utility icon SVGs — real SVG paths applied manually to Global Header. Placeholder ellipses removed.
 
 ### Components missing entirely
+
 - `Dropdown/Select — Open state` — the Holdings page dropdown with grouped
   options (Cost basis, Unrealized gains/losses, etc.). Reference: dropdown-holdings-menu.png
 - `Table/Lot Detail Row` — the expanded lot-level row shown in data-table-unrealized-gains.png
@@ -137,6 +164,7 @@ the reference screenshots. Address these in the next Claude Code session.
 - `Pill/Time Range Selector` — verify against performance-graphs.png
 
 ### Known structural notes — do not flag as errors
+
 - `Hero/Greeting Banner` contains a child frame "Banner background 1" (1440×1440, absolute
   positioned, layout: NONE). This is the manually imported swoosh SVG from the live Vanguard
   portal. Its large native dimensions are expected — the SVG coordinate system requires this
@@ -149,6 +177,7 @@ the reference screenshots. Address these in the next Claude Code session.
   aligned to "Sell & Rebalance" tab. Do not move, duplicate, or restructure this component.
 
 ### Components that need visual correction
+
 - `Table/Fund Row` — **known incorrect, must be rebuilt.** The current component
   does not match the portal. Correct spec: fund symbol 14px/700/#1255CC with underline;
   full fund name 11px/400/#555 uppercase below symbol; price column 14px/400;
@@ -168,6 +197,7 @@ the reference screenshots. Address these in the next Claude Code session.
   Reference: data-table-holdings.png.
 
 ### Prompt to use in Claude Code for the gap audit
+
 ```
 Read pd/CLAUDE.md. Then read each reference screenshot in pd/reference-screenshots/
 one at a time and compare what you see against the current components in the
@@ -187,16 +217,19 @@ Wait for my confirmation before making any changes.
 ```
 
 ### Remaining manual-only items (cannot be done via Claude Code API)
+
 1. **Hero banner SVG** — curved swoosh approximation is acceptable for portfolio project scope.
    Further refinement requires manual Figma pen tool editing. Do not attempt programmatic fixes.
 2. **Drop shadow on header** — verify it is applied: Effect → Drop Shadow, rgba(4,5,5,0.06), X:0 Y:0 Blur:4
 3. **Font** — all text uses Inter (FF Mark substitute). Swap globally when FF Mark is licensed.
 
 ## Deprecated files
+
 - `pd/FIGMA_DESIGN_SYSTEM_DEPRECATED.md` — superseded by Notion page 14 and the rendered
   HTML at the GitHub Pages URL above. Do not use as a design reference.
 
 ## Canonical sample dataset
+
 Always read these files before generating any screen or writing any code
 that involves portfolio data, fund names, lot counts, tax figures, or account
 balances. Do not use inline values from prompts — the files are the single
@@ -208,6 +241,7 @@ source of truth.
   cases, special condition flags
 
 Key values for quick reference (verify against file before use):
+
 - Portfolio total: $849,851.40
 - Target withdrawal used in screens: $50,000
 - Tax assumption: 24% ST / 15% LT (default bracket)
@@ -217,6 +251,7 @@ Key values for quick reference (verify against file before use):
   VTIAX (Brokerage ...4782), VFIAX (Roth IRA ...8148)
 
 ## Screen generation rules
+
 - All frames: 1440px wide
 - Portal shell on every screen: Global Header (100px) + L2 Nav (48px) + white content area
 - L2 active tab: "Sell & Rebalance" with RED #C8102E underline
@@ -224,36 +259,74 @@ Key values for quick reference (verify against file before use):
 - No hero/greeting banner on transactional screens
 - Horizontal arrangement with 80px gaps between frames
 
+### Workflow architecture (4 stages)
+
+Screens map to the canonical workflow at the GitHub Pages URL above.
+Do not generate screens based on the old A1–A6 / B1–B4 step structure —
+that architecture is superseded by PM Decision 11.
+
+Stage 1 — Fund Selection (single screen, two mode variants):
+
+- Automated mode: system recommendation, fund list locked, amounts read-only
+- Manual mode: editable per-fund amounts, accounting method selectable
+- Shared summary header in both modes: sale amount, account scope, tax
+  assumptions, running totals
+- Fund list grouped by account
+- Mode toggle and Table/Card view toggle persistently visible
+
+Stage 2 — Scenario Analysis (optional):
+
+- Activated by saving a scenario; not directly navigable
+- Side-by-side scenario columns (up to 3)
+- Full allocation bar chart and optimization scoring live here
+
+Stage 3 — Order Confirmation:
+
+- All content read-only
+- Two actions only: Submit order (primary) / Cancel
+
+Stage 4 — Execution Summary:
+
+- Success banner, tax summary, rebalancing impact,
+  What Happens Next timeline, PDF download
+
 ### Screen auto-layout rules
+
 Every screen frame and every container within it must use auto-layout.
 Absolute positioning is not acceptable anywhere in a screen frame.
 
 **Top-level screen frame:**
+
 - VERTICAL auto-layout, width Fixed 1440px, height Hug contents
 - Children in order: Global Header, Nav/L2 Secondary Navigation, Content Area
 - No padding on the screen frame itself
 
 **Content area frame (below the nav):**
+
 - VERTICAL auto-layout, width Fill, height Hug contents
 - Padding: 40px top, 24px left/right (matching portal content margin)
 - Gap between content sections: 24px
 
 **Section frames (TAX BRACKET, YTD REALIZED GAINS, etc.):**
+
 - VERTICAL auto-layout, width Fill, height Hug contents
 - Gap between label and content: 8px
 
 **Card/table frames (the white-bg data cards):**
+
 - HORIZONTAL auto-layout for side-by-side columns, width Fill, height Hug
 - Each column cell: VERTICAL auto-layout, width Fill, height Hug
 - Padding inside cards: 16px all sides
 - Gap between cells: 1px (border acts as divider)
 
 **Row frames within tables:**
+
 - HORIZONTAL auto-layout, width Fill, height Fixed (48px standard row)
 - Padding: 0 12px
 - Align items: Center
 
 **All text and value pairs (label + value stacked):**
+
 - VERTICAL auto-layout, width Fill, height Hug
 - Gap: 4px
 
@@ -262,6 +335,7 @@ to be manually adjusted when the parent is resized, auto-layout has
 not been applied correctly.
 
 ### Missing component protocol
+
 If a screen requires a component that does not exist in the Design System library
 (krtNgOD3jL5U6WmUMT32u6), do not invent a substitute or use raw shapes inline.
 Stop and report: "Screen [name] requires [component name] which is not in the
@@ -269,6 +343,7 @@ library. Add it before proceeding?" Wait for explicit confirmation before contin
 This applies to every screen generation task regardless of how the prompt is worded.
 
 ### Component instance rules
+
 - Never detach a component instance to work around a library publishing gap
   or property limitation
 - If a required component property is unavailable because the library has not
@@ -277,11 +352,13 @@ This applies to every screen generation task regardless of how the prompt is wor
   — never manually reposition the indicator rectangle
 
 ### Auto-layout requirements
+
 Every component added to the Design System library must have auto-layout applied
 before being committed. No exceptions. A component without auto-layout is not
 acceptable for library use.
 
 **By component type:**
+
 - Row-level components (buttons, input fields, nav tabs, table rows, chips):
   HORIZONTAL auto-layout
 - Container components (cards, dropdowns, form groups, modals, alert banners):
@@ -290,6 +367,7 @@ acceptable for library use.
   — outer frame VERTICAL, inner rows HORIZONTAL
 
 **Resizing behavior:**
+
 - Full-width components (dropdowns, banners, table rows, nav bars):
   width = Fill container, height = Fixed at prescribed px value
 - Form inputs (text, select, dollar amount): width = Fixed 320px base
@@ -300,8 +378,7 @@ acceptable for library use.
   height = Hug contents
 
 **Before adding any component to the library:**
+
 1. Confirm auto-layout is applied at every frame level
 2. Confirm resizing behavior is set correctly (not left as Fixed/Fixed by default)
 3. Verify the component resizes correctly when width is changed before publishing
-
-

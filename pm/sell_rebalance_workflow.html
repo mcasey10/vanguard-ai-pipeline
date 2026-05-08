@@ -1,0 +1,595 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sell &amp; Rebalance — Workflow</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f7f6f2; --bg2: #ffffff; --text: #1a1a19; --text2: #5f5e5a; --text3: #8f8e89;
+  --bdr: rgba(0,0,0,0.10); --bdr2: rgba(0,0,0,0.18);
+  --teal-bg: #e1f5ee; --teal-txt: #085041; --teal-bdr: #5dcaa5;
+  --blue-bg: #e6f1fb; --blue-txt: #0c447c; --blue-bdr: #85b7eb;
+  --purple-bg: #eeedfe; --purple-txt: #3c3489; --purple-bdr: #afa9ec;
+  --amber-bg: #faeeda; --amber-txt: #633806; --amber-bdr: #ef9f27;
+  --gray-bg: #f1efe8; --gray-txt: #5f5e5a; --gray-bdr: #b4b2a9;
+  --green-bg: #eaf3de; --green-txt: #3b6d11; --green-bdr: #97c459;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e1c; --bg2: #2a2a28; --text: #e8e6de; --text2: #b4b2a9; --text3: #73726c;
+    --bdr: rgba(255,255,255,0.08); --bdr2: rgba(255,255,255,0.16);
+    --teal-bg: #04342c; --teal-txt: #9fe1cb; --teal-bdr: #0f6e56;
+    --blue-bg: #042c53; --blue-txt: #b5d4f4; --blue-bdr: #185fa5;
+    --purple-bg: #26215c; --purple-txt: #cecbf6; --purple-bdr: #534ab7;
+    --amber-bg: #412402; --amber-txt: #fac775; --amber-bdr: #854f0b;
+    --gray-bg: #2c2c2a; --gray-txt: #73726c; --gray-bdr: #444441;
+    --green-bg: #173404; --green-txt: #c0dd97; --green-bdr: #3b6d11;
+  }
+}
+body {
+  font-family: var(--sans); background: var(--bg); color: var(--text);
+  padding: 28px 24px 60px; font-size: 13px; line-height: 1.5;
+  max-width: 1200px; margin: 0 auto;
+}
+h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
+.sub { font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+
+.tab-strip {
+  display: flex; border: 0.5px solid var(--bdr2); border-radius: 8px;
+  background: var(--bg2); overflow: hidden; margin-bottom: 24px; width: fit-content;
+}
+.tab { padding: 8px 20px; font-size: 12px; font-weight: 500; color: var(--text2); border-right: 0.5px solid var(--bdr); cursor: default; }
+.tab:last-child { border-right: none; }
+.tab.active { background: var(--text); color: var(--bg2); }
+.tab.dim { opacity: 0.45; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; align-items: center; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.dot { width: 10px; height: 10px; border-radius: 2px; border: 0.5px solid; flex-shrink: 0; }
+
+.stage-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 6px; padding-left: 2px; }
+
+.card { border-radius: 8px; border: 0.5px solid; background: var(--bg2); overflow: hidden; margin-bottom: 4px; }
+.card.dashed { border-style: dashed; }
+.card-head { padding: 10px 12px 8px; border-bottom: 0.5px solid var(--bdr); }
+.card-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.card-sub { font-size: 11px; color: var(--text2); }
+.card-body { padding: 8px 12px 10px; }
+
+.teal { background: var(--teal-bg); border-color: var(--teal-bdr); }
+.teal .card-title { color: var(--teal-txt); }
+.teal .block-label { color: var(--teal-txt); }
+.teal .item-dot { background: var(--teal-bdr); }
+.blue { background: var(--blue-bg); border-color: var(--blue-bdr); }
+.blue .card-title { color: var(--blue-txt); }
+.blue .block-label { color: var(--blue-txt); }
+.blue .item-dot { background: var(--blue-bdr); }
+.purple { background: var(--purple-bg); border-color: var(--purple-bdr); }
+.purple .card-title { color: var(--purple-txt); }
+.purple .block-label { color: var(--purple-txt); }
+.purple .item-dot { background: var(--purple-bdr); }
+.amber { background: var(--amber-bg); border-color: var(--amber-bdr); }
+.amber .card-title { color: var(--amber-txt); }
+.amber .block-label { color: var(--amber-txt); }
+.amber .item-dot { background: var(--amber-bdr); }
+.gray { background: var(--gray-bg); border-color: var(--gray-bdr); }
+.gray .card-title { color: var(--gray-txt); }
+.gray .block-label { color: var(--gray-txt); }
+.gray .item-dot { background: var(--gray-bdr); }
+
+.block { margin-bottom: 8px; }
+.block:last-child { margin-bottom: 0; }
+.block-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.items { display: flex; flex-direction: column; gap: 3px; }
+.item { font-size: 11px; color: var(--text); display: flex; align-items: flex-start; gap: 5px; line-height: 1.4; }
+.item-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.badge { font-size: 9px; font-weight: 600; padding: 1px 5px; border-radius: 4px; border: 0.5px solid; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.b-in  { background: var(--blue-bg);   border-color: var(--blue-bdr);   color: var(--blue-txt); }
+.b-ro  { background: var(--gray-bg);   border-color: var(--gray-bdr);   color: var(--gray-txt); }
+.b-act { background: var(--green-bg);  border-color: var(--green-bdr);  color: var(--green-txt); }
+.b-warn{ background: var(--amber-bg);  border-color: var(--amber-bdr);  color: var(--amber-txt); }
+.b-oos { background: var(--gray-bg);   border-color: var(--gray-bdr);   color: var(--gray-txt); opacity: 0.65; }
+.divider { height: 0.5px; background: var(--bdr); margin: 8px 0; }
+
+.connector { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; margin-bottom: 4px; }
+.conn-line { width: 0.5px; background: var(--bdr2); height: 14px; }
+.conn-arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid var(--bdr2); }
+.conn-label { font-size: 10px; color: var(--text3); text-align: center; max-width: 480px; }
+.conn-row { display: flex; gap: 20px; align-items: flex-start; justify-content: center; }
+.conn-branch { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+
+.stage2-grid { display: grid; grid-template-columns: 1fr 52px 1fr; gap: 0; align-items: start; }
+.switch-col { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 56px; gap: 5px; }
+.sw-line { width: 0.5px; background: var(--bdr2); height: 12px; }
+.sw-label { font-size: 10px; color: var(--text3); text-align: center; width: 48px; line-height: 1.3; }
+
+.mode-bar { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: var(--bg); border: 0.5px solid var(--bdr2); border-radius: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.toggle-pill { display: flex; border-radius: 4px; overflow: hidden; border: 0.5px solid var(--bdr2); }
+.toggle-opt { padding: 2px 8px; font-size: 10px; font-weight: 500; }
+.toggle-opt.on { background: var(--text); color: var(--bg2); }
+.toggle-opt.off { color: var(--text2); }
+.mode-sep { width: 0.5px; height: 14px; background: var(--bdr2); }
+.mode-note { font-size: 10px; color: var(--text3); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Sell &amp; Rebalance — workflow</h1>
+<p class="sub">5-stage model · inputs merged into Fund Selection · funds grouped by account · Auto/Manual mode toggle · inputs vs. read-only · available actions per state</p>
+
+<div class="tab-strip">
+  <div class="tab active">Fund selection</div>
+  <div class="tab dim">Scenario analysis</div>
+  <div class="tab dim">Order confirmation</div>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="dot" style="background:var(--blue-bg);border-color:var(--blue-bdr)"></div>Input field</div>
+  <div class="leg"><div class="dot" style="background:var(--gray-bg);border-color:var(--gray-bdr)"></div>Read-only</div>
+  <div class="leg"><div class="dot" style="background:var(--green-bg);border-color:var(--green-bdr)"></div>Action</div>
+  <div class="leg"><div class="dot" style="background:var(--amber-bg);border-color:var(--amber-bdr)"></div>Notice / alert</div>
+  <div class="leg"><div class="dot" style="background:var(--teal-bg);border-color:var(--teal-bdr)"></div>Common to both modes</div>
+  <div class="leg"><div class="dot" style="background:var(--blue-bg);border-color:var(--blue-bdr);border-radius:50%"></div>Automated mode</div>
+  <div class="leg"><div class="dot" style="background:var(--purple-bg);border-color:var(--purple-bdr);border-radius:50%"></div>Manual mode</div>
+  <div class="leg"><div class="dot" style="background:var(--amber-bg);border-color:var(--amber-bdr);border-style:dashed"></div>Optional stage</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     STAGE 1 — FUND SELECTION
+     ══════════════════════════════════════════════════════════ -->
+<div class="stage-label">Stage 1 — Fund selection &amp; sale inputs</div>
+
+<div class="mode-bar">
+  <div class="toggle-pill"><div class="toggle-opt on">Automated</div><div class="toggle-opt off">Manual</div></div>
+  <div class="mode-note">Mode — always visible · toggling Manual→Auto prompts save or discard</div>
+  <div class="mode-sep"></div>
+  <div class="toggle-pill"><div class="toggle-opt on">Table</div><div class="toggle-opt off">Cards</div></div>
+  <div class="mode-note">Fund list view</div>
+  <div class="mode-sep"></div>
+  <div class="toggle-pill"><div class="toggle-opt on">All accounts</div><div class="toggle-opt off">Select accounts</div></div>
+  <div class="mode-note">Account scope — defaults all · funds grouped by account below</div>
+</div>
+
+<!-- SHARED SUMMARY HEADER (both modes) -->
+<div class="card teal" style="margin-bottom:8px;">
+  <div class="card-head">
+    <div class="card-title">Summary header — common to both modes</div>
+    <div class="card-sub">Appears at top of screen at all times · first-time coach mark overlay on initial session</div>
+  </div>
+  <div class="card-body">
+    <div class="grid3">
+
+      <div class="block">
+        <div class="block-label">Sale amount</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input — Auto only</span> Total dollar amount field (user-entered target)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only — Manual</span> Running total derived live from per-fund entries</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> % of selected accounts' total value</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Shortfall / overage vs. target (Manual mode)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Soft alert if amount &gt;10% of portfolio</div></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Tax assumptions</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Active rates: 24% ST / 15% LT</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Link</span> "Change" → income bracket dropdown (income range → rates implied)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> YTD realized: ST $1,245 / LT $8,750</div></div>
+          <div class="item"><div class="item-dot"></div><div>Bracket selection persists across sessions</div></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Running totals (live)</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gains · LT gains · Losses harvested</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Estimated total tax · Effective tax rate</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Portfolio allocation impact indicator: Improved / Regressed / Neutral</div></div>
+          <div class="item"><div class="item-dot"></div><div>Updates in real time as amounts change (both modes)</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- DUAL MODE FUND LIST -->
+<div class="stage2-grid">
+
+  <!-- ─── AUTO MODE ─── -->
+  <div>
+    <div class="card blue">
+      <div class="card-head">
+        <div class="card-title">Automated mode — fund list</div>
+        <div class="card-sub">System selects funds and amounts · all sell amounts locked · rationale provided</div>
+      </div>
+      <div class="card-body">
+
+        <div class="block">
+          <div class="block-label">Account group header (per account)</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Account name · type (Taxable / Trad. IRA / Roth IRA) · total balance · subtotal being sold from this account</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Fund rows (per fund within account)</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol (link) · Full fund name · Current balance · Target % · Actual % · Drift indicator (over / under / on target)</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Sell amount — system-filled, locked</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Tax method: Specific lot ID</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gain/loss · LT gain/loss · Est. tax for this fund</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Rationale for inclusion (plain-language, e.g. "Overweight — LT lots available")</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Expand</span> "Details ∨" → lot-level breakdown (read-only)</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">⚡ Wait &amp; Save</span> Inline notice if a selected lot is within 30 days of LT conversion — shows N days remaining + ~$X tax difference</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Harvestable loss flag if unrealized loss lot available but not selected</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Lot detail (expanded per fund)</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Lot ID · Acq. date · Shares · Cost basis · Current value · Gain/loss · ST / LT classification</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">⚡</span> Wait &amp; Save lot flagged with conversion date + tax savings estimate</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Flag</span> Harvestable loss lots identified</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Actions</div>
+          <div class="items">
+            <div class="item"><span class="badge b-act">Primary</span> Proceed → Order confirmation</div>
+            <div class="item"><span class="badge b-act">Secondary</span> Save as scenario → Scenario analysis</div>
+            <div class="item"><span class="badge b-act">Toggle</span> Switch to Manual mode — pre-populates per-fund amounts from this recommendation</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SWITCH COL ─── -->
+  <div class="switch-col">
+    <div class="sw-line" style="height:20px;"></div>
+    <div class="sw-label">Pre-populates amounts →</div>
+    <div style="font-size:16px;color:var(--text3);">⇄</div>
+    <div class="sw-label">← Resets to system rec.</div>
+    <div class="sw-line" style="height:20px;"></div>
+  </div>
+
+  <!-- ─── MANUAL MODE ─── -->
+  <div>
+    <div class="card purple">
+      <div class="card-head">
+        <div class="card-title">Manual mode — fund list</div>
+        <div class="card-sub">User enters per-fund sell amounts · total derived · real-time tax recalculation</div>
+      </div>
+      <div class="card-body">
+
+        <div class="block">
+          <div class="block-label">Account group header (per account)</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Account name · type · total balance · running subtotal entered for this account</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Fund rows (per fund within account)</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol · Full name · Current balance · Target % · Actual % · Drift indicator</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Sell amount — user-entered field (pre-filled from Auto if switching modes, otherwise blank)</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Accounting method selector per fund: FIFO / Average cost / Specific lot ID</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gain/loss · LT gain/loss · Est. tax — updates live as sell amount changes</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Expand</span> "Details ∨" → lot-level table with manual lot selection</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">⚡ Wait &amp; Save</span> Inline notice if entered amount would trigger sale of a near-LT lot</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Harvestable loss flag on eligible funds</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Lot detail (expanded per fund)</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Lot ID · Acq. date · Shares · Cost basis · Current value · Gain/loss · ST / LT</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Checkbox to include / exclude individual lots</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Action</span> Exclude lot from sale · Include lot and proceed</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">⚡</span> Wait &amp; Save lot flagged with conversion date + estimated tax savings</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Flag</span> Harvestable loss lots identified</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Actions</div>
+          <div class="items">
+            <div class="item"><span class="badge b-act">Primary</span> Proceed → Order confirmation</div>
+            <div class="item"><span class="badge b-act">Secondary</span> Save as scenario → Scenario analysis</div>
+          </div>
+          <div style="margin-top:6px;padding:8px 10px;background:var(--amber-bg);border:0.5px solid var(--amber-bdr);border-radius:6px;">
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--amber-txt);margin-bottom:5px;">Prompt — toggle Manual → Auto</div>
+            <div style="font-size:11px;color:var(--text);margin-bottom:6px;">If manual amounts have been entered, switching to Automated mode triggers: <em>"Save your changes as a scenario before switching?"</em></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+              <div style="padding:6px 8px;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:5px;">
+                <div style="font-size:10px;font-weight:600;color:var(--green-txt);margin-bottom:2px;">Save as scenario</div>
+                <div style="font-size:11px;color:var(--text2);">Preserves manual configuration as a saved scenario, then resets view to Auto recommendation</div>
+              </div>
+              <div style="padding:6px 8px;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:5px;">
+                <div style="font-size:10px;font-weight:600;color:var(--gray-txt);margin-bottom:2px;">Discard and reset</div>
+                <div style="font-size:11px;color:var(--text2);">Discards manual amounts without saving, resets to system recommendation</div>
+              </div>
+            </div>
+            <div style="font-size:10px;color:var(--text3);margin-top:5px;">If no manual amounts entered yet — toggle to Auto resets silently, no prompt shown</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- end stage2-grid -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     CONNECTOR 1 → 2 / 3
+     ══════════════════════════════════════════════════════════ -->
+<div class="connector" style="margin-top:8px;">
+  <div class="conn-line"></div>
+  <div class="conn-row">
+    <div class="conn-branch">
+      <div class="conn-arrow"></div>
+      <div class="conn-label">Proceed directly</div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;">or</div>
+    <div class="conn-branch">
+      <div class="conn-arrow" style="border-top-color:var(--amber-bdr);"></div>
+      <div class="conn-label" style="color:var(--amber-txt);">Save as scenario</div>
+    </div>
+  </div>
+  <div class="conn-line"></div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     STAGE 2 — SCENARIO ANALYSIS (optional)
+     ══════════════════════════════════════════════════════════ -->
+<div class="stage-label">Stage 2 — Scenario analysis <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional · activated by saving a scenario)</span></div>
+
+<div class="card amber dashed">
+  <div class="card-head">
+    <div class="card-title">Scenario analysis</div>
+    <div class="card-sub">Convergence point — no Auto/Manual mode distinction · up to 3 saved scenarios compared side by side · full allocation detail shown here, not in Fund Selection</div>
+  </div>
+  <div class="card-body">
+    <div class="grid2">
+
+      <div class="block">
+        <div class="block-label">Per-scenario column (up to 3)</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Scenario label (system default: "Scenario 1") · source mode (Automated / Manual)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Rename scenario label</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Accounts included · total sale amount</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund-by-fund: name · sell amount · tax method</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gains · LT gains · Losses harvested · Est. total tax · Effective tax rate</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Portfolio allocation: before → after → target (full bar chart breakdown — Domestic equity / Intl equity / Bonds / Reserves)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Optimization scoring: tax impact vs. FIFO baseline · drift improvement · account priority compliance</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Plain-language tradeoff summary (e.g., "Lowest tax impact but leaves bonds slightly underweight")</div></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Actions</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Primary</span> Select scenario → proceed to Order confirmation</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Secondary</span> Edit scenario → returns to Fund selection in the source mode (Auto or Manual)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Secondary</span> Add scenario (up to 3 total) → returns to Fund selection to configure</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Destructive</span> Delete scenario from comparison</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Nav</span> ← Back to Fund selection (active scenario preserved)</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="block-label">What differentiates Scenario Analysis from Fund Selection</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div>Fund Selection shows one configuration at a time · Scenario Analysis shows up to 3 side by side</div></div>
+          <div class="item"><div class="item-dot"></div><div>Portfolio allocation detail (before/after/target bar chart) lives here, not in Fund Selection</div></div>
+          <div class="item"><div class="item-dot"></div><div>Optimization scoring detail lives here, not in Fund Selection</div></div>
+          <div class="item"><div class="item-dot"></div><div>No mode toggle here — scenarios are mode-agnostic once saved</div></div>
+          <div class="item"><div class="item-dot"></div><div>Read-only view of saved snapshots — editing returns to Fund Selection</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     CONNECTOR 2 → 3
+     ══════════════════════════════════════════════════════════ -->
+<div class="connector">
+  <div class="conn-line"></div>
+  <div class="conn-arrow"></div>
+  <div class="conn-label">Selected scenario or direct proceed from Fund Selection</div>
+  <div class="conn-line"></div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     STAGE 3 — ORDER CONFIRMATION
+     ══════════════════════════════════════════════════════════ -->
+<div class="stage-label">Stage 3 — Order confirmation</div>
+
+<div class="card gray">
+  <div class="card-head">
+    <div class="card-title">Order confirmation</div>
+    <div class="card-sub">Final review · all content read-only · no new inputs · affirmative action required to submit</div>
+  </div>
+  <div class="card-body">
+    <div class="grid2">
+
+      <div class="block">
+        <div class="block-label">Pre-execution summary (all read-only)</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Accounts included · funds to be sold · sell amounts</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Tax method per fund</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Estimated proceeds net of projected tax</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Destination: settlement fund (Brokerage ·4782)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Estimated settlement: 1–2 business days</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Final tax advisory notice (Federal rates only · consult tax professional)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Any unresolved Wait &amp; Save opportunities still present in the order</div></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Actions</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Primary</span> Submit order — affirmative action required (not passive continuation)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Secondary</span> Cancel → returns to previous screen (Fund Selection or Scenario Analysis) · all selections and mode preserved · no data lost</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     CONNECTOR 3 → 4
+     ══════════════════════════════════════════════════════════ -->
+<div class="connector">
+  <div class="conn-line"></div>
+  <div class="conn-arrow"></div>
+  <div class="conn-label">Order submitted</div>
+  <div class="conn-line"></div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     STAGE 4 — EXECUTION SUMMARY
+     ══════════════════════════════════════════════════════════ -->
+<div class="stage-label">Stage 4 — Execution summary</div>
+
+<div class="card teal">
+  <div class="card-head">
+    <div class="card-title">Execution summary</div>
+    <div class="card-sub">Post-submission confirmation · all content read-only · session complete</div>
+  </div>
+  <div class="card-body">
+
+    <!-- Element 1: Success banner -->
+    <div class="block">
+      <div class="block-label">1 — Order submitted banner</div>
+      <div class="items">
+        <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Full-width green success banner: "Order submitted successfully" with transaction confirmation number and plain-language summary ("Your sell order has been placed and is being processed")</div></div>
+        <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Estimated settlement date · destination settlement fund</div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Element 2 + 3 side by side -->
+    <div class="grid2">
+
+      <!-- Element 2: Tax Summary -->
+      <div class="block">
+        <div class="block-label">2 — Tax summary</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> "You saved $X compared to selling without optimization" — optimization value headline</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST capital gains realized</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> LT capital gains realized</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Losses harvested (if any)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Net taxable gain</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Federal tax (estimated)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Est. total tax · effective tax rate</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Note</span> State tax is out of scope for v1 — federal rates only per REQ-G-007</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Compliance</span> "Estimated" label required on all tax figures per REQ-EC-001</div></div>
+        </div>
+      </div>
+
+      <!-- Element 3: Portfolio Rebalancing Impact -->
+      <div class="block">
+        <div class="block-label">3 — Portfolio rebalancing impact</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Before → After allocation per asset class (Domestic equity · Intl equity · Bonds · Reserves)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Simplified format — before/after only, no target bars (full bar chart is in Scenario Analysis)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Updated portfolio total value post-sale (from localStorage per REQ-PS-001)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Updated YTD realized gains position (per REQ-PS-003)</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Element 4: What Happens Next -->
+    <div class="block">
+      <div class="block-label">4 — What happens next</div>
+      <div class="items">
+        <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Sequential step timeline — 4 steps with labels and plain-language descriptions:</div></div>
+        <div class="item"><div class="item-dot"></div><div style="padding-left:8px;">① Order submitted — sell order placed and confirmed</div></div>
+        <div class="item"><div class="item-dot"></div><div style="padding-left:8px;">② Execution at NAV — trades execute at next available NAV pricing</div></div>
+        <div class="item"><div class="item-dot"></div><div style="padding-left:8px;">③ Settlement — proceeds settle in 1–2 business days to settlement fund</div></div>
+        <div class="item"><div class="item-dot"></div><div style="padding-left:8px;">④ Tax lot update — lot records updated for tax year</div></div>
+        <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Step 1 shown as active/complete · steps 2–4 shown as pending</div></div>
+        <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Note</span> Withdrawal of proceeds to external bank is a separate downstream action — not part of this workflow</div></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Element 5 + Actions -->
+    <div class="grid2">
+
+      <!-- Element 5: Download PDF -->
+      <div class="block">
+        <div class="block-label">5 — Download confirmation</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Action</span> Download confirmation PDF — generates client-side PDF containing: confirmation number, funds sold, amounts, tax methods, tax summary, allocation impact, and timestamp</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Compliance</span> PDF must include the same "estimated figures" disclaimer as the screen per REQ-PS-007 · requires compliance review before implementation</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Note</span> PDF is not an authoritative financial record — disclaimer required per REQ-PS-007</div></div>
+        </div>
+      </div>
+
+      <!-- Navigation actions -->
+      <div class="block">
+        <div class="block-label">Navigation actions</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Primary</span> Start a new sale</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Link</span> View order in Activity / Order status</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Link</span> View transaction history (if prior transactions in localStorage per REQ-PS-006)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Link</span> Return to Portfolio / Balances</div></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<div style="margin-top:20px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--bdr);border-radius:6px;">
+  <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px;">Out of scope — noted for future consideration</div>
+  <div style="font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:3px;">
+    <div>· External account context — launching tool from Portfolio/Balances page with a pre-selected account</div>
+    <div>· Withdrawal of proceeds from settlement fund to external bank (separate transaction)</div>
+    <div>· RMD-aware account ordering (future enhancement to account priority logic)</div>
+  </div>
+</div>
+
+</body>
+</html>
