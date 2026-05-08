@@ -156,9 +156,9 @@ the reference screenshots. Address these in the next Claude Code session.
 - Utility icon SVGs — real SVG paths applied manually to Global Header. Placeholder ellipses removed.
 - `Modal/Dialog` — exists on page 7, id 69:2.
 - `Pill/Time Range Selector` — exists on page 5, id 9:18, key `46a72c8c499ae9dca74984d3192349c1db1eebb2`.
-- `Controls/Mode Toggle` — added 2026-05-08, page 5, key `8f380b07dde64440fa2e44a88207666b09e0e9e2`.
-  Variants: `Active=Automated`, `Active=Manual`. 36px height, 100px radius pill.
-- `Controls/View Toggle` — added 2026-05-08, page 5, key `3eb7dca7ea5bb2f6d92cb219b372e38eb0ada06e`.
+- `Controls/Mode Toggle` — added 2026-05-08, page 5, key `0478687d973b6f21d547c9c5a0458fd5c7275ec9`.
+  Variants: `Active=Automated`, `Active=Manual`. 36px height, 100px radius pill, 12px L/R segment padding, HUG width.
+- `Controls/View Toggle` — added 2026-05-08, page 5, key `0dbb25b284d4ee4ce5f9bad1a1fd370478ab9900`.
   Variants: `Active=Table`, `Active=Cards`. Same spec as Mode Toggle.
 - `Table/Fund Row` — rebuilt 2026-05-08, page 7, key `5988d1156d6ee2c4df03443f15753ec4ca60cc58`.
   Columns: Symbol+Name (216px), Price (88px), $ Unrealized G/L (140px), % Unrealized G/L (100px),
