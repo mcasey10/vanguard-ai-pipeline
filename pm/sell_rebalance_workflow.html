@@ -1,9 +1,9 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sell &amp; Rebalance — Workflow</title>
+<title>Sell &amp; Rebalance — Proposed Workflow v3</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -120,7 +120,7 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
 </head>
 <body>
 
-<h1>Sell &amp; Rebalance — workflow</h1>
+<h1>Sell &amp; Rebalance — Proposed workflow v3</h1>
 <p class="sub">5-stage model · inputs merged into Fund Selection · funds grouped by account · Auto/Manual mode toggle · inputs vs. read-only · available actions per state</p>
 
 <div class="tab-strip">
@@ -290,15 +290,38 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
         <div class="divider"></div>
 
         <div class="block">
-          <div class="block-label">Fund rows (per fund within account)</div>
+          <div class="block-label">Fund rows — all funds in selected accounts shown</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div>All funds held in the selected accounts are displayed — not just funds included in the Automated recommendation. Each fund row has two states: inactive and active.</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Fund row — inactive state (default for non-recommended funds)</div>
           <div class="items">
             <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol · Full name · Current balance · Target % · Actual % · Drift indicator</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Sell amount — user-entered field (pre-filled from Auto if switching modes, otherwise blank)</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Accounting method selector per fund: FIFO / Average cost / Specific lot ID</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gain/loss · LT gain/loss · Est. tax — updates live as sell amount changes</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> No sell amount field · no method selector · no tax figures shown</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Action</span> "Sell" button — activates the row, reveals sell amount input and method selector</div></div>
+            <div class="item"><div class="item-dot"></div><div>Funds NOT included in the Automated recommendation default to inactive when entering Manual mode</div></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="block">
+          <div class="block-label">Fund row — active state (default for Automated-recommended funds)</div>
+          <div class="items">
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol · Full name · Current balance · Target % · Actual % · Drift indicator</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Sell amount — user-entered field (pre-filled from Automated recommendation if fund was included; blank if user-activated)</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Accounting method selector: FIFO / Average cost / Specific lot ID</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gain/loss · LT gain/loss · Est. tax · Drift — update live as sell amount changes</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Expand</span> "Details ∨" → lot-level table with manual lot selection</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Action</span> "Cancel" button — deactivates the row, removes from sale, clears entered amount</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">⚡ Wait &amp; Save</span> Inline notice if entered amount would trigger sale of a near-LT lot</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Harvestable loss flag on eligible funds</div></div>
+            <div class="item"><div class="item-dot"></div><div>Funds included in the Automated recommendation default to active when entering Manual mode — pre-populated with recommended amounts</div></div>
           </div>
         </div>
 
