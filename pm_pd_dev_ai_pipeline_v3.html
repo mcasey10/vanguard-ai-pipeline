@@ -110,17 +110,11 @@
       border-color: var(--used-bdr);
     }
     .chip-skipped {
-      background: var(--t2-bg);
-      color: var(--t2-txt);
-      border-color: var(--t2-bdr);
-      text-decoration: line-through;
-      text-decoration-color: var(--t2-txt);
-      cursor: help;
-    }
-    .chip-pending {
       background: var(--skipped-bg);
       color: var(--skipped-txt);
       border-color: var(--skipped-bdr);
+      text-decoration: line-through;
+      text-decoration-color: var(--skipped-txt);
       cursor: help;
     }
     .chip-used { cursor: help; }
@@ -306,7 +300,7 @@
 <body>
 
   <h1>PM / PD / Dev — AI pipeline by role</h1>
-  <p class="subtitle">Phases, tools used, tools evaluated and skipped — Vanguard Sell &amp; Rebalance project · Updated May 2026 — Structure and Skeleton steps added to PD phase</p>
+  <p class="subtitle">Phases, tools used, tools evaluated and skipped — Vanguard Sell &amp; Rebalance project · April 2026</p>
 
   <div class="legend">
     <div class="leg-group"><span class="tag t1">T1</span><span class="leg-label">chat</span></div>
@@ -323,11 +317,7 @@
     </div>
     <div class="sk-item">
       <span class="chip chip-skipped" style="pointer-events:none;cursor:default;text-decoration:none">Tool name</span>
-      evaluated, tested, not selected — hover for reason
-    </div>
-    <div class="sk-item">
-      <span class="chip chip-pending" style="pointer-events:none;cursor:default">Tool name</span>
-      not started / not applicable — hover for context
+      evaluated / skipped — hover for reason
     </div>
   </div>
 
@@ -404,7 +394,7 @@
         <div class="step-num pm-num">4</div>
         <div class="step-main">
           <div class="step-title">PRD + conversational design requirements</div>
-          <div class="step-desc">Full PRD compiled in Notion via MCP: problem statement, success metrics, user research, PM decisions log, user journeys, functional requirements (REQ-numbered, REVIEW-flagged), non-functional requirements, open design questions, logical data model. Conversational design requirements added as page 11 covering voice/tone framework, dialogue flows, AI opt-out design, and feedback loops.</div>
+          <div class="step-desc">Full PRD compiled in Notion via MCP: problem statement, success metrics, user research, PM decisions log, user journeys, functional requirements (REQ-numbered, REVIEW-flagged), non-functional requirements, open design questions, logical data model. Conversational design requirements covering voice/tone framework, dialogue flows, AI opt-out design, and feedback loops.</div>
         </div>
       </div>
       <div class="step-footer">
@@ -416,7 +406,7 @@
         <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Jira MCP<span class="tip">T4 agentic — all 69 Jira issues (7 epics, 28 stories, 28 compliance review tasks) created programmatically via Atlassian Rovo MCP in a dedicated Claude.ai thread. Issues were read from Notion page 09 and pushed to Jira VSR project in three batches with confirmation at each stage.</span></span>
+          <span class="chip chip-used">Jira MCP<span class="tip">T4 agentic — all 69 Jira issues (7 epics, 28 stories, 28 compliance review tasks) created programmatically via Atlassian Rovo MCP in a dedicated Claude.ai thread. Issues were read from the PRD and pushed to Jira VSR project in three batches with confirmation at each stage.</span></span>
           <span class="chip chip-skipped">Linear MCP<span class="tip">Alternative to Jira for ticket sync — not used. Project management was scoped to Jira for this phase. Linear integration would be appropriate for teams using Linear instead of Jira.</span></span>
         </div>
       </div>
@@ -427,7 +417,7 @@
         <div class="step-num pm-num">5</div>
         <div class="step-main">
           <div class="step-title">Sample data generation</div>
-          <div class="step-desc">Canonical synthetic dataset generated from lot-level transactions bottom-up — 32 lots across 6 funds and 3 accounts, $849,851.40 total portfolio value. All 15 sample data coverage cases from the logical data model exercised simultaneously. Arithmetic verified by automated Python script. Hosted in GitHub and compiled in Notion (page 10).</div>
+          <div class="step-desc">Canonical synthetic dataset generated from lot-level transactions bottom-up — 32 lots across 6 funds and 3 accounts, $849,851.40 total portfolio value. All 15 sample data coverage cases from the logical data model exercised simultaneously. Arithmetic verified by automated Python script. Hosted in GitHub and compiled in the PRD.</div>
         </div>
       </div>
       <div class="step-footer">
@@ -435,7 +425,7 @@
         <div class="tools-row">
           <span class="chip chip-used">Claude.ai<span class="tip">Generated 32 lots across 6 funds and 3 accounts totaling $849,851.40, starting from individual lot-level transactions and computing all aggregates bottom-up. All 15 sample data coverage cases exercised simultaneously in a single coherent investor profile.</span></span>
           <span class="chip chip-used">GitHub<span class="tip">Sample dataset committed to mcasey10/vanguard-logic-validation as the canonical input file for both the logic validation prototype and eventual Dev phase unit tests.</span></span>
-          <span class="chip chip-used">Notion MCP<span class="tip">Sample dataset documented as Notion page 10 with all five verification tables, special condition flags, and the 15-case coverage map — cross-referenced from the logical data model page (07b).</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Sample dataset documented in the PRD with all five verification tables, special condition flags, and the 15-case coverage map — cross-referenced from the logical data model in the PRD.</span></span>
         </div>
       </div>
     </div>
@@ -461,15 +451,15 @@
     <div class="handoff">
       <div class="handoff-lbl">PM → PD handoff artifacts</div>
       <div class="handoff-items">
-        <span class="handoff-item">PRD (Notion, 12 pages)</span>
+        <span class="handoff-item">PRD (Notion)</span>
         <span class="handoff-item">User journey maps</span>
-        <span class="handoff-item">Logical data model (14 entities)</span>
+        <span class="handoff-item">Logical data model</span>
         <span class="handoff-item">Conversational design requirements</span>
         <span class="handoff-item">Sample dataset (JSON)</span>
         <span class="handoff-item">Logic validation prototype (Lovable)</span>
-        <span class="handoff-item">Jira backlog (VSR-1 to VSR-74)</span>
+        <span class="handoff-item">Jira backlog (VSR project)</span>
         <span class="handoff-item">Visual research artifacts (GitHub Pages)</span>
-        <span class="handoff-item">localStorage persistence spec (REQ-PS-001–007)</span>
+        <span class="handoff-item">localStorage persistence spec</span>
         <span class="handoff-item">Success metrics</span>
       </div>
     </div>
@@ -482,13 +472,12 @@
     <div class="phase-inputs">
       <div class="phase-inputs-lbl">Inputs for this phase</div>
       <div class="phase-inputs-items">
-        <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace (14 pages)</a>
+        <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace</a>
         <a class="input-item" href="https://mcasey10.github.io/vanguard-ai-pipeline/pm/contextual_segment_map.html" target="_blank">Contextual segment map</a>
         <a class="input-item" href="https://mcasey10.github.io/vanguard-ai-pipeline/pm/hmw_design_brief.html" target="_blank">HMW design brief</a>
-        <a class="input-item" href="https://mcasey10.github.io/vanguard-ai-pipeline/pm/sell_rebalance_workflow.html" target="_blank">Workflow diagram (canonical)</a>
         <span class="input-item">Lovable logic validation prototype</span>
-        <span class="input-item">Sample dataset JSON (page 10)</span>
-        <span class="input-item">Jira backlog VSR-1 to VSR-81</span>
+        <span class="input-item">Sample dataset JSON</span>
+        <span class="input-item">Jira backlog (VSR project)</span>
       </div>
     </div>
 
@@ -497,14 +486,13 @@
         <div class="step-num pd-num">1</div>
         <div class="step-main">
           <div class="step-title">Tier 1 open design questions resolution</div>
-          <div class="step-desc">Resolve all Tier 1 open questions from page 07 before any structural or visual design work begins. These are architectural decisions that constrain everything downstream. Resolutions documented in Notion page 13 (PD decisions log) and PM decisions log page 03. Gate: all Tier 1 questions resolved and documented.</div>
+          <div class="step-desc">Before any screen design begins, the five Tier 1 open design questions from the PRD must be resolved. These are architectural decisions that constrain screen design: how to communicate silent optimization integration, the balance-prioritized alternative interaction model, graceful degradation to tax-only mode, the return-to-recommendation control transition, and the Workflow B entry model.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t1">T1</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude.ai<span class="tip">Primary tool for Tier 1 resolution. Each question worked through against the PRD, functional requirements, and workflow diagram. Resolutions written to Notion page 13 via Notion MCP.</span></span>
-          <span class="chip chip-used">Notion MCP<span class="tip">Decisions recorded to Notion page 13 incrementally as each Tier 1 question is resolved.</span></span>
+          <span class="chip chip-skipped">Claude.ai<span class="tip">PD phase not yet started. Tool assignments are planned, not confirmed.</span></span>
         </div>
       </div>
     </div>
@@ -514,19 +502,19 @@
         <div class="step-num pd-num">2</div>
         <div class="step-main">
           <div class="step-title">Design system extraction</div>
-          <div class="step-desc">Document Vanguard design tokens from the existing portal via DevTools inspection and reference screenshots. Build a token reference for use in Figma and as prompt input for screen generation. Claude Code + Figma MCP scaffold the component library from extracted tokens. Reference screenshots are required alongside DevTools output — CSS extraction alone produces incorrect values for several components. Gate: design system validated against reference screenshots.</div>
+          <div class="step-desc">Document Vanguard design tokens from the existing portal via DevTools inspection. Build a token reference for Figma Make prompts. Claude Code + Figma MCP can scaffold the library automatically from the extracted tokens.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t1">T1</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude.ai<span class="tip">Token extraction, gap analysis between DevTools output and reference screenshots, and correction of inferred values. Produces the design system specification used as prompt input in step 5.</span></span>
+          <span class="chip chip-skipped">Claude.ai<span class="tip">PD phase not yet started.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude Code<span class="tip">Scaffolds the Figma component library from extracted design tokens via Figma MCP. Generates native Figma Design frames directly — more reliable than Figma Make for systematic component creation from token specs.</span></span>
-          <span class="chip chip-used">Figma MCP<span class="tip">Enables Claude Code to write native Figma Design frames directly into the Design System file. Accumulates frames rather than regenerating per prompt.</span></span>
+          <span class="chip chip-skipped">Claude Code<span class="tip">PD phase not yet started.</span></span>
+          <span class="chip chip-skipped">Figma MCP<span class="tip">PD phase not yet started.</span></span>
         </div>
       </div>
     </div>
@@ -535,15 +523,16 @@
       <div class="step-head">
         <div class="step-num pd-num">3</div>
         <div class="step-main">
-          <div class="step-title">Information architecture + screen inventory</div>
-          <div class="step-desc">Produce a structured screen inventory covering every distinct screen and state in the workflow — inputs, outputs, navigation paths, and the user decision each screen supports. Makes scope explicit and surfaces undocumented states before layout work begins. Gate: inventory reviewed against functional requirements and workflow diagram with no undocumented states.</div>
+          <div class="step-title">Screen generation + data visualization planning</div>
+          <div class="step-desc">PRD, journey maps, and conversational design requirements become structured prompt inputs. Lovable prototype screenshots serve as visual fidelity reference for data-dense layouts. Build all screens before wiring. Data visualizations must be explicitly prompted — three features require deliberate chart design: the scenario comparison view (Tier 1 open question Q8), the allocation drift indicator in Workflow B, and the progressive disclosure of optimization scoring. Figma Make will not generate these automatically without specific prompts specifying chart type, data dimensions, and segment-aware reading order.</div>
         </div>
       </div>
       <div class="step-footer">
-        <span class="tag t1">T1</span><span class="sep"></span>
+        <span class="tag t2">T2</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude.ai<span class="tip">Generates the screen inventory as a structured list from the PRD, user journeys, and workflow diagram. Gaps between the inventory and the PRD are surfaced for resolution before wireframing begins.</span></span>
-          <span class="chip chip-pending">Whimsical<span class="tip">AI-assisted site map and screen inventory diagram — translates the structured list into a visual map showing screen relationships and navigation paths.</span></span>
+          <span class="chip chip-skipped">Figma Make<span class="tip">PD phase not yet started. Primary planned tool for screen generation. Requires explicit visualization prompts for the three data-heavy components — will not auto-generate charts from PRD text alone.</span></span>
+          <span class="chip chip-skipped">Galileo AI<span class="tip">Alternate screen generation tool — evaluation planned. Strong for component-level generation from text descriptions.</span></span>
+          <span class="chip chip-skipped">Framer AI<span class="tip">Strong for interaction-rich prototypes — evaluation planned for the wiring phase.</span></span>
         </div>
       </div>
     </div>
@@ -552,25 +541,15 @@
       <div class="step-head">
         <div class="step-num pd-num">4</div>
         <div class="step-main">
-          <div class="step-title">Low-fidelity wireframes (Skeleton phase)</div>
-          <div class="step-desc">Annotated wireframes for every screen in the inventory — grayscale, no brand styling, focused on layout zones, content hierarchy, and interaction patterns. Structural decisions made here are cheap to revise; the same decisions made during high-fidelity work are not. Gate: wireframes reviewed against screen inventory and functional requirements.</div>
+          <div class="step-title">Interaction wiring + micro-interactions</div>
+          <div class="step-desc">Wire flows as a separate pass after all screens exist. Coach marks, tooltips, dropdowns, overlays, and the Wait &amp; Save interrupt added via targeted prompts. Conversational design requirements (PRD) govern all system language at this stage.</div>
         </div>
       </div>
       <div class="step-footer">
-        <span class="tag t1">T1</span><span class="sep"></span>
-        <div class="tools-row">
-          <span class="chip chip-pending">Claude.ai<span class="tip">Generates wireframe annotations and layout specifications from the screen inventory and functional requirements — structured descriptions of each layout zone, content hierarchy, and interaction pattern used as prompts for wireframe generation tools.</span></span>
-        </div>
-        <span class="sep"></span>
         <span class="tag t2">T2</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Relume<span class="tip">AI-assisted wireframe generation from text descriptions — strong for content-heavy layouts including data tables, dashboards, and multi-state components.</span></span>
-          <span class="chip chip-pending">Balsamiq<span class="tip">Purpose-built low-fidelity wireframing. Its deliberately rough visual treatment keeps reviewers focused on structure rather than aesthetics.</span></span>
-        </div>
-        <span class="sep"></span>
-        <span class="tag t3">T3</span><span class="sep"></span>
-        <div class="tools-row">
-          <span class="chip chip-pending">v0 by Vercel<span class="tip">Describe a screen in plain language and get a functional unstyled React layout — makes the information architecture tangible and testable without a design system dependency. Output is structural validation, not production code.</span></span>
+          <span class="chip chip-skipped">Figma Make<span class="tip">PD phase not yet started.</span></span>
+          <span class="chip chip-skipped">Framer AI<span class="tip">PD phase not yet started.</span></span>
         </div>
       </div>
     </div>
@@ -579,54 +558,14 @@
       <div class="step-head">
         <div class="step-num pd-num">5</div>
         <div class="step-main">
-          <div class="step-title">Screen generation + data visualization</div>
-          <div class="step-desc">High-fidelity screen generation using wireframes and design system as inputs. PRD, journey maps, workflow diagram, wireframes, and conversational design requirements (page 11) become structured prompt inputs. Build all screens before wiring. Data visualizations require explicit prompts specifying chart type, data dimensions, and segment-aware reading order — they will not generate correctly from PRD text alone. Gate: all screens generated and reviewed against wireframes.</div>
-        </div>
-      </div>
-      <div class="step-footer">
-        <span class="tag t2">T2</span><span class="sep"></span>
-        <div class="tools-row">
-          <span class="chip chip-skipped">Figma Make<span class="tip">Evaluated for screen generation — generates React prototypes rather than native Figma frames, with each prompt creating a new version rather than accumulating screens. Replaced by Claude Code + Figma MCP for this step.</span></span>
-          <span class="chip chip-skipped">Galileo AI<span class="tip">Evaluated as alternate screen generation tool — not selected. Claude Code + Figma MCP retained as primary approach.</span></span>
-        </div>
-        <span class="sep"></span>
-        <span class="tag t4">T4</span><span class="sep"></span>
-        <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Planned primary tool for screen generation — same Claude Code + Figma MCP path used in step 2 for the design system, now applied to product screens. Wireframes and design system both required as inputs before this step begins.</span></span>
-          <span class="chip chip-pending">Figma MCP<span class="tip">Writes native Figma Design frames directly into the Screens file, referencing the published Design System library from step 2.</span></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num pd-num">6</div>
-        <div class="step-main">
-          <div class="step-title">Interaction wiring + micro-interactions</div>
-          <div class="step-desc">Wire flows as a separate pass after all screens exist. Coach marks, tooltips, dropdowns, overlays, and interrupt behaviors added via targeted prompts. Conversational design requirements (page 11) govern all system language at this stage.</div>
-        </div>
-      </div>
-      <div class="step-footer">
-        <span class="tag t2">T2</span><span class="sep"></span>
-        <div class="tools-row">
-          <span class="chip chip-pending">Figma Make<span class="tip">Planned for interaction wiring pass — separate from screen generation. Figma Make generates new React versions per prompt, better suited to iterative wiring than systematic screen generation.</span></span>
-          <span class="chip chip-pending">Framer AI<span class="tip">Strong candidate for this step — purpose-built for interaction-rich prototypes. Evaluate against Figma Make for the wiring pass.</span></span>
-        </div>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="step-head">
-        <div class="step-num pd-num">7</div>
-        <div class="step-main">
-          <div class="step-title">Design decisions documentation (Notion page 13)</div>
-          <div class="step-desc">All design decisions recorded throughout the PD phase in Notion page 13 — PD decisions log. Structured identically to the PM decisions log (page 03): what was decided, why, which open question or requirement it resolves, Figma frame link, and segments affected. Notion is the official handoff reference to Dev. Decisions recorded incrementally throughout the phase — not compiled at the end.</div>
+          <div class="step-title">Design decisions documentation (PDB — PD decisions log)</div>
+          <div class="step-desc">All design decisions recorded throughout the PD phase in the PDB decisions log. Structured identically to the PM decisions log: what was decided, why, which open question or requirement it resolves, Figma frame link, and segments affected. The PDB is the official handoff reference to Dev — no secondary markdown file needed. The Dev thread reads the PD decisions log via Notion MCP the same way the PD thread reads the user journeys, functional requirements, open design questions, and logical data model.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Notion MCP<span class="tip">Decisions recorded to Notion page 13 incrementally throughout the PD phase. Each Tier 1 resolution, screen decision, component decision, and data visualization decision gets its own entry as it is made.</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Decisions recorded to the PDB decisions log incrementally throughout the PD phase. Each Tier 1 resolution, screen decision, component decision, and data visualization decision gets its own entry as it is made.</span></span>
         </div>
       </div>
     </div>
@@ -634,13 +573,12 @@
     <div class="handoff">
       <div class="handoff-lbl">PD → Dev handoff artifacts (planned)</div>
       <div class="handoff-items">
-        <span class="handoff-item">Notion page 13 — PD decisions log</span>
-        <span class="handoff-item">Screen inventory (Notion or Whimsical)</span>
-        <span class="handoff-item">Annotated wireframes</span>
+        <span class="handoff-item">PDB — PD decisions log</span>
+        <span class="handoff-item">Figma Make prototype</span>
         <span class="handoff-item">Figma Design + Dev Mode</span>
         <span class="handoff-item">Component library</span>
-        <span class="handoff-item">Interaction spec (wired prototype)</span>
-        <span class="handoff-item">Data model (confirmed, page 07b)</span>
+        <span class="handoff-item">Interaction spec</span>
+        <span class="handoff-item">Logical data model (PRD)</span>
       </div>
     </div>
 
@@ -652,13 +590,12 @@
     <div class="phase-inputs">
       <div class="phase-inputs-lbl">Inputs for this phase</div>
       <div class="phase-inputs-items">
-        <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace (14 pages)</a>
-        <span class="input-item">Figma Design + Dev Mode (wired prototype)</span>
-        <span class="input-item">Screen inventory + annotated wireframes</span>
-        <span class="input-item">Notion page 13 — PD decisions log</span>
-        <span class="input-item">Sample dataset JSON (page 10)</span>
+        <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace</a>
+        <span class="input-item">Figma Make prototype</span>
+        <span class="input-item">PDB — PD decisions log</span>
+        <span class="input-item">Sample dataset JSON</span>
         <span class="input-item">Lovable reference implementation</span>
-        <span class="input-item">Jira backlog VSR-1 to VSR-81</span>
+        <span class="input-item">Jira backlog (VSR project)</span>
         <a class="input-item" href="https://github.com/mcasey10/vanguard-ai-pipeline" target="_blank">vanguard-ai-pipeline repo</a>
       </div>
     </div>
@@ -668,21 +605,21 @@
         <div class="step-num dev-num">1</div>
         <div class="step-main">
           <div class="step-title">Project scaffold + component generation</div>
-          <div class="step-desc">Generate app scaffold and translate Figma components to production code. The Lovable logic validation prototype serves as the reference implementation for the optimization engine. Claude Code handles multi-file agentic implementation reading from Notion page 13 (PD decisions log) and PRD via Notion MCP.</div>
+          <div class="step-desc">Generate app scaffold and translate Figma components to production code. The Lovable logic validation prototype serves as the reference implementation for the optimization engine. Claude Code handles multi-file agentic implementation reading from the PDB decisions log and PRD via Notion MCP.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t3">T3</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">v0 by Vercel<span class="tip">Reclassified — better suited to PD phase Skeleton step (step 4) than Dev phase scaffold. For the Dev phase, v0 may still be useful for translating finalized Figma component specs into production React components, but the exploratory structural use belongs in PD.</span></span>
-          <span class="chip chip-pending">Lovable<span class="tip">Used in PM phase for logic validation — may be revisited for initial app scaffold before Claude Code takes over for business logic.</span></span>
-          <span class="chip chip-pending">Replit<span class="tip">Full-stack application builder with database integration — worth evaluating for the initial scaffold, particularly if a hosted backend is needed from the start.</span></span>
-          <span class="chip chip-pending">Base44<span class="tip">Newer entrant in the code-forward tier — not yet evaluated. Worth including in the scaffold comparison experiment alongside Lovable and v0.</span></span>
+          <span class="chip chip-skipped">v0 by Vercel<span class="tip">Dev phase not yet started. Strong candidate for React component scaffold from Figma specs.</span></span>
+          <span class="chip chip-skipped">Lovable<span class="tip">Used in PM phase for logic validation — may be revisited for initial app scaffold before Claude Code takes over for business logic.</span></span>
+          <span class="chip chip-skipped">Replit<span class="tip">Full-stack application builder with database integration — worth evaluating for the initial scaffold, particularly if a hosted backend is needed from the start.</span></span>
+          <span class="chip chip-skipped">Base44<span class="tip">Newer entrant in the code-forward tier — not yet evaluated. Worth including in the scaffold comparison experiment alongside Lovable and v0.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started. Primary planned tool for agentic implementation.</span></span>
+          <span class="chip chip-skipped">Claude Code<span class="tip">Dev phase not yet started. Primary planned tool for agentic implementation.</span></span>
         </div>
       </div>
     </div>
@@ -692,14 +629,14 @@
         <div class="step-num dev-num">2</div>
         <div class="step-main">
           <div class="step-title">Data model + API layer</div>
-          <div class="step-desc">Implement the logical data model from page 07b. Build API routes, data fetching, and state management. The canonical sample dataset (page 10) drives unit test coverage from the first commit.</div>
+          <div class="step-desc">Implement the logical data model from the PRD. Build API routes, data fetching, and state management. The canonical sample dataset drives unit test coverage from the first commit.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started.</span></span>
-          <span class="chip chip-pending">Cursor<span class="tip">Dev phase not yet started. Alternative to Claude Code for multi-file agentic editing.</span></span>
+          <span class="chip chip-skipped">Claude Code<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-skipped">Cursor<span class="tip">Dev phase not yet started. Alternative to Claude Code for multi-file agentic editing.</span></span>
         </div>
       </div>
     </div>
@@ -731,7 +668,7 @@
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-skipped">Claude Code<span class="tip">Dev phase not yet started.</span></span>
         </div>
       </div>
     </div>
@@ -752,8 +689,8 @@
         <span class="sep"></span>
         <span class="tag t3">T3</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Vercel<span class="tip">Primary deployment target — deploy-on-push from GitHub, zero-config for Next.js/React applications. Free tier sufficient for portfolio project.</span></span>
-          <span class="chip chip-pending">Railway<span class="tip">Alternative to Vercel if a persistent backend (FastAPI, PostgreSQL) is needed alongside the React frontend.</span></span>
+          <span class="chip chip-skipped">Vercel<span class="tip">Primary deployment target — deploy-on-push from GitHub, zero-config for Next.js/React applications. Free tier sufficient for portfolio project.</span></span>
+          <span class="chip chip-skipped">Railway<span class="tip">Alternative to Vercel if a persistent backend (FastAPI, PostgreSQL) is needed alongside the React frontend.</span></span>
         </div>
       </div>
     </div>
@@ -769,14 +706,14 @@
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-skipped">Claude Code<span class="tip">Dev phase not yet started.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t5">T5 emerging</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">GitHub MCP<span class="tip">Dev phase not yet started.</span></span>
-          <span class="chip chip-pending">Slack MCP<span class="tip">Dev phase not yet started.</span></span>
-          <span class="chip chip-pending">n8n<span class="tip">Open-source workflow automation — can orchestrate cross-system pipelines connecting Jira, GitHub, Slack, and Notion in ways that go beyond individual MCP connections. Strong candidate for T5 orchestration in the Dev phase.</span></span>
+          <span class="chip chip-skipped">GitHub MCP<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-skipped">Slack MCP<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-skipped">n8n<span class="tip">Open-source workflow automation — can orchestrate cross-system pipelines connecting Jira, GitHub, Slack, and Notion in ways that go beyond individual MCP connections. Strong candidate for T5 orchestration in the Dev phase.</span></span>
         </div>
       </div>
     </div>

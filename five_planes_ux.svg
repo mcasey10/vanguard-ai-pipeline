@@ -1,0 +1,109 @@
+<svg width="680" height="520" viewBox="0 0 680 520" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>The five planes of UX design</title>
+<desc>An isometric stack of five colored planes labeled from bottom to top: Strategy (Why), Scope (What), Structure (How), Skeleton (Where), and Surface (Look and feel).</desc>
+<defs>
+<style>
+.label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; fill: #111111; }
+.sub { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 400; fill: #666666; }
+.arrow-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11px; font-weight: 400; fill: #666666; }
+</style>
+<marker id="arrowup" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+  <path d="M2 8L5 2L8 8" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+
+<!-- Background -->
+<rect width="680" height="520" fill="#ffffff"/>
+
+<!-- STRATEGY — amber -->
+<polygon points="230,440 390,400 510,440 350,480" fill="#F5C542" stroke="#C9991A" stroke-width="0.5"/>
+<polygon points="230,440 350,480 350,498 230,458" fill="#C9991A" stroke="#C9991A" stroke-width="0.5"/>
+<polygon points="350,480 510,440 510,458 350,498" fill="#DEB030" stroke="#C9991A" stroke-width="0.5"/>
+
+<!-- SCOPE — green -->
+<polygon points="230,382 390,342 510,382 350,422" fill="#4CAF50" stroke="#2E7D32" stroke-width="0.5"/>
+<polygon points="230,382 350,422 350,440 230,400" fill="#2E7D32" stroke="#2E7D32" stroke-width="0.5"/>
+<polygon points="350,422 510,382 510,400 350,440" fill="#388E3C" stroke="#2E7D32" stroke-width="0.5"/>
+
+<!-- STRUCTURE — red -->
+<polygon points="230,324 390,284 510,324 350,364" fill="#EF5350" stroke="#B71C1C" stroke-width="0.5"/>
+<polygon points="230,324 350,364 350,382 230,342" fill="#B71C1C" stroke="#B71C1C" stroke-width="0.5"/>
+<polygon points="350,364 510,324 510,342 350,382" fill="#C62828" stroke="#B71C1C" stroke-width="0.5"/>
+
+<!-- SKELETON — purple -->
+<polygon points="230,266 390,226 510,266 350,306" fill="#9C27B0" stroke="#6A1B9A" stroke-width="0.5"/>
+<polygon points="230,266 350,306 350,324 230,284" fill="#6A1B9A" stroke="#6A1B9A" stroke-width="0.5"/>
+<polygon points="350,306 510,266 510,284 350,324" fill="#7B1FA2" stroke="#6A1B9A" stroke-width="0.5"/>
+
+<!-- SURFACE — blue -->
+<polygon points="230,208 390,168 510,208 350,248" fill="#2196F3" stroke="#0D47A1" stroke-width="0.5"/>
+<polygon points="230,208 350,248 350,266 230,226" fill="#0D47A1" stroke="#0D47A1" stroke-width="0.5"/>
+<polygon points="350,248 510,208 510,226 350,266" fill="#1565C0" stroke="#0D47A1" stroke-width="0.5"/>
+
+<!-- Eye icon — Surface -->
+<g transform="translate(356,214)">
+  <ellipse cx="10" cy="10" rx="9" ry="6" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.3"/>
+  <circle cx="10" cy="10" r="3" fill="rgba(255,255,255,0.75)"/>
+</g>
+
+<!-- Layout icon — Skeleton -->
+<g transform="translate(352,274)">
+  <rect x="0" y="0" width="16" height="4" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <rect x="0" y="7" width="7" height="8" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <rect x="9" y="7" width="7" height="8" rx="1" fill="rgba(255,255,255,0.75)"/>
+</g>
+
+<!-- Sitemap icon — Structure -->
+<g transform="translate(352,332)">
+  <rect x="5" y="0" width="6" height="4" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <line x1="8" y1="4" x2="8" y2="7" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>
+  <line x1="3" y1="7" x2="13" y2="7" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>
+  <line x1="3" y1="7" x2="3" y2="10" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>
+  <line x1="8" y1="7" x2="8" y2="10" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>
+  <line x1="13" y1="7" x2="13" y2="10" stroke="rgba(255,255,255,0.75)" stroke-width="1.2"/>
+  <rect x="0" y="10" width="6" height="4" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <rect x="5" y="10" width="6" height="4" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <rect x="10" y="10" width="6" height="4" rx="1" fill="rgba(255,255,255,0.75)"/>
+</g>
+
+<!-- List icon — Scope -->
+<g transform="translate(352,390)">
+  <rect x="0" y="0" width="16" height="2" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <rect x="0" y="5" width="12" height="2" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <rect x="0" y="10" width="14" height="2" rx="1" fill="rgba(255,255,255,0.75)"/>
+  <rect x="0" y="15" width="10" height="2" rx="1" fill="rgba(255,255,255,0.75)"/>
+</g>
+
+<!-- Lightbulb icon — Strategy -->
+<g transform="translate(354,448)">
+  <path d="M6 0 C1 0 0 4 0 5 C0 8 2 9 3 11 L9 11 C10 9 12 8 12 5 C12 4 11 0 6 0Z" fill="rgba(255,255,255,0.75)"/>
+  <rect x="3" y="12" width="6" height="2" rx="1" fill="rgba(255,255,255,0.75)"/>
+</g>
+
+<!-- Labels left -->
+<text x="218" y="202" text-anchor="end" class="label">Surface</text>
+<text x="218" y="216" text-anchor="end" class="sub">Look and feel</text>
+<line x1="220" y1="208" x2="230" y2="208" stroke="#999" stroke-width="0.5"/>
+
+<text x="218" y="260" text-anchor="end" class="label">Skeleton</text>
+<text x="218" y="274" text-anchor="end" class="sub">Where</text>
+<line x1="220" y1="266" x2="230" y2="266" stroke="#999" stroke-width="0.5"/>
+
+<text x="218" y="318" text-anchor="end" class="label">Structure</text>
+<text x="218" y="332" text-anchor="end" class="sub">How</text>
+<line x1="220" y1="324" x2="230" y2="324" stroke="#999" stroke-width="0.5"/>
+
+<text x="218" y="376" text-anchor="end" class="label">Scope</text>
+<text x="218" y="390" text-anchor="end" class="sub">What</text>
+<line x1="220" y1="382" x2="230" y2="382" stroke="#999" stroke-width="0.5"/>
+
+<text x="218" y="434" text-anchor="end" class="label">Strategy</text>
+<text x="218" y="448" text-anchor="end" class="sub">Why</text>
+<line x1="220" y1="440" x2="230" y2="440" stroke="#999" stroke-width="0.5"/>
+
+<!-- Abstract to Concrete arrow -->
+<line x1="570" y1="468" x2="570" y2="188" stroke="#999" stroke-width="1" marker-end="url(#arrowup)"/>
+<text x="582" y="192" class="arrow-label">Concrete</text>
+<text x="582" y="472" class="arrow-label">Abstract</text>
+
+</svg>
