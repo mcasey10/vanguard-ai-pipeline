@@ -593,14 +593,16 @@
       <div class="step-head">
         <div class="step-num pd-num">6</div>
         <div class="step-main">
-          <div class="step-title">Wireframes</div>
-          <div class="step-desc">Produce annotated wireframes for every screen in the inventory. Wireframes specify layout zones, content hierarchy, component types, two-state behaviors, and interaction annotations. No Vanguard brand styling. Design system (step 2) and screen inventory (step 5) are both required inputs. Gate: all screens wireframed and reviewed against the inventory before high-fidelity work begins.</div>
+          <div class="step-title">Design system audit + gap report</div>
+          <div class="step-desc">Before screen generation begins, audit the Figma Design System file against the extraction spec (PDB 05) and the component requirements from the screen inventory (PDB 04). The audit identifies components to keep, correct, delete (invented during prior generation attempts), and add. Gate: gap report reviewed and approved before any screen generation starts. This prevents the pattern of CC inventing components it needs, which creates manual cleanup work.</div>
         </div>
       </div>
       <div class="step-footer">
-        <span class="tag t3">T3</span><span class="sep"></span>
+        <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">v0 by Vercel<span class="tip">Primary wireframing tool. Each screen described as a structured v0 prompt specifying layout zones, component types, and interaction patterns. Output is a functional unstyled React layout. Prompts written by Claude and executed in v0.</span></span>
+          <span class="chip chip-pending">Claude Code<span class="tip">Reads PDB 05 (design system spec) and PDB 04 (screen inventory) via Notion MCP, then audits the Figma Design System file via Figma MCP. Outputs a gap report. No changes to the Figma file until the gap report is approved.</span></span>
+          <span class="chip chip-pending">Figma MCP<span class="tip">Used read-only during audit to enumerate all components, color styles, and text styles in the Design System file. Used read-write after gap report approval to apply corrections and additions.</span></span>
+          <span class="chip chip-pending">Notion MCP<span class="tip">Reads PDB 05 and PDB 04. Gap report and correction log written to PDB 06.</span></span>
         </div>
       </div>
     </div>
@@ -609,21 +611,20 @@
       <div class="step-head">
         <div class="step-num pd-num">7</div>
         <div class="step-main">
-          <div class="step-title">Screen generation + data visualization</div>
-          <div class="step-desc">High-fidelity screen generation using wireframes and design system as inputs — both required before this step begins. PRD, user journey, workflow diagram, wireframes, and conversational design requirements become structured prompt inputs. Build all screens before wiring. Data visualizations require explicit prompts specifying chart type, data dimensions, and three-state display logic — they will not generate correctly from PRD text alone. Gate: all screens generated and reviewed against wireframes.</div>
+          <div class="step-title">Screen specifications + screen generation</div>
+          <div class="step-desc">Steps 6 (Wireframes) and 7 (Screen generation) are merged. The screen specification documents written as Claude Code / Figma MCP prompts — the specification is the wireframe. v0 wireframing was retired after structural exploration confirmed v0 cannot reference the Figma Design System file and produces annotation-heavy output unsuitable as a Figma handoff artifact. The Prototype B structural exploration already validated the progressive disclosure model and served the wireframe purpose for structural decisions. Claude Code reads from the screen inventory and PD decisions log and produces native Figma frames directly in the Screens file. Design system (step 2) and screen inventory (step 5) are both required inputs. Gate: all screens generated and reviewed against the screen inventory.</div>
         </div>
       </div>
       <div class="step-footer">
-        <span class="tag t2">T2</span><span class="sep"></span>
+        <span class="tag t3">T3</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-skipped">Figma Make<span class="tip">Evaluated for screen generation — generates React prototypes rather than native Figma frames, with each prompt creating a new version rather than accumulating screens. Replaced by Claude Code + Figma MCP for this step.</span></span>
-          <span class="chip chip-skipped">Galileo AI<span class="tip">Evaluated as alternate screen generation tool — not selected. Claude Code + Figma MCP retained as primary approach.</span></span>
+          <span class="chip chip-skipped">v0 by Vercel<span class="tip">Evaluated for wireframing — retired. v0 has no access to the Figma Design System file and renders specification prompts as annotation-heavy visual documents rather than clean structural layouts. Structural exploration (step 4, Prototype B) already served the wireframe purpose for structural decisions.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Primary tool for high-fidelity screen generation — same Claude Code + Figma MCP path used in step 2 for the design system, now applied to product screens. Wireframes and design system both required as inputs.</span></span>
-          <span class="chip chip-pending">Figma MCP<span class="tip">Writes native Figma Design frames directly into the Screens file, referencing the published Design System library from step 2.</span></span>
+          <span class="chip chip-pending">Claude Code<span class="tip">Primary tool for screen specification and generation. Reads screen inventory and PD decisions log via Notion MCP, writes native Figma Design frames directly via Figma MCP. Specification documents written in Claude.ai PD thread, executed in Claude Code sessions.</span></span>
+          <span class="chip chip-pending">Figma MCP<span class="tip">Writes native Figma Design frames into the Screens file (H06IX7e8BwKLU5wQHYpnS5), referencing the published Design System library (krtNgOD3jL5U6WmUMT32u6).</span></span>
         </div>
       </div>
     </div>
