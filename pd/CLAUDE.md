@@ -48,12 +48,12 @@ This is the rendered HTML design system document. It contains:
 - Rendered component examples (navigation, hero banner, buttons, forms, alerts, tables)
 - CSS implementation details for complex components (hero banner SVG, icon SVG paths)
 
-### Notion page 14 — supplementary specs and corrections
+### Notion page 13 — Design system (Constellation / c11n)
 ID: 341dcac9574a8171a21bc681ca4190ae
 Contains: corrected component specifications (Section 6), file architecture decisions,
 screen generation progress, and the gap between DevTools extraction and visual reality.
 
-### Notion page 13 — PD decisions log
+### PDB — 06 — PD decisions log
 ID: 340dcac9574a8141a170de6bc25d9750
 Contains: all design decisions made during PD phase, Tier 1 question resolutions,
 data visualization register (DV-1, DV-2, DV-3), portal shell framing decision.
