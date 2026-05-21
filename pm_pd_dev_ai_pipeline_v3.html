@@ -556,14 +556,14 @@
       <div class="step-head">
         <div class="step-num pd-num">4</div>
         <div class="step-main">
-          <div class="step-title">Structural exploration</div>
-          <div class="step-desc">Explore multiple structural models for how the user flow maps to an interface. Two v0 structural prototypes generated: Prototype A (two-workflow architecture) and Prototype B (progressive disclosure with Automated/Manual mode toggle). Structural prototypes are functional, unstyled React layouts — no brand colors, no design system. Gate: at least two structural alternatives produced and compared.</div>
+          <div class="step-title">Wireframing — structural exploration</div>
+          <div class="step-desc">Wireframing through structural exploration — two v0 structural prototypes generated to validate how the user flow maps to an interface. Prototype A (two-workflow architecture) and Prototype B (progressive disclosure with Automated/Manual mode toggle). Structural prototypes are functional, unstyled React layouts — no brand colors, no design system. The selection of Prototype B in step 5 serves as the wireframe decision that gates screen generation. Gate: at least two structural alternatives produced and compared.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t3">T3</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">v0 by Vercel<span class="tip">Primary tool for structural exploration. Each structural model described in plain language and rendered as a functional unstyled React layout. Prototype A: two-workflow architecture. Prototype B: progressive disclosure model. Output is structural validation — not production code.</span></span>
+          <span class="chip chip-used">v0 by Vercel<span class="tip">Primary wireframing tool for structural exploration. Each structural model described in plain language and rendered as a functional unstyled React layout. Prototype A: two-workflow architecture. Prototype B: progressive disclosure model. The Prototype B selection in step 5 is the wireframe decision that gates screen generation.</span></span>
         </div>
       </div>
     </div>
@@ -611,8 +611,8 @@
       <div class="step-head">
         <div class="step-num pd-num">7</div>
         <div class="step-main">
-          <div class="step-title">Screen specifications + screen generation</div>
-          <div class="step-desc">Steps 6 (Wireframes) and 7 (Screen generation) are merged. The screen specification documents written as Claude Code / Figma MCP prompts — the specification is the wireframe. v0 wireframing was retired after structural exploration confirmed v0 cannot reference the Figma Design System file and produces annotation-heavy output unsuitable as a Figma handoff artifact. The Prototype B structural exploration already validated the progressive disclosure model and served the wireframe purpose for structural decisions. Claude Code reads from the screen inventory and PD decisions log and produces native Figma frames directly in the Screens file. Design system (step 2) and screen inventory (step 5) are both required inputs. Gate: all screens generated and reviewed against the screen inventory.</div>
+          <div class="step-title">Screen generation</div>
+          <div class="step-desc">Claude Code reads from the PDB (screen inventory and PD decisions log) and references the design system library created in Figma to produce native Figma frames directly in the Screens file. Gate: complete screen inventory and required design system components.</div>
         </div>
       </div>
       <div class="step-footer">
