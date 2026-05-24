@@ -39,6 +39,9 @@ any Figma component, read the relevant screenshot(s) first.
 | buy-sell-agreement-terms.png | Buy/Sell agreement terms screen: terms text, confirm checkbox, Submit button |
 | buy-sell-agreement-prompt.png | Buy/Sell agreement prompt/modal: brief summary with Accept/Decline actions |
 | sell-fund-transaction.png | Vanguard mutual fund sell transaction screen: inactive fund rows with Sell button, active rows with amount input field and Cancel button, cost basis method selector per fund, running total at bottom. Reference for Manual mode fund row inactive/active states. |
+| Sell_specific_shares_of_fund.png | Lot selection screen for Specific ID cost basis: per-lot input fields for number of shares, LT and ST sections with totals, "Continue" and "Back" buttons |
+| Fund_Row_-_sell_specific_shares_of_fund.png | Fund row in SpecID mode after lot selection: read-only total shares to sell displayed, summarizing the lot-level selection |
+| choose-cost-basis-dialog.png | Cost basis method selection dialog: radio options for MinTax, HIFO, FIFO, Specific ID with descriptions, Continue/Cancel buttons |
 
 ### Visual design reference (secondary — rendered HTML document)
 https://mcasey10.github.io/vanguard-ai-pipeline/pd/vanguard-design-system.html
