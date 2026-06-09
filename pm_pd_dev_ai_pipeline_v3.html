@@ -159,6 +159,23 @@
     }
     .chip:hover .tip { display: block; }
 
+    .tag-h {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      border: 0.5px solid;
+      background: var(--t4-bg);
+      color: var(--t4-txt);
+      border-color: var(--t4-bdr);
+    }
+    .chip-human {
+      background: var(--used-bg);
+      color: var(--used-txt);
+      border-color: var(--used-bdr);
+      cursor: help;
+    }
     .sep {
       width: 0.5px;
       height: 12px;
@@ -314,6 +331,7 @@
     <div class="leg-group"><span class="tag t3">T3</span><span class="leg-label">code-forward</span></div>
     <div class="leg-group"><span class="tag t4">T4</span><span class="leg-label">agentic</span></div>
     <div class="leg-group"><span class="tag t5">T5</span><span class="leg-label">orchestrated</span></div>
+    <div class="leg-group"><span class="tag-h">H</span><span class="leg-label">human task</span></div>
   </div>
 
   <div class="status-key">
@@ -518,7 +536,7 @@
         <div class="step-num pd-num">2</div>
         <div class="step-main">
           <div class="step-title">Design system extraction</div>
-          <div class="step-desc">Document Vanguard design tokens from the existing portal via DevTools inspection and reference screenshots. Build a token reference for use in Figma and as prompt input for screen generation. Claude Code + Figma MCP scaffold the component library from extracted tokens. Reference screenshots are required alongside DevTools output — CSS extraction alone produces incorrect values for several components. Gate: design system validated against reference screenshots.</div>
+          <div class="step-desc">Document Vanguard design tokens from the existing portal via DevTools inspection and reference screenshots. Build a token reference for use in Figma and as prompt input for screen generation. Claude Code + Figma MCP scaffold the component library from extracted tokens. Reference screenshots are required alongside DevTools output — CSS extraction alone produces incorrect values for several components. Gate: design system validated against reference screenshots. <strong>Note:</strong> The Fund Row component and its sub-components (Details Row, Lot Details Table, Lot Detail Row, Lot Detail Header, Lot Detail Totals) required substantial manual Figma work after multiple CC-assisted attempts produced structurally incorrect results. CC was effective for initial scaffolding and targeted corrections; the complex multi-variant component architecture with nested component references exceeded what CC could reliably produce without regressions.</div>
         </div>
       </div>
       <div class="step-footer">
@@ -600,9 +618,9 @@
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Reads PDB 05 (design system spec) and PDB 04 (screen inventory) via Notion MCP, then audits the Figma Design System file via Figma MCP. Outputs a gap report. No changes to the Figma file until the gap report is approved.</span></span>
-          <span class="chip chip-pending">Figma MCP<span class="tip">Used read-only during audit to enumerate all components, color styles, and text styles in the Design System file. Used read-write after gap report approval to apply corrections and additions.</span></span>
-          <span class="chip chip-pending">Notion MCP<span class="tip">Reads PDB 05 and PDB 04. Gap report and correction log written to PDB 06.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Ran gap report audit reading PDB 05 and PDB 04 via Notion MCP and Figma DS file via Figma MCP. Produced four-category gap report (Keep/Correct/Delete/Missing). Multiple correction rounds applied. CC-assisted corrections required 9 rounds including several partial manual fixes for visual issues CC could not resolve reliably.</span></span>
+          <span class="chip chip-used">Figma MCP<span class="tip">Used read-only for audit enumeration and read-write for corrections. Manual Figma work was required for complex component architecture (Fund Row and sub-components) where CC-generated output had structural regressions.</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Reads PDB 05 and PDB 04. Gap report and 9-round correction log written to PDB 06.</span></span>
         </div>
       </div>
     </div>
@@ -612,7 +630,7 @@
         <div class="step-num pd-num">7</div>
         <div class="step-main">
           <div class="step-title">Screen generation</div>
-          <div class="step-desc">Claude Code reads from the PDB (screen inventory and PD decisions log) and references the design system library created in Figma to produce native Figma frames directly in the Screens file. Gate: complete screen inventory and required design system components.</div>
+          <div class="step-desc">Screen generation was divided between AI automation for general screen layout and independent human work to create the complex feature-specific components the screens depend on. Claude Code produced initial screen frames from the PDB screen inventory; the Fund Row component family required manual Figma construction after CC-assisted attempts produced structural regressions. Gate: complete screen inventory and required design system components.</div>
         </div>
       </div>
       <div class="step-footer">
@@ -621,10 +639,15 @@
           <span class="chip chip-skipped">v0 by Vercel<span class="tip">Evaluated for wireframing — retired. v0 has no access to the Figma Design System file and renders specification prompts as annotation-heavy visual documents rather than clean structural layouts. Structural exploration (step 4, Prototype B) already served the wireframe purpose for structural decisions.</span></span>
         </div>
         <span class="sep"></span>
+        <span class="tag-h">H</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-human">Figma<span class="tip">Manual Figma construction required for the Fund Row component family: Fund Row (3 variants: Automated/Active/Inactive), Details Row (Collapsed/Expanded), Lot Details Table (8 row-count variants), Lot Detail Row (4 variants: Wait & Save × GL direction), Lot Detail Header, Lot Detail Totals. These are feature-specific data table components whose column structure, variant logic, and nested component references exceeded reliable CC output. Multiple CC-assisted attempts produced structural regressions before manual construction was adopted.</span></span>
+        </div>
+        <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Primary tool for screen specification and generation. Reads screen inventory and PD decisions log via Notion MCP, writes native Figma Design frames directly via Figma MCP. Specification documents written in Claude.ai PD thread, executed in Claude Code sessions.</span></span>
-          <span class="chip chip-pending">Figma MCP<span class="tip">Writes native Figma Design frames into the Screens file (H06IX7e8BwKLU5wQHYpnS5), referencing the published Design System library (krtNgOD3jL5U6WmUMT32u6).</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Group A screens (FS-ENTRY-1, FS-AUTO-1, FS-MAN-1) generated across multiple sessions with iterative correction rounds. CC effective for initial frame creation and bulk data updates; manual Figma finishing required for structural corrections, component placement accuracy, and visual refinements. Full rebuild passes risk regressions — targeted manual edits preferred once a frame has solid structure.</span></span>
+          <span class="chip chip-used">Figma MCP<span class="tip">Writes native Figma Design frames into the Screens file (jz82GrOp8RE2QGh81V0qbs), referencing the published Design System library (krtNgOD3jL5U6WmUMT32u6). Note: original Screens file key (H06IX7e8BwKLU5wQHYpnS5) was an archived prior version — corrected mid-session.</span></span>
         </div>
       </div>
     </div>
