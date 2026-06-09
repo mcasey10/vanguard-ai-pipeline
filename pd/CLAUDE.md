@@ -70,242 +70,159 @@ data visualization register (DV-1, DV-2, DV-3), portal shell framing decision.
 
 **Always use krtNgOD3jL5U6WmUMT32u6 as the active Design System file.**
 
-## Design tokens — quick reference
-These are the most critical values. Verify against the HTML file for full detail.
+## Design System components — canonical inventory
+DS file: krtNgOD3jL5U6WmUMT32u6
+Screens file: jz82GrOp8RE2QGh81V0qbs
 
-### Colors
-- Primary text: #040505 (near-black, NOT pure black)
-- Secondary text: rgb(113,119,119) / #717777
-- Link blue: rgb(20,91,255) / #1255FF
-- Brand red: #C8102E (active tab indicators, error states)
-- Positive/gain: #007A00
-- Negative/loss: #C8102E
-- Warning amber: #E07000
-- Warning bg: #FFF8F0
-- Info teal bg: #E8F5F0
-- Chart equity/stocks: #2bbfb3
-- Chart bonds: #c8902a
+Use ONLY the component names listed below when placing instances in screens.
+Do not invent component names. Do not reference any component prefixed with NEW,
+v2, or v3 — those were workshop builds and have been superseded or deleted.
 
-### Typography (Inter substituting for FF Mark)
-- Page title: 30px/700
-- Hero title: 26px/700
-- Section heading: 16px/700
-- Body default: 14px/400
-- Nav items (all states): 14px/400 inactive, 14px/700 active
-- Table column headers: 12px/600, sentence case
-- Labels: 12px/400/#040505
-- Helper text: 11px/400/#555 italic
-- Timestamps/captions: 11px/400/#555
+### Page 4 — Navigation & Shell
+- Header/Global Header (COMPONENT_SET, variant: L1 Active Tab)
+- Nav/L2 Secondary Navigation
+- Hero/Greeting Banner
 
-### Shape
-- Button border-radius: 100px (pill) — ALL buttons
-- Card/input border-radius: 4px
-- Badge border-radius: 50% (circle)
+### Page 5 — Buttons & Controls
+- Button/Primary
+- Button/Secondary
+- Button/Ghost-Link
+- Pill/Time Range Selector
+- Heading/Page Title with Toggle (1440×56px, space-between: title left / mode toggle right)
+- Kebab/Three-dot Menu (COMPONENT_SET, variants: State=Default|Hover|Open)
+- Accordion/Row (COMPONENT_SET, variants: State=Collapsed|Expanded)
+- Controls/Mode Toggle (COMPONENT_SET, variants: Active=Automated|Manual)
+- Controls/View Toggle (COMPONENT_SET, variants: Active=Table|Cards)
 
-### Buttons
-- Primary: bg #040505, white text, 100px radius, 48px height, 11px/28px padding, weight 700
-- Secondary: white bg, #040505 border 1.5px, same geometry
-- Ghost/link: #1255CC, underline, no background
+### Page 6 — Form Inputs
+- Input/Text — Default
+- Input/Text — Focus
+- Input/Text — Error
+- Input/Select (COMPONENT_SET, variants: State=Closed|Open)
+- Checkbox (COMPONENT_SET, variants: State=Unchecked|Checked)
+- Input/Dollar Amount (COMPONENT_SET, variants: State=Default|Focused)
+  Component property: Current value (TEXT, default "$0.00")
+- Input/Share Amount (COMPONENT_SET, variants: State=Default|Focused)
+  Component property: Current value (TEXT, default "0.000")
+  Note: use Input/Share Amount for lot-level share quantity inputs, NOT Input/Dollar Amount
 
-### Navigation
-- L1 nav: active tab has BLACK 3px bottom border (#040505)
-- L2 nav: active tab has RED 2px bottom border (#C8102E) — NOT black
-- Header: two-row, ~100px total (Row 1: brand+icons 60px, Row 2: L1 nav 40px)
-- Utility icons: monochrome black SVG glyphs, ~24px, stacked above 11px label — SVG paths already applied manually
-- Messages badge: red dot only, NO count number
+### Page 7 — Data & Alerts
+- Alert/Portfolio Alert Panel
+- Banner/Info Teal
+- Alert/Warning Banner
+- Modal/Dialog
+- Chart/Stacked Bar
+- Summary Banner
+- Lot Detail Header (standalone — column header row for lot detail table)
+- Lot Detail Totals (standalone — totals row for lot detail table)
+- Lot Detail Row (COMPONENT_SET, 4 variants: Wait & Save=False|True × GL direction=Loss|Gain)
+  Component properties (all TEXT):
+    Shares owned · Total cost · Est gain/loss (per share) · Est proceeds · Date acquired
+- Lot Details Table (COMPONENT_SET, 8 variants: Row count=2–9)
+  Component properties (all BOOLEAN, default false):
+    Row 3 visible · Row 4 visible · Row 5 visible · Row 6 visible ·
+    Row 7 visible · Row 8 visible
+  IMPORTANT: When placing with Row count > 2, you must explicitly set each
+  additional row's visibility boolean to true. Row count=5 requires setting
+  Row 3 visible=true, Row 4 visible=true, Row 5 visible=true.
+- Details Row (COMPONENT_SET, variants: State=Collapsed|Expanded)
+  Component properties:
+    Details Text (TEXT, default "Fund row details message")
+    Show details text (BOOLEAN, default true)
+    Show LT details (BOOLEAN, default true)
+    Show ST details (BOOLEAN, default true)
+- Fund Row (COMPONENT_SET, variants: Mode=Automated|Active|Inactive)
+  Component properties (TEXT):
+    Fund name · Symbol · Shares · Balance · Sell amount · Method ·
+    EST ST Gains · EST LT Gains · EST Tax · Impact
+  Component properties (BOOLEAN):
+    Show details row (default true)
+    Sell amount read-only (default false) — set true when SpecID is selected;
+      hides input field, shows locked text value derived from lot selections
+    Sell amount input (default true) — set false when Sell amount read-only=true
 
-### Inputs
-- All inputs: square corners (0px border-radius via 4px card, but inputs specifically 4px)
-- Default border: 1px solid #767676
-- Focus border: 2px solid #1255CC
-- Error border: 2px solid #C8102E
-- Height: 48px
+## Fund Row usage rules
 
-### Content layout (at 1440px canvas)
-- Left content margin: 24-32px (NOT 159px — that was a viewport-specific extraction artifact)
-- Content max width: ~1296px
+Mode=Automated:
+  All sell amounts are read-only locked text. No input fields. No Cancel button.
+  Show details row=true when SpecID is the accounting method; false otherwise.
+  Sell amount read-only=true always in Automated mode.
 
-## Design System gap audit — items to address
-These gaps were identified by comparing the current Design System file against
-the reference screenshots. Address these in the next Claude Code session.
+Mode=Active (Manual mode, fund selected for selling):
+  Default: Sell amount input=true, Sell amount read-only=false (shows input field).
+  When SpecID selected: Sell amount read-only=true, Sell amount input=false
+    (input replaced by read-only total derived from lot-level share entries).
+    Show details row=true to reveal lot detail panel.
+  When any other method selected: Sell amount input=true, Show details row=false.
 
-### Completed / already resolved
-- `Nav/L2 Nav Bar` — deleted (was redundant). `Nav/L2 Secondary Navigation` with red underline is the canonical component.
-- Utility icon SVGs — real SVG paths applied manually to Global Header. Placeholder ellipses removed.
-
-### Components missing entirely
-- `Dropdown/Select — Open state` — the Holdings page dropdown with grouped
-  options (Cost basis, Unrealized gains/losses, etc.). Reference: dropdown-holdings-menu.png
-- `Table/Lot Detail Row` — the expanded lot-level row shown in data-table-unrealized-gains.png
-- `Modal/Dialog` — the account routing number dialog. Reference: dialog-modal.png
-- `Pill/Time Range Selector` — verify against performance-graphs.png
-
-### Known structural notes — do not flag as errors
-- `Hero/Greeting Banner` contains a child frame "Banner background 1" (1440×1440, absolute
-  positioned, layout: NONE). This is the manually imported swoosh SVG from the live Vanguard
-  portal. Its large native dimensions are expected — the SVG coordinate system requires this
-  height to preserve the curve shape. Do not resize, restructure, or delete this frame.
-  The parent component height of 132px is correct. Any further swoosh refinement requires
-  manual Figma pen tool editing and is out of scope for Claude Code sessions.
-- `Nav/L2 Secondary Navigation` — single canonical component on page 4 — Navigation & Shell
-  (node 6:2, key 1a562774…). HORIZONTAL auto-layout, 1440×48px fixed, 24px left/right padding,
-  24px item spacing, active indicator (113×2, #C8102E) absolute-positioned at x=598 y=46,
-  aligned to "Sell & Rebalance" tab. Do not move, duplicate, or restructure this component.
-
-### Components that need visual correction
-- `Table/Fund Row` — **known incorrect, must be rebuilt.** The current component
-  does not match the portal. Correct spec: fund symbol 14px/700/#1255CC with underline;
-  full fund name 11px/400/#555 uppercase below symbol; price column 14px/400;
-  gain/loss values with green ↑ or red ↓ arrow prefix; % gain column; current balance;
-  "Transact" ghost link; kebab dot button (3×15 ellipse). Reference: data-table-holdings.png.
-  Do not attempt to patch the existing component — replace it.
-- `Table/Column Header Row` — treat as a reusable structural template, not a
-  content prescription. Do not hardcode specific column labels — use placeholder
-  names (Column 1, Column 2, etc.) with correct typography (12px/600, sentence case).
-  Column labels and count are set at the screen level. Sort indicators must reflect
-  three states per column: unsorted (both arrows, muted), sorted ascending (up arrow
-  #040505, down arrow muted), sorted descending (down arrow #040505, up arrow muted).
-  Sort indicators must use filled SVG triangle vector nodes — NOT Unicode arrow
-  characters or text glyphs. Up triangle: 6px wide × 4px tall. Down triangle: same
-  dimensions, inverted. Active fill: #040505. Muted fill: #B0B0B0. The two triangles
-  stack vertically with 2px gap between them.
-  Reference: data-table-holdings.png.
-
-### Prompt to use in Claude Code for the gap audit
-```
-Read pd/CLAUDE.md. Then read each reference screenshot in pd/reference-screenshots/
-one at a time and compare what you see against the current components in the
-Design System file (krtNgOD3jL5U6WmUMT32u6).
-
-For each component that exists in the screenshots but is missing from the file,
-or that visually differs significantly from the screenshot, document the gap.
-Pay particular attention to Table/Fund Row — this component is a known rebuild
-target and should be flagged as incorrect regardless of superficial similarity.
-
-Do not make any changes yet. Output a gap report organized by page
-(Navigation & Shell, Buttons & Controls, Form Inputs, Data & Alerts)
-showing: component name, gap type (missing / incorrect / needs verification),
-and the specific reference screenshot to use for correction.
-
-Wait for my confirmation before making any changes.
-```
-
-### Remaining manual-only items (cannot be done via Claude Code API)
-1. **Hero banner SVG** — curved swoosh approximation is acceptable for portfolio project scope.
-   Further refinement requires manual Figma pen tool editing. Do not attempt programmatic fixes.
-2. **Drop shadow on header** — verify it is applied: Effect → Drop Shadow, rgba(4,5,5,0.06), X:0 Y:0 Blur:4
-3. **Font** — all text uses Inter (FF Mark substitute). Swap globally when FF Mark is licensed.
-
-## Deprecated files
-- `pd/FIGMA_DESIGN_SYSTEM_DEPRECATED.md` — superseded by Notion page 14 and the rendered
-  HTML at the GitHub Pages URL above. Do not use as a design reference.
-
-## Canonical sample dataset
-Always read these files before generating any screen or writing any code
-that involves portfolio data, fund names, lot counts, tax figures, or account
-balances. Do not use inline values from prompts — the files are the single
-source of truth.
-
-- `pm/08-sample-dataset.json` — full lot-level dataset: 32 lots, 5 funds,
-  3 accounts, $849,851.40 total portfolio value
-- `pm/08-sample-dataset-verification.md` — verification tables, 15 coverage
-  cases, special condition flags
-
-Key values for quick reference (verify against file before use):
-- Portfolio total: $849,851.40
-- Target withdrawal used in screens: $50,000
-- Tax assumption: 24% ST / 15% LT (default bracket)
-- YTD realized: ST $1,245 / LT $8,750
-- Wait & Save lot: T-VBIRX-07, 14 days to LT conversion, $55.80 tax difference
-- Funds: VTSAX (Brokerage ...4782), VBTLX (Brokerage ...4782), VBIRX (IRA ...2973),
-  VTIAX (Brokerage ...4782), VFIAX (Roth IRA ...8148)
+Mode=Inactive (Manual mode, fund not selected):
+  No sell amount. No method selector. No tax figures. Sell button only.
+  Show details row=false always.
 
 ## Screen generation rules
 - All frames: 1440px wide
-- Portal shell on every screen: Global Header (100px) + L2 Nav (48px) + white content area
-- L2 active tab: "Sell & Rebalance" with RED #C8102E underline
-- L1 active tab: Transact — set via "L1 Active Tab" component property on Header/Global Header
+- Portal shell on every screen: Global Header (100px) + L2 Secondary Navigation
+  (48px, "Sell & Rebalance" tab active with red #C8102E underline) + white content area
+- L1 active tab: "Transact" with black underline
 - No hero/greeting banner on transactional screens
+- Content margin: 32px left/right throughout
 - Horizontal arrangement with 80px gaps between frames
+- Summary Banner: full-width #E8F5F0 background (no left/right margin on background,
+  but internal column content has padding)
 
-### Screen auto-layout rules
-Every screen frame and every container within it must use auto-layout.
-Absolute positioning is not acceptable anywhere in a screen frame.
+## Screens file page names
+- Stage 1 — Fund Selection
+- Stage 2 — Scenario Analysis
+- Stage 3 — Order Confirmation
+- Stage 4 — Execution Summary
 
-**Top-level screen frame:**
-- VERTICAL auto-layout, width Fixed 1440px, height Hug contents
-- Children in order: Global Header, Nav/L2 Secondary Navigation, Content Area
-- No padding on the screen frame itself
+## Notion pages — quick reference
+### PDB 05 — Design system (Constellation / c11n)
+ID: 341dcac9574a8171a21bc681ca4190ae
+Contains: full design token spec, component specs by section
 
-**Content area frame (below the nav):**
-- VERTICAL auto-layout, width Fill, height Hug contents
-- Padding: 40px top, 24px left/right (matching portal content margin)
-- Gap between content sections: 24px
+### PDB 06 — Design system audit + gap report
+ID: 366dcac9574a81bd8b39dcc1ded84922
+Contains: gap report, correction history, DS correction prompts
 
-**Section frames (TAX BRACKET, YTD REALIZED GAINS, etc.):**
-- VERTICAL auto-layout, width Fill, height Hug contents
-- Gap between label and content: 8px
+### PDB 07 — Screen specifications + generation
+ID: 366dcac9574a818c98d1f59c417ee758
+Contains: Group A–E screen generation prompts and frame links
 
-**Card/table frames (the white-bg data cards):**
-- HORIZONTAL auto-layout for side-by-side columns, width Fill, height Hug
-- Each column cell: VERTICAL auto-layout, width Fill, height Hug
-- Padding inside cards: 16px all sides
-- Gap between cells: 1px (border acts as divider)
+### PDB 08 — Interaction wiring
+ID: 366dcac9574a81e49420c8743395a70d
+Contains: interaction wiring specifications (not started)
 
-**Row frames within tables:**
-- HORIZONTAL auto-layout, width Fill, height Fixed (48px standard row)
-- Padding: 0 12px
-- Align items: Center
+### PDB 09 — PD decisions log
+ID: 340dcac9574a8141a170de6bc25d9750
+Contains: all PD decisions, process reflections, workflow findings
 
-**All text and value pairs (label + value stacked):**
-- VERTICAL auto-layout, width Fill, height Hug
-- Gap: 4px
+## Sample data — canonical values
+Reference date: 2026-05-27
+Investor: Margaret R. Ellison, age 73
+Portfolio total: $849,851.40
+Sale scenario: $25,000.03 from Taxable Brokerage ...4782
 
-**The rule in one sentence:** if a child element's position would need
-to be manually adjusted when the parent is resized, auto-layout has
-not been applied correctly.
+Active account: Taxable Brokerage ...4782 — $507,194.40
+  VTSAX: 1,597 shares · $231,884.40 · NAV $145.20
+  VBTLX: 5,600 shares · $51,408.00 · NAV $9.18
+  VTIAX: 3,600 shares · $139,500.00 · NAV $38.75
+  VBIRX: 8,100 shares · $84,402.00 · NAV $10.42
 
-### Missing component protocol
-If a screen requires a component that does not exist in the Design System library
-(krtNgOD3jL5U6WmUMT32u6), do not invent a substitute or use raw shapes inline.
-Stop and report: "Screen [name] requires [component name] which is not in the
-library. Add it before proceeding?" Wait for explicit confirmation before continuing.
-This applies to every screen generation task regardless of how the prompt is worded.
+Traditional IRA ...2973 — $211,065.00 · RMD remaining $3,667.92
+  VBTLX: 12,000 shares · $110,160.00
+  VFITX: 9,300 shares · $100,905.00
 
-### Component instance rules
-- Never detach a component instance to work around a library publishing gap
-  or property limitation
-- If a required component property is unavailable because the library has not
-  been published, stop and report it — do not detach or approximate with raw shapes
-- All header instances must use setProperties to set "L1 Active Tab": "Transact"
-  — never manually reposition the indicator rectangle
+Roth IRA ...8148 — $131,592.00
+  VFIAX: 240 shares · $131,592.00 · NAV $548.30
 
-### Auto-layout requirements
-Every component added to the Design System library must have auto-layout applied
-before being committed. No exceptions. A component without auto-layout is not
-acceptable for library use.
+YTD realized: ST $1,245 / LT $8,750
+Tax rates: 24% ST / 15% LT
 
-**By component type:**
-- Row-level components (buttons, input fields, nav tabs, table rows, chips):
-  HORIZONTAL auto-layout
-- Container components (cards, dropdowns, form groups, modals, alert banners):
-  VERTICAL auto-layout
-- Complex components with both axes (fund rows, dialog boxes): nested auto-layout
-  — outer frame VERTICAL, inner rows HORIZONTAL
-
-**Resizing behavior:**
-- Full-width components (dropdowns, banners, table rows, nav bars):
-  width = Fill container, height = Fixed at prescribed px value
-- Form inputs (text, select, dollar amount): width = Fixed 320px base
-  (overridden at instance level on screens), height = Fixed 48px for the
-  input field itself, Hug for the label+input group
-- Buttons: width = Hug contents, height = Fixed 48px
-- Content that grows with text (alert bodies, modal text, tooltips):
-  height = Hug contents
-
-**Before adding any component to the library:**
-1. Confirm auto-layout is applied at every frame level
-2. Confirm resizing behavior is set correctly (not left as Fixed/Fixed by default)
-3. Verify the component resizes correctly when width is changed before publishing
-
-
+Primary sale scenario (Verification Table 8, PRD page 10):
+  VTSAX: sell 103.306 sh from T-VTSAX-09 (SpecID) · proceeds $15,000.03 ·
+    ST gain $1,515.85 · EST. TAX $363.80 · Impact −0.8% Equity (green)
+    Wait & Save: lot converts LT 2026-11-20 (166 days) · saves $37.03
+  VBTLX: sell 1,089.325 sh from T-VBTLX-02 (MinTax) · proceeds $10,000.00 ·
+    LT loss −$1,056.65 · EST. TAX $0.00 · Impact −0.4% Bonds (red)
+  EST. NET TAX: $110.21 (net after loss offsets gain) · effective rate 0.44%
