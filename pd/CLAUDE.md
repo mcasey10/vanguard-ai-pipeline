@@ -159,6 +159,52 @@ Mode=Inactive (Manual mode, fund not selected):
   No sell amount. No method selector. No tax figures. Sell button only.
   Show details row=false always.
 
+## Fund Row display rules — intentional design decisions
+
+### Details Row visibility for non-SpecID active rows
+Show details row=true is CORRECT for all Mode=Active fund rows regardless of
+cost basis method. The Details Row serves dual purpose: it shows the rationale
+text (Automated mode) or Wait & Save badge (any mode) in its collapsed state.
+It is NOT hidden for MinTax, HIFO, FIFO, or Average cost — only the Details
+Table inside it is hidden. The rule "When any other method selected: Show
+details row=false" applies only to the Details Table panel, not the trigger row.
+Correct behavior summary:
+  - Mode=Active, any method: Show details row=true, Details Row State=Collapsed
+  - Mode=Active, SpecID: Show details row=true, Details Row State=Expanded
+  - Mode=Inactive: Show details row=false always
+
+### Inactive rows pre-populated from Automated mode (FS-MAN-1 state)
+FS-MAN-1 represents the state immediately after the user switches from Automated
+mode to Manual mode. In this state, inactive rows retain the Automated
+recommendation amounts as read-only reference context — the sell amount,
+method, and tax figures are pre-populated even though the row is Mode=Inactive.
+This is intentional. These values are NOT user inputs; they are carry-over
+context from the Automated recommendation displayed for reference.
+DO NOT treat pre-populated values on inactive rows as a Fund Row rule violation
+when reading FS-MAN-1. This state is unique to FS-MAN-1.
+All other screens (FS-MAN-2, FS-MAN-LOT, and all new screens) follow the
+standard rule: Mode=Inactive rows show only fund name, symbol, position, and
+Sell button — no sell amount, no method, no tax figures.
+
+### Expanded lot detail panel background color
+The #F8F8F7 background color is applied to the expanded lot detail panel
+(the Table Section inside a Details Row State=Expanded). This visually
+separates the drill-down content from the parent fund row. Do not use white
+or any other color for this panel.
+
+### Wait & Save — suppressed in Automated mode
+The Wait & Save badge and notice are suppressed entirely in Automated mode.
+They appear only in Manual mode (Mode=Active fund rows with an expanded or
+collapsed Details Row). Do not add Wait & Save indicators to any Automated
+mode screen.
+
+### Hidden layers
+Figma frames may contain hidden layers from earlier iterations. When reading
+existing frames, treat hidden layers as non-authoritative — they may contain
+stale data from previous states. Only visible layers represent the current
+intended design. When generating new frames, do not copy hidden layers from
+existing frames.
+
 ## Screen generation rules
 - All frames: 1440px wide
 - Portal shell on every screen: Global Header (100px) + L2 Secondary Navigation
