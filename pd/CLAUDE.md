@@ -131,6 +131,8 @@ v2, or v3 — those were workshop builds and have been superseded or deleted.
     Show details text (BOOLEAN, default true)
     Show LT details (BOOLEAN, default true)
     Show ST details (BOOLEAN, default true)
+    Show wait and save (BOOLEAN, default true) — set false on all Automated mode fund row instances
+    Wait and save amount (TEXT, default "$0.00") — set to lot-specific savings amount e.g. "$37.03"
 - Fund Row (COMPONENT_SET, variants: Mode=Automated|Active|Inactive)
   Component properties (TEXT):
     Fund name · Symbol · Shares · Balance · Sell amount · Method ·
@@ -194,9 +196,11 @@ or any other color for this panel.
 
 ### Wait & Save — suppressed in Automated mode
 The Wait & Save badge and notice are suppressed entirely in Automated mode.
-They appear only in Manual mode (Mode=Active fund rows with an expanded or
-collapsed Details Row). Do not add Wait & Save indicators to any Automated
-mode screen.
+They appear only in Manual mode (Mode=Active fund rows).
+Implementation: set Show wait and save=false on all Details Row instances
+inside Automated mode fund rows. Set Wait and save amount to the lot-specific
+dollar savings figure (e.g. "$37.03" for T-VTSAX-09).
+Do not add Wait & Save indicators to any Automated mode screen.
 
 ### Hidden layers
 Figma frames may contain hidden layers from earlier iterations. When reading
