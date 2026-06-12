@@ -365,7 +365,7 @@
 
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
     <h1>AI Product Pipeline by Role</h1>
-    <a class="artifact artifact-notion" href="https://www.notion.so/Vanguard-Sell-Rebalance-Design-Process-365dcac9574a8187a8ced7d4e9408c3b" target="_blank">📋 Design Process</a>
+    <a class="artifact artifact-notion" href="https://www.notion.so/Vanguard-Sell-Rebalance-Design-Process-365dcac9574a8187a8ced7d4e9408c3b" target="_blank">🧬 Design Process</a>
   </div>
   <p class="subtitle">A portfolio project demonstrating a structured AI-assisted PM → PD → Dev pipeline applied to a hypothetical Vanguard Sell &amp; Rebalance tool. This document is the central point of organization for all project artifacts — each step links to the source materials, decisions, and outputs produced at that stage. Artifacts marked with a link icon are publicly accessible; others are noted as in-progress or restricted.</p>
 
@@ -405,7 +405,12 @@
       <div class="step-head">
         <div class="step-num pm-num">1</div>
         <div class="step-main">
-          <div class="step-title">Problem framing + competitive research</div>
+          <div class="step-title-row">
+            <div class="step-title">Problem framing + competitive research</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/01-Problem-statement-33edcac9574a81a4a95ff3493d38775a" target="_blank">🎯 Problem statement</a>
+            </div>
+          </div>
           <div class="step-desc">Defined user problem, target segment, and the gap in Vanguard's existing portal. Parallel competitive framing run in Claude.ai, ChatGPT, and Gemini to surface differing framings and reconcile into a refined problem statement.</div>
         </div>
       </div>
@@ -424,7 +429,12 @@
       <div class="step-head">
         <div class="step-num pm-num">2</div>
         <div class="step-main">
-          <div class="step-title">User research (structured inference)</div>
+          <div class="step-title-row">
+            <div class="step-title">User research (structured inference)</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-github" href="https://mcasey10.github.io/vanguard-ai-pipeline/pm/contextual_segment_map.html" target="_blank">⬡ User segments</a>
+            </div>
+          </div>
           <div class="step-desc">Four-step structured inference process: population analysis, eight contextual variation dimensions, four contextual segments, seven key findings, and eight How Might We questions. Visual artifacts (segment map, dimensions explorer, HMW brief) generated as interactive HTML and hosted on GitHub Pages.</div>
         </div>
       </div>
@@ -446,7 +456,12 @@
       <div class="step-head">
         <div class="step-num pm-num">3</div>
         <div class="step-main">
-          <div class="step-title">User journeys + workflow architecture</div>
+          <div class="step-title-row">
+            <div class="step-title">User journeys + workflow architecture</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/04-User-journeys-33edcac9574a819eaa01c61e6675b368" target="_blank">🗓️ User journeys</a>
+            </div>
+          </div>
           <div class="step-desc">Workflow A and B mapped with segment annotations, emotional state mapping, decision points, and the Wait &amp; Save interrupt. Multi-tool comparison experiment: same prompt run cold in ChatGPT and Gemini — Claude.ai version retained as primary after gap analysis. Gemini surfaced the Newly Self-Directed confirmation screen insight incorporated as REQ-EC-002 amendment.</div>
         </div>
       </div>
@@ -467,8 +482,7 @@
           <div class="step-title-row">
             <div class="step-title">PRD + conversational design requirements</div>
             <div class="artifacts-row">
-              <a class="artifact artifact-notion" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">📋 PRD</a>
-              <a class="artifact artifact-notion" href="https://www.notion.so/33edcac9574a81c4b19ffcf6facc40b8" target="_blank">📋 Functional requirements</a>
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/05-Functional-requirements-33edcac9574a81c4b19ffcf6facc40b8" target="_blank">📝 Functional requirements</a>
             </div>
           </div>
           <div class="step-desc">Full PRD compiled in Notion via MCP: problem statement, success metrics, user research, PM decisions log, user journeys, functional requirements (REQ-numbered, REVIEW-flagged), non-functional requirements, open design questions, logical data model. Conversational design requirements covering voice/tone framework, dialogue flows, AI opt-out design, and feedback loops.</div>
@@ -493,7 +507,12 @@
       <div class="step-head">
         <div class="step-num pm-num">5</div>
         <div class="step-main">
-          <div class="step-title">Sample data generation</div>
+          <div class="step-title-row">
+            <div class="step-title">Sample data generation</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/10-Sample-dataset-33fdcac9574a81d181c0f25bb665d8ad" target="_blank">🗄️ Sample dataset</a>
+            </div>
+          </div>
           <div class="step-desc">Canonical synthetic dataset generated from lot-level transactions bottom-up — 32 lots across 6 funds and 3 accounts, $849,851.40 total portfolio value. All 15 sample data coverage cases from the logical data model exercised simultaneously. Arithmetic verified by automated Python script. Hosted in GitHub and compiled in the PRD.</div>
         </div>
       </div>
@@ -511,7 +530,12 @@
       <div class="step-head">
         <div class="step-num pm-num">6</div>
         <div class="step-main">
-          <div class="step-title">Logic validation prototype</div>
+          <div class="step-title-row">
+            <div class="step-title">Logic validation prototype</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-github" href="https://sell-rebalance-tool.lovable.app" target="_blank">⬡ Lovable prototype</a>
+            </div>
+          </div>
           <div class="step-desc">Bolt and Lovable evaluated side-by-side using identical prompts and the canonical sample dataset. Lovable produced correct output in one correction prompt — lot count accurate (32), both optimization modes working, all harvestable loss alerts firing, Wait &amp; Save correct, FIFO vs specific lot ID contrast validated. Key finding: neither tool inferred account withdrawal priority order (taxable → IRA → Roth) without explicit instruction.</div>
         </div>
       </div>
