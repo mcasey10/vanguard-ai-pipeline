@@ -161,6 +161,15 @@ Mode=Inactive (Manual mode, fund not selected):
   No sell amount. No method selector. No tax figures. Sell button only.
   Show details row=false always.
 
+## Button terminology — canonical labels
+- "Review order" — primary action navigating to Order Confirmation
+  (used in Fund Selection and Scenario Analysis; replaces "Proceed", "Execute", "Select this scenario")
+- "Go to Scenario Analysis" — secondary action saving current configuration
+  (replaces "Save as scenario")
+- "Reset to system recommendation" — ghost link in Manual mode footer
+  (replaces "Return to system recommendation"; visible only after deviation from automated recommendation)
+- "Edit scenario →" — secondary action in Scenario Analysis navigating back to Fund Selection
+
 ## Fund Row display rules — intentional design decisions
 
 ### Details Row visibility for non-SpecID active rows
