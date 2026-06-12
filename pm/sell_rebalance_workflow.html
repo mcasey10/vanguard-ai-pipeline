@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sell &amp; Rebalance — Proposed Workflow</title>
+<title>Sell &amp; Rebalance — Proposed Workflow v3</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -120,8 +120,8 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
 </head>
 <body>
 
-<h1>Sell &amp; Rebalance — Proposed workflow</h1>
-<p class="sub">4-stage model · single active account per session · collapsible account sections · consolidated summary banner · Impact column replaces Drift · PM Decisions 11 &amp; 12</p>
+<h1>Sell &amp; Rebalance — Proposed workflow v3</h1>
+<p class="sub">5-stage model · inputs merged into Fund Selection · funds grouped by account · Auto/Manual mode toggle · inputs vs. read-only · available actions per state</p>
 
 <div class="tab-strip">
   <div class="tab active">Fund selection</div>
@@ -148,52 +148,58 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
 
 <div class="mode-bar">
   <div class="toggle-pill"><div class="toggle-opt on">Automated</div><div class="toggle-opt off">Manual</div></div>
-  <div class="mode-note">Mode toggle — always visible · Manual→Auto with amounts entered prompts save or discard</div>
+  <div class="mode-note">Mode — always visible · toggling Manual→Auto prompts save or discard</div>
   <div class="mode-sep"></div>
-  <div style="display:flex;align-items:center;gap:6px;">
-    <span style="font-size:10px;font-weight:600;color:var(--text2);">Active account:</span>
-    <span style="font-size:10px;background:var(--green-bg);color:var(--green-txt);border:0.5px solid var(--green-bdr);border-radius:4px;padding:2px 8px;font-weight:500;">● Taxable Brokerage (default)</span>
-  </div>
-  <div class="mode-note">Defaults to Taxable Brokerage · radio button in account header to change · changing account with amounts entered prompts save or discard · changing account in Auto mode discards recommendation and generates new one</div>
+  <div class="toggle-pill"><div class="toggle-opt on">Table</div><div class="toggle-opt off">Cards</div></div>
+  <div class="mode-note">Fund list view</div>
+  <div class="mode-sep"></div>
+  <div class="toggle-pill"><div class="toggle-opt on">All accounts</div><div class="toggle-opt off">Select accounts</div></div>
+  <div class="mode-note">Account scope — defaults all · funds grouped by account below</div>
 </div>
 
-<!-- SHARED SUMMARY BANNER (both modes) -->
+<!-- SHARED SUMMARY HEADER (both modes) -->
 <div class="card teal" style="margin-bottom:8px;">
   <div class="card-head">
-    <div class="card-title">Summary banner — common to both modes</div>
-    <div class="card-sub">Progressive disclosure — initial state on load / revealed state after sale amount entered · first-time coach mark overlay on initial session</div>
+    <div class="card-title">Summary header — common to both modes</div>
+    <div class="card-sub">Appears at top of screen at all times · first-time coach mark overlay on initial session</div>
   </div>
   <div class="card-body">
-    <div class="grid2">
+    <div class="grid3">
 
       <div class="block">
-        <div class="block-label">Initial state (on load — before amount entered)</div>
+        <div class="block-label">Sale amount</div>
         <div class="items">
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Sale amount field — always visible · action button below always visible ("Get recommendation" in Automated / "Show funds" in Manual) · disabled when empty or unchanged, enabled when valid amount entered</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Total portfolio value (all accounts) displayed below the input field</div></div>
-          <div class="item"><div class="item-dot"></div><div>Fund list area shows placeholder message only — nothing else shown on load</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input — Auto only</span> Total dollar amount field (user-entered target)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only — Manual</span> Running total derived live from per-fund entries</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> % of selected accounts' total value</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Shortfall / overage vs. target (Manual mode)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Soft alert if amount &gt;10% of portfolio</div></div>
         </div>
       </div>
 
       <div class="block">
-        <div class="block-label">Revealed state (after sale amount entered)</div>
+        <div class="block-label">Tax assumptions</div>
         <div class="items">
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Sale total vs. target · % of total portfolio value · shortfall / overage indicator (Manual mode)</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Tax rates: 24% ST / 15% LT · <span class="badge b-act">Link</span> "Change" → bracket selector · bracket selection persists across sessions</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Active rates: 24% ST / 15% LT</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Link</span> "Change" → income bracket dropdown (income range → rates implied)</div></div>
           <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> YTD realized: ST $1,245 / LT $8,750</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> RMD notice (compact, informational — if applicable)</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Est. ST gains · Est. LT gains · Est. federal tax · Effective rate — update on recalculation</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> <strong>Inline allocation impact</strong> — compact signed deltas per asset class (e.g. Equity −1.2% · Bonds +0.8% · Reserves −0.3%) · updates on recalculation · reference: whole portfolio across all accounts</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Soft alert if amount &gt;10% of total portfolio value</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Note</span> If no target allocation on record: allocation deltas shown vs. pre-sale baseline only (tax-only mode per Decision 7). Full Current / Planned / Target breakdown is on the Scenario Analysis screen.</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Coach mark</span> First session: (1) tax rates — adjustable; (2) inline allocation deltas — reflect impact on whole portfolio across all accounts; (3) active account — selling from one account, optimizing toward whole-portfolio goal</div></div>
+          <div class="item"><div class="item-dot"></div><div>Bracket selection persists across sessions</div></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Running totals (live)</div>
+        <div class="items">
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gains · LT gains · Losses harvested</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Estimated total tax · Effective tax rate</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Portfolio allocation impact indicator: Improved / Regressed / Neutral</div></div>
+          <div class="item"><div class="item-dot"></div><div>Updates in real time as amounts change (both modes)</div></div>
         </div>
       </div>
 
     </div>
   </div>
 </div>
-
 
 <!-- DUAL MODE FUND LIST -->
 <div class="stage2-grid">
@@ -203,30 +209,28 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
     <div class="card blue">
       <div class="card-head">
         <div class="card-title">Automated mode — fund list</div>
-        <div class="card-sub">System selects funds within the active account · optimization: minimize tax + improve overall portfolio mix · inactive accounts show header only (chevrons hidden)</div>
+        <div class="card-sub">System selects funds and amounts · all sell amounts locked · rationale provided</div>
       </div>
       <div class="card-body">
 
         <div class="block">
-          <div class="block-label">Account header rows (all accounts)</div>
+          <div class="block-label">Account group header (per account)</div>
           <div class="items">
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Radio button</span> Active account designation — eligible accounts only (not Cash/settlement) · Taxable Brokerage selected by default</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Account name · type (Taxable / Trad. IRA / Roth IRA) · total balance · asset class contribution summary (e.g. 45% Equity / 38% Bonds / 17% Other)</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only — active only</span> Subtotal being sold from this account</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Note</span> Inactive account chevrons hidden in Automated mode · Cash/settlement: name + balance only, no radio button, no chevron</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Account name · type (Taxable / Trad. IRA / Roth IRA) · total balance · subtotal being sold from this account</div></div>
           </div>
         </div>
 
         <div class="divider"></div>
 
         <div class="block">
-          <div class="block-label">Fund rows (active account only — recommended funds)</div>
+          <div class="block-label">Fund rows (per fund within account)</div>
           <div class="items">
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol (link) · Full fund name · Current balance · Sell amount (locked) · Tax method</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol (link) · Full fund name · Current balance · Target % · Actual % · Drift indicator (over / under / on target)</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Sell amount — system-filled, locked</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Tax method: Specific lot ID</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gain/loss · LT gain/loss · Est. tax for this fund</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> <strong>Impact</strong> — signed delta to overall portfolio asset class allocation if this fund is sold (e.g. −1.2% Equity) · reference: summary banner above</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Rationale for inclusion (plain-language, references overall portfolio impact, e.g. "Selling this reduces bond allocation from 42% toward your 35% target")</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Expand</span> "Details ∨" → lot-level breakdown (read-only) + optimization scoring</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Rationale for inclusion (plain-language, e.g. "Overweight — LT lots available")</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Expand</span> "Details ∨" → lot-level breakdown (read-only)</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">⚡ Wait &amp; Save</span> Inline notice if a selected lot is within 30 days of LT conversion — shows N days remaining + ~$X tax difference</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Notice</span> Harvestable loss flag if unrealized loss lot available but not selected</div></div>
           </div>
@@ -248,8 +252,8 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
         <div class="block">
           <div class="block-label">Actions</div>
           <div class="items">
-            <div class="item"><span class="badge b-act">Primary</span> Proceed → Order confirmation</div>
-            <div class="item"><span class="badge b-act">Secondary</span> Save as scenario → Scenario analysis</div>
+            <div class="item"><span class="badge b-act">Primary</span> Review order → Order confirmation</div>
+            <div class="item"><span class="badge b-act">Secondary</span> Go to Scenario Analysis → Scenario analysis</div>
             <div class="item"><span class="badge b-act">Toggle</span> Switch to Manual mode — pre-populates per-fund amounts from this recommendation</div>
           </div>
         </div>
@@ -272,27 +276,23 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
     <div class="card purple">
       <div class="card-head">
         <div class="card-title">Manual mode — fund list</div>
-        <div class="card-sub">Active account expanded with interactive rows · inactive accounts collapsed (read-only on expansion) · all funds in active account shown · Impact column on all rows</div>
+        <div class="card-sub">User enters per-fund sell amounts · total derived · real-time tax recalculation</div>
       </div>
       <div class="card-body">
 
         <div class="block">
-          <div class="block-label">Account sections — all accounts</div>
+          <div class="block-label">Account group header (per account)</div>
           <div class="items">
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Radio button</span> Active account designation — same as Automated mode · Taxable Brokerage default</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only — all accounts</span> Account name · type · balance · asset class contribution summary</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Active account</span> Expanded — shows all funds held within it with full interactive rows</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Inactive accounts</span> Collapsed by default · chevron active · expanding shows read-only fund data (name, balance, asset class) — no sell inputs, no method selector, no tax figures</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">Note</span> Cash/settlement accounts: name + balance only, no radio button, no chevron</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Account name · type · total balance · running subtotal entered for this account</div></div>
           </div>
         </div>
 
         <div class="divider"></div>
 
         <div class="block">
-          <div class="block-label">Fund rows — active account · all funds shown</div>
+          <div class="block-label">Fund rows — all funds in selected accounts shown</div>
           <div class="items">
-            <div class="item"><div class="item-dot"></div><div>All funds held in the active account are displayed — not just Automated-recommended funds. Each row has two states: inactive and active.</div></div>
+            <div class="item"><div class="item-dot"></div><div>All funds held in the selected accounts are displayed — not just funds included in the Automated recommendation. Each fund row has two states: inactive and active.</div></div>
           </div>
         </div>
 
@@ -301,9 +301,9 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
         <div class="block">
           <div class="block-label">Fund row — inactive state (default for non-recommended funds)</div>
           <div class="items">
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol · Full name · Current balance · <strong>Impact</strong> (asset class delta at $0 sell — contribution to current mix)</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol · Full name · Current balance · Target % · Actual % · Drift indicator</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> No sell amount field · no method selector · no tax figures shown</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Action</span> "Sell" button — activates the row, reveals sell amount input, method selector, and tax figures</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Action</span> "Sell" button — activates the row, reveals sell amount input and method selector</div></div>
             <div class="item"><div class="item-dot"></div><div>Funds NOT included in the Automated recommendation default to inactive when entering Manual mode</div></div>
           </div>
         </div>
@@ -313,10 +313,10 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
         <div class="block">
           <div class="block-label">Fund row — active state (default for Automated-recommended funds)</div>
           <div class="items">
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol · Full name · Current balance</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund symbol · Full name · Current balance · Target % · Actual % · Drift indicator</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Sell amount — user-entered field (pre-filled from Automated recommendation if fund was included; blank if user-activated)</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Accounting method selector: FIFO / Average cost / Specific lot ID</div></div>
-            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gain/loss · LT gain/loss · Est. tax · <strong>Impact</strong> (signed asset class delta) — update on recalculation</div></div>
+            <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gain/loss · LT gain/loss · Est. tax · Drift — update live as sell amount changes</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Expand</span> "Details ∨" → lot-level table with manual lot selection</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Action</span> "Cancel" button — deactivates the row, removes from sale, clears entered amount</div></div>
             <div class="item"><div class="item-dot"></div><div><span class="badge b-warn">⚡ Wait &amp; Save</span> Inline notice if entered amount would trigger sale of a near-LT lot</div></div>
@@ -343,15 +343,15 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
         <div class="block">
           <div class="block-label">Actions</div>
           <div class="items">
-            <div class="item"><span class="badge b-act">Primary</span> Proceed → Order confirmation</div>
-            <div class="item"><span class="badge b-act">Secondary</span> Save as scenario → Scenario analysis</div>
+            <div class="item"><span class="badge b-act">Primary</span> Review order → Order confirmation</div>
+            <div class="item"><span class="badge b-act">Secondary</span> Go to Scenario Analysis → Scenario analysis</div>
           </div>
           <div style="margin-top:6px;padding:8px 10px;background:var(--amber-bg);border:0.5px solid var(--amber-bdr);border-radius:6px;">
             <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--amber-txt);margin-bottom:5px;">Prompt — toggle Manual → Auto</div>
-            <div style="font-size:11px;color:var(--text);margin-bottom:6px;">If manual amounts have been entered, switching to Automated mode triggers: <em>"Save your changes as a scenario before switching?"</em></div>
+            <div style="font-size:11px;color:var(--text);margin-bottom:6px;">If manual amounts have been entered, switching to Automated mode triggers: <em>"Go to Scenario Analysis or discard before switching?"</em></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
               <div style="padding:6px 8px;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:5px;">
-                <div style="font-size:10px;font-weight:600;color:var(--green-txt);margin-bottom:2px;">Save as scenario</div>
+                <div style="font-size:10px;font-weight:600;color:var(--green-txt);margin-bottom:2px;">Go to Scenario Analysis</div>
                 <div style="font-size:11px;color:var(--text2);">Preserves manual configuration as a saved scenario, then resets view to Auto recommendation</div>
               </div>
               <div style="padding:6px 8px;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:5px;">
@@ -378,12 +378,12 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
   <div class="conn-row">
     <div class="conn-branch">
       <div class="conn-arrow"></div>
-      <div class="conn-label">Proceed directly</div>
+      <div class="conn-label">Review order → Order confirmation</div>
     </div>
     <div style="font-size:11px;color:var(--text3);margin-top:6px;">or</div>
     <div class="conn-branch">
       <div class="conn-arrow" style="border-top-color:var(--amber-bdr);"></div>
-      <div class="conn-label" style="color:var(--amber-txt);">Save as scenario</div>
+      <div class="conn-label" style="color:var(--amber-txt);">Go to Scenario Analysis</div>
     </div>
   </div>
   <div class="conn-line"></div>
@@ -398,7 +398,7 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
 <div class="card amber dashed">
   <div class="card-head">
     <div class="card-title">Scenario analysis</div>
-    <div class="card-sub">Convergence point — no Auto/Manual mode distinction · up to 3 saved scenarios compared side by side · full allocation detail shown here, not in Fund Selection</div>
+    <div class="card-sub">Read-only comparison view — all scenarios created in Fund Selection · up to 3 scenarios compared side by side · editing returns to Fund Selection · full allocation detail shown here, not in Fund Selection</div>
   </div>
   <div class="card-body">
     <div class="grid2">
@@ -406,8 +406,7 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
       <div class="block">
         <div class="block-label">Per-scenario column (up to 3)</div>
         <div class="items">
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Scenario label (system default: "Scenario 1") · source mode (Automated / Manual)</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-in">Input</span> Rename scenario label</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Scenario label — auto-numbered (Scenario 1, 2, 3) · "System recommendation" badge on automated scenarios · no user-editable name</div></div>
           <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Accounts included · total sale amount</div></div>
           <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> Fund-by-fund: name · sell amount · tax method</div></div>
           <div class="item"><div class="item-dot"></div><div><span class="badge b-ro">Read-only</span> ST gains · LT gains · Losses harvested · Est. total tax · Effective tax rate</div></div>
@@ -420,20 +419,21 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
       <div class="block">
         <div class="block-label">Actions</div>
         <div class="items">
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Primary</span> Select scenario → proceed to Order confirmation</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Secondary</span> Edit scenario → returns to Fund selection in the source mode (Auto or Manual)</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Secondary</span> Add scenario (up to 3 total) → returns to Fund selection to configure</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Destructive</span> Delete scenario from comparison</div></div>
-          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Nav</span> ← Back to Fund selection (active scenario preserved)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Primary</span> Review order → Order confirmation (per scenario column)</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Secondary</span> Edit scenario → returns to Fund Selection with that scenario's context shown in header</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Secondary</span> Add scenario (up to 3 total) → returns to Fund Selection in new empty scenario context; column shown as dashed placeholder when slot is empty</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Destructive</span> Delete scenario (kebab menu) → confirmation required · if last scenario deleted, inline empty state shown with Add scenario and Return to Fund Selection actions</div></div>
+          <div class="item"><div class="item-dot"></div><div><span class="badge b-act">Destructive</span> Duplicate scenario (kebab menu) → duplicate takes next available slot</div></div>
         </div>
         <div class="divider"></div>
         <div class="block-label">What differentiates Scenario Analysis from Fund Selection</div>
         <div class="items">
           <div class="item"><div class="item-dot"></div><div>Fund Selection shows one configuration at a time · Scenario Analysis shows up to 3 side by side</div></div>
-          <div class="item"><div class="item-dot"></div><div>Portfolio allocation detail (before/after/target bar chart) lives here, not in Fund Selection</div></div>
-          <div class="item"><div class="item-dot"></div><div>Optimization scoring detail lives here, not in Fund Selection</div></div>
+          <div class="item"><div class="item-dot"></div><div>Portfolio allocation detail (Current / Target / After sale bar chart + percentage table) lives here, not in Fund Selection</div></div>
+          <div class="item"><div class="item-dot"></div><div>Plain-language tradeoff summary sentence is system-generated and appears at bottom of each scenario column</div></div>
           <div class="item"><div class="item-dot"></div><div>No mode toggle here — scenarios are mode-agnostic once saved</div></div>
-          <div class="item"><div class="item-dot"></div><div>Read-only view of saved snapshots — editing returns to Fund Selection</div></div>
+          <div class="item"><div class="item-dot"></div><div>Entirely read-only — all editing returns to Fund Selection via "Edit scenario →"</div></div>
+          <div class="item"><div class="item-dot"></div><div>Wait &amp; Save is suppressed in Automated mode — only appears in Manual mode fund rows</div></div>
         </div>
       </div>
 
@@ -448,7 +448,7 @@ h1 { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
 <div class="connector">
   <div class="conn-line"></div>
   <div class="conn-arrow"></div>
-  <div class="conn-label">Selected scenario or direct proceed from Fund Selection</div>
+  <div class="conn-label">"Review order" from Fund Selection or Scenario Analysis</div>
   <div class="conn-line"></div>
 </div>
 
