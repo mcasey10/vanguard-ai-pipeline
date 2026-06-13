@@ -165,7 +165,7 @@
 
 ## PENDING ITEMS (not yet completed)
 
-1. **Scenario context annotation CC prompt** — add amber annotation frames to FS-MAN-1/2/LOT showing dynamic "Editing Scenario 2" header label. Prompt written, stored in PDB 09.
+1. **Scenario context annotation** — amber annotation frames added to FS-MAN-1/2/LOT in Figma. ✅ COMPLETE
 2. **Jira Figma frame URLs** — add Figma deep links to VSR story descriptions. Deferred to pre-Dev phase.
 3. **FS-TXHIST** — completed but lowest priority; may need minor refinement.
 4. **ai_pipeline.html** — renamed from v3, artifact links added for PM steps 1-6 and PD steps 1-9. Push latest version to GitHub (replace pm/pm_pd_dev_ai_pipeline_v3.html with pm/ai_pipeline.html).
