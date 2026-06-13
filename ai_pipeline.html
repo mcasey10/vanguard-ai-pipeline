@@ -587,7 +587,12 @@
       <div class="step-head">
         <div class="step-num pd-num">1</div>
         <div class="step-main">
-          <div class="step-title">Tier 1 open design questions resolution</div>
+          <div class="step-title-row">
+            <div class="step-title">Tier 1 open design questions resolution</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/09-PD-decisions-log-340dcac9574a8141a170de6bc25d9750" target="_blank">🎨 PD decisions log</a>
+            </div>
+          </div>
           <div class="step-desc">Resolve all Tier 1 open design questions from the PRD before any structural or visual design work begins. These are architectural decisions that constrain everything downstream. Resolutions documented in the PDB decisions log and PM decisions log. Gate: all Tier 1 questions resolved and documented.</div>
         </div>
       </div>
@@ -608,7 +613,12 @@
       <div class="step-head">
         <div class="step-num pd-num">2</div>
         <div class="step-main">
-          <div class="step-title">Design system extraction</div>
+          <div class="step-title-row">
+            <div class="step-title">Design system extraction</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-figma" href="https://www.figma.com/design/krtNgOD3jL5U6WmUMT32u6/Vanguard-Constellation-%E2%80%94-Design-System?node-id=0-1&t=y8FDLbezASJAgXCD-1" target="_blank">◈ Design System (Figma)</a>
+            </div>
+          </div>
           <div class="step-desc">Document Vanguard design tokens from the existing portal via DevTools inspection and reference screenshots. Build a token reference for use in Figma and as prompt input for screen generation. Claude Code + Figma MCP scaffold the component library from extracted tokens. Reference screenshots are required alongside DevTools output — CSS extraction alone produces incorrect values for several components. Gate: design system validated against reference screenshots.</div>
         </div>
       </div>
@@ -634,7 +644,6 @@
             <div class="step-title">User flow diagram</div>
             <div class="artifacts-row">
               <a class="artifact artifact-github" href="https://mcasey10.github.io/vanguard-ai-pipeline/pm/sell_rebalance_workflow.html" target="_blank">⬡ Workflow diagram</a>
-              <a class="artifact artifact-notion" href="https://www.notion.so/364dcac9574a8190a725fffdc4bc5e2a" target="_blank">📋 PDB 01</a>
             </div>
           </div>
           <div class="step-desc">Translate the PM user journey into a visual flow showing the sequence of user goals and decisions — not screens. At this stage the interface structure is intentionally unspecified. Two versions produced: original two-workflow reading and revised four-stage model. Gate: flow reviewed against user journey and functional requirements — no screen references, no layout assumptions.</div>
@@ -653,7 +662,13 @@
       <div class="step-head">
         <div class="step-num pd-num">4</div>
         <div class="step-main">
-          <div class="step-title">Wireframing — structural exploration</div>
+          <div class="step-title-row">
+            <div class="step-title">Wireframing — structural exploration</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-github" href="https://v0.app/chat/structural-exploration-prototype-a-qtC9evffjXF?ref=VJZRHL" target="_blank">⬡ Prototype A</a>
+              <a class="artifact artifact-github" href="https://v0.app/chat/structural-exploration-prototype-b-oymQzqwOXX3?ref=VJZRHL" target="_blank">⬡ Prototype B</a>
+            </div>
+          </div>
           <div class="step-desc">Wireframing through structural exploration — two v0 structural prototypes generated to validate how the user flow maps to an interface. Prototype A (two-workflow architecture) and Prototype B (progressive disclosure with Automated/Manual mode toggle). Structural prototypes are functional, unstyled React layouts — no brand colors, no design system. The selection of Prototype B in step 5 serves as the wireframe decision that gates screen generation. Gate: at least two structural alternatives produced and compared.</div>
         </div>
       </div>
@@ -669,7 +684,12 @@
       <div class="step-head">
         <div class="step-num pd-num">5</div>
         <div class="step-main">
-          <div class="step-title">Screen model decision + screen inventory</div>
+          <div class="step-title-row">
+            <div class="step-title">Screen model decision + screen inventory</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/03-Screen-model-decision-364dcac9574a81f792a9ca22a49eff47" target="_blank">🪟 Screen model decision</a>
+            </div>
+          </div>
           <div class="step-desc">Select the structural model from step 4 and document the rationale in the PDB decisions log. Then produce the screen inventory: every distinct screen and state in the chosen model, with inputs, outputs, navigation paths, and user decision each screen supports. The inventory is an output of design thinking, not a pre-specified input. Gate: decision and inventory documented in the PDB before wireframing begins.</div>
         </div>
       </div>
@@ -690,16 +710,21 @@
       <div class="step-head">
         <div class="step-num pd-num">6</div>
         <div class="step-main">
-          <div class="step-title">Design system audit + gap report</div>
+          <div class="step-title-row">
+            <div class="step-title">Design system audit + gap report</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/06-Design-system-audit-gap-report-366dcac9574a81bd8b39dcc1ded84922" target="_blank">🎨 DS audit + gap report</a>
+            </div>
+          </div>
           <div class="step-desc">Before screen generation begins, audit the Figma Design System file against the extraction spec (PDB 05) and the component requirements from the screen inventory (PDB 04). The audit identifies components to keep, correct, delete (invented during prior generation attempts), and add. Gate: gap report reviewed and approved before any screen generation starts. This prevents the pattern of CC inventing components it needs, which creates manual cleanup work.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Reads PDB 05 (design system spec) and PDB 04 (screen inventory) via Notion MCP, then audits the Figma Design System file via Figma MCP. Outputs a gap report. No changes to the Figma file until the gap report is approved.</span></span>
-          <span class="chip chip-pending">Figma MCP<span class="tip">Used read-only during audit to enumerate all components, color styles, and text styles in the Design System file. Used read-write after gap report approval to apply corrections and additions.</span></span>
-          <span class="chip chip-pending">Notion MCP<span class="tip">Reads PDB 05 and PDB 04. Gap report and correction log written to PDB 06.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Reads PDB 05 (design system spec) and PDB 04 (screen inventory) via Notion MCP, then audits the Figma Design System file via Figma MCP. Outputs a gap report. Changes to the Figma file applied after gap report approval.</span></span>
+          <span class="chip chip-used">Figma MCP<span class="tip">Used read-only during audit to enumerate all components, color styles, and text styles in the Design System file. Used read-write after gap report approval to apply corrections and additions.</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Reads PDB 05 and PDB 04. Gap report and correction log written to PDB 06.</span></span>
         </div>
       </div>
     </div>
@@ -708,7 +733,12 @@
       <div class="step-head">
         <div class="step-num pd-num">7</div>
         <div class="step-main">
-          <div class="step-title">Screen generation</div>
+          <div class="step-title-row">
+            <div class="step-title">Screen generation</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-figma" href="https://www.figma.com/design/jz82GrOp8RE2QGh81V0qbs/Vanguard-Sell---Rebalance-%E2%80%94-Screens?node-id=248-541&t=HjwtbqbmenmJP8hD-1" target="_blank">◈ Screens (Figma)</a>
+            </div>
+          </div>
           <div class="step-desc">Claude Code reads from the PDB (screen inventory and PD decisions log) and references the design system library in Figma to produce native Figma frames directly in the Screens file. In practice this step revealed a key limitation: CC handles well-specified component usage reliably, but cannot navigate design-space exploration — decisions about component architecture, variant structure, and conditional nesting require human judgment. The Fund Row component family (covering Automated/Active/Inactive modes, SpecID cost basis, expandable lot detail panels, and Wait &amp; Save badges) required full manual reconstruction after multiple CC regression cycles. This distinction between AI execution and human design judgment is the central learning of this phase. Gate: complete screen inventory and validated design system components.</div>
         </div>
       </div>
@@ -747,7 +777,12 @@
       <div class="step-head">
         <div class="step-num pd-num">9</div>
         <div class="step-main">
-          <div class="step-title">Design decisions documentation (PDB — PD decisions log)</div>
+          <div class="step-title-row">
+            <div class="step-title">Design decisions documentation (PDB — PD decisions log)</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-notion" href="https://app.notion.com/p/09-PD-decisions-log-340dcac9574a8141a170de6bc25d9750" target="_blank">🎨 PD decisions log</a>
+            </div>
+          </div>
           <div class="step-desc">All design decisions recorded throughout the PD phase in the PDB decisions log. Structured identically to the PM decisions log: what was decided, why, which open question or requirement it resolves, Figma frame link, and segments affected. The PDB is the official handoff reference to Dev. Decisions recorded incrementally throughout the phase — not compiled at the end.</div>
         </div>
       </div>
