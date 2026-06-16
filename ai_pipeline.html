@@ -760,15 +760,41 @@
       <div class="step-head">
         <div class="step-num pd-num">8</div>
         <div class="step-main">
-          <div class="step-title">Interaction wiring + micro-interactions</div>
-          <div class="step-desc">Wire flows as a separate pass after all screens exist. Coach marks, tooltips, dropdowns, overlays, and interrupt behaviors added via targeted prompts. Conversational design requirements (PRD) govern all system language at this stage.</div>
+          <div class="step-title-row">
+            <div class="step-title">Interaction wiring + micro-interactions</div>
+            <div class="artifacts-row">
+              <a class="artifact artifact-figma" href="https://www.figma.com/proto/jz82GrOp8RE2QGh81V0qbs/Vanguard-Sell---Rebalance-%E2%80%94-Screens" target="_blank">◈ Figma</a>
+              <a class="artifact artifact-github" href="https://spiky-manager-267229.framer.app/" target="_blank">⬡ Framer</a>
+              <a class="artifact artifact-github" href="https://cloud.protopie.io/p/8951614ea03c1c2b09b7c4b9" target="_blank">⬡ ProtoPie</a>
+            </div>
+          </div>
+          <div class="step-desc">Three parallel prototype tracks evaluated. A structured wiring spec was produced first — frame inventory, gap analysis, ambiguity resolutions, and a phase-ordered connection list — before any wiring was applied. Track A (Figma native) used CC + Figma MCP to apply 37 of 45 connections programmatically in a single session after consolidating all frames onto one page; 8 variant-swap interactions blocked by Figma Plugin API remote component restriction and deferred. Track B (Framer) used the native overlay system for the SaveDiscard modal with scrim, animation, and dismissible backdrop — interactions not achievable in Figma prototype mode; full happy path and branch paths wired manually. Track C (ProtoPie) confirmed strong Figma import fidelity and auto-import of existing prototype connections, but free plan's 2-scene hard limit and AI features paywall made full evaluation impractical.</div>
         </div>
       </div>
       <div class="step-footer">
+        <span class="tag t4">T4</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-used">Claude Code<span class="tip">Track A — produced a 3-prompt wiring spec (DS audit → frame inventory + gap analysis → connection spec with ambiguity resolutions), then applied 37 prototype connections in a single session via Figma MCP. Zero failures on Phases 1–3 (happy path, branches, overlays). Phase 4 variant swaps blocked by Figma Plugin API remote component restriction — requires manual UI application. Key learning: all frames must be on one page before wiring; frames moved between pages receive new node IDs.</span></span>
+          <span class="chip chip-used">Figma MCP<span class="tip">Track A — wrote all prototype connections directly into the Screens file. Cross-page navigation was the initial blocker; resolved by consolidating all frames onto a single page. Frame consolidation used cut/paste (not copy) to preserve DS library references and avoid duplicate node IDs.</span></span>
+        </div>
+        <span class="sep"></span>
         <span class="tag t2">T2</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Figma Make<span class="tip">Planned for interaction wiring pass — separate from screen generation. Figma Make generates new React versions per prompt, better suited to iterative wiring than systematic screen generation.</span></span>
-          <span class="chip chip-pending">Framer AI<span class="tip">Strong candidate for this step — purpose-built for interaction-rich prototypes. Evaluate against Figma Make for the wiring pass.</span></span>
+          <span class="chip chip-used">Framer<span class="tip">Track B — imported all 12 screens via Figma plugin (copy-paste workflow). Built SaveDiscard modal as a native Fixed overlay with scrim, Ease In/Out animation, and click-outside dismissal. Hover-triggered kebab → delete confirmation wired as two-step interaction. Full happy path and branch paths wired manually. Shareable URL available immediately after save. Limitations: no built-in hotspot visualization (Figma's Show Hotspots has no equivalent); viewport height locked to first page dimensions unless presenting full screen; import workflow is copy-paste via plugin, not a direct Figma file import; no CC/MCP integration path. AI features (Framer AI) are oriented toward marketing site generation, not prototype wiring.</span></span>
+          <span class="chip chip-skipped">Figma Make<span class="tip">Evaluated in prior sessions for screen generation — not used for wiring. Figma Make generates new React versions per prompt rather than writing to existing Figma frames, making it unsuitable for systematic wiring of an existing screen inventory.</span></span>
+        </div>
+        <span class="sep"></span>
+        <span class="tag t3">T3</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-skipped">ProtoPie<span class="tip">Track C — evaluated but not completed. Strong Figma import: preserves auto-layout, constraints, component variants, and existing Figma prototype connections (auto-imported without manual wiring). Live Figma component sync maintained post-import prevents direct text editing in ProtoPie Studio. Free plan hard limits: 2 scenes per prototype (enforced in Studio, not just cloud uploads), AI features require Basic plan ($13/month). Mobile-first tool — desktop prototyping supported but secondary. Best suited for conditional logic prototypes with variables and formulas; this value did not materialize within free plan constraints.</span></span>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:10px 14px;border-radius:8px;border:0.5px solid var(--bdr2);background:var(--bg2);font-size:12px;color:var(--text2);">
+        <strong style="color:var(--text);display:block;margin-bottom:6px;">Tool comparison — when to use each</strong>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <div><strong style="color:var(--text);">Figma native prototype</strong><br>Best for design review, stakeholder walkthroughs, and Dev handoff. CC-automatable via Figma MCP. Built-in hotspot visualization. Stays in the same file as annotated screens. All frames must be on one page — no cross-page connections.</div>
+          <div><strong style="color:var(--text);">Framer</strong><br>Best for demonstrating interaction quality and animation fidelity to a technical audience. Native overlay system with scrim and animation. No page limitations. Shareable URL immediately. No AI automation; no hotspot visualization; viewport height quirks require full-screen presentation.</div>
+          <div><strong style="color:var(--text);">ProtoPie</strong><br>Best for conditional logic prototypes with variables and formulas that go beyond frame-to-frame navigation. Strongest Figma import fidelity. Auto-imports existing Figma prototype connections. Free plan too limited for meaningful evaluation — Basic plan required.</div>
         </div>
       </div>
     </div>
@@ -795,17 +821,19 @@
     </div>
 
     <div class="handoff">
-      <div class="handoff-lbl">PD → Dev handoff artifacts (planned)</div>
+      <div class="handoff-lbl">PD → Dev handoff artifacts</div>
       <div class="handoff-items">
-        <span class="handoff-item">PDB — PD decisions log</span>
+        <span class="handoff-item">PDB — PD decisions log (Notion)</span>
         <span class="handoff-item">User flow diagram (Whimsical)</span>
         <span class="handoff-item">Structural exploration prototypes (v0)</span>
         <span class="handoff-item">Screen inventory (PDB)</span>
-        <span class="handoff-item">Annotated wireframes (v0)</span>
-        <span class="handoff-item">Figma Design + Dev Mode</span>
-        <span class="handoff-item">Component library</span>
-        <span class="handoff-item">Interaction spec (wired prototype)</span>
+        <span class="handoff-item">Figma Design System — 33 components</span>
+        <span class="handoff-item">Figma Screens — 12 annotated screens</span>
+        <span class="handoff-item">Track A — Figma wired prototype (37 connections)</span>
+        <span class="handoff-item">Track B — Framer prototype</span>
+        <span class="handoff-item">Track C — ProtoPie evaluation</span>
         <span class="handoff-item">Logical data model (PRD)</span>
+        <span class="handoff-item">Sample dataset — 43 lots, 7 fund/account combinations</span>
       </div>
     </div>
 
