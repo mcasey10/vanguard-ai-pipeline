@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
 
 type Mode = 'automated' | 'manual'
 
 export default function FundSelectionEntry() {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>('automated')
   const [rawAmount, setRawAmount] = useState('')
 
@@ -96,6 +98,7 @@ export default function FundSelectionEntry() {
           {/* Primary CTA button — black pill, "Get recommendation" */}
           <button
             disabled={!hasAmount}
+            onClick={() => navigate('/automated', { state: { amount: parseInt(rawAmount, 10) } })}
             className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold
               whitespace-nowrap transition-opacity
               disabled:opacity-40 disabled:cursor-not-allowed
