@@ -5,6 +5,7 @@
       "name": "vsr-app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
+      "cwd": "dev",
       "port": 5173,
       "autoPort": true
     }
