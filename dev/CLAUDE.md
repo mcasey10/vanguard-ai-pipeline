@@ -251,15 +251,19 @@ Cost Basis Dialog: 660:4200 Target Alloc Modal: 667:3618
 
 ## GitHub branch strategy
 
-main — stable, manually merged
-dev/scaffold — Lovable evaluation output, app shell
-dev/data-model — Step 2: data model + API layer
-dev/optimization-engine — Step 3: optimization engine (all 15 cases)
-dev/testing — Step 4: test suite
-dev/deployment — Step 5: Vercel config, GitHub Actions
+Revised after pivoting from Lovable to Claude Code + Figma MCP for the
+entire UI build (Lovable's Figma integration required desktop-only access
+unavailable on Windows; abandoned before any code was committed).
 
-Claude Code auto-branches (claude/...) are acceptable for Step 6 (PR automation).
-All prior steps use the named branches above.
+All application code lives in dev/ at the repo root, committed directly
+to main. Frequent small commits, one logical change per commit (e.g. one
+screen, one fix, one refactor). No feature branches for the UI build —
+a single continuous CC session sequence is building screens one at a time
+in the same working tree, so branch-per-step adds overhead without benefit.
+
+If a PR-based workflow is wanted later (Step 6 — PR creation + ticket
+management, demonstrating agentic PR automation), branch at that point
+intentionally for that demonstration. Until then: main only.
 
 ## Jira project
 
