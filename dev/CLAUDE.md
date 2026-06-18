@@ -335,6 +335,18 @@ To prevent this:
    or is unavailable. Note which connection was actually used for each frame
    in your session report.
 
+6. The Screens file (jz82GrOp8RE2QGh81V0qbs) references component instances
+   from the Design System library file (key: krtNgOD3jL5U6WmUMT32u6). When
+   a frame uses a DS library component (buttons, inputs, Fund Row, Details
+   Row, modals, etc.), do NOT infer that component's internal structure or
+   variant behavior just from how the instance appears inside the screen
+   frame. Read the component's actual node in the DS file directly via
+   get_metadata / get_design_context against krtNgOD3jL5U6WmUMT32u6, and use
+   get_variable_defs and get_code_connect_map where useful for mapping DS
+   components to code. This applies to every frame in the screen inventory —
+   treat it as a standard step in Step 1 context-gathering for any screen,
+   not a one-off check for a single frame.
+
 ---
 
 ## Ask, don't invent — CRITICAL
