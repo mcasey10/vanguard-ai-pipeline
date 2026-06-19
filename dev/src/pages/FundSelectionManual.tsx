@@ -251,10 +251,7 @@ export default function FundSelectionManual() {
                 <InactiveFundRow
                   key={fund.ticker}
                   fund={fund}
-                  onSell={() => {
-                    // TODO: activating a row transitions to FS-MAN-2 state.
-                    // Navigate to /manual/active once FS-MAN-2 is built.
-                  }}
+                  onSell={() => navigate('/manual-2')}
                 />
               ))}
 
