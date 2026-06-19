@@ -447,3 +447,44 @@ reflection of real application architecture.
    frame, prototype link, canvas position) is NOT something to build —
    it only existed to make Figma's static prototype demonstrate the
    interaction at all.
+
+---
+
+## Coach mark interaction pattern — sequential hint indicators, not simultaneous display
+
+The Figma overlay frames (documented above) show all of a screen's coach
+marks simultaneously when revealed. This is NOT the correct behavior for
+the real application — it was corrected during FS-AUTO-1 implementation
+and is now the standing pattern for every screen with coach marks.
+
+**Correct pattern:**
+
+1. Each coach mark's anchor point gets a small, static "?" hint indicator
+   (no pulse/animation — muted styling per CD-2.1's calm tone
+   requirement), positioned next to the element it explains.
+2. Hint indicators are visible by default on load.
+3. Clicking a hint indicator reveals ONLY that one coach mark's content,
+   anchored to its indicator.
+4. Only one coach mark may be open at a time. Opening a second
+   automatically closes whichever was already open — implement this with
+   a single state value (e.g. `openMark: 'tax' | 'ytd' | null`) rather
+   than independent boolean flags per mark, since exclusivity is then
+   automatic rather than something to enforce separately.
+5. Each open coach mark has its own × dismiss.
+6. The "Show tips" / "Show Tips" header control toggles visibility of the
+   HINT INDICATORS THEMSELVES, not individual coach mark content. Label
+   reads "Hide tips" when indicators are showing, "Show tips" when
+   hidden.
+
+**When implementing coach marks on a new screen:** use the Figma overlay
+frame ONLY for content (the exact CD-3.5 text) and visual bubble
+structure (shadow, radius, arrow, × position) — NOT for display
+sequencing. The overlay frame's "show everything at once" behavior is
+stale and superseded; do not replicate it.
+
+**Reference implementation:** FS-AUTO-1, src/pages/FundSelectionAutomated.tsx
+— see the `hintsVisible` / `openMark` state pattern there as the working
+example for FS-MAN-1, FS-MAN-2, and FS-MAN-LOT.
+
+See PDB 09, entry "Coach mark interaction pattern: sequential hint
+indicators," for full rationale.
