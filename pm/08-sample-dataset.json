@@ -182,7 +182,7 @@
             },
             {
               "lot_id": "T-VTSAX-09",
-              "acquisition_date": "2025-06-20",
+              "acquisition_date": "2025-11-20",
               "shares": 172,
               "cost_basis_per_share": 128.90,
               "total_cost_basis": 22170.80,
@@ -190,8 +190,18 @@
               "current_value": 24974.40,
               "unrealized_gain_loss": 2803.60,
               "holding_period": "ST",
-              "days_to_lt_conversion": 70,
-              "lt_conversion_date": "2026-06-20"
+              "days_to_lt_conversion": 223,
+              "lt_conversion_date": "2026-11-20",
+              "wait_and_save_flag": true,
+              "wait_and_save_detail": {
+                "days_until_lt": 223,
+                "lt_conversion_date": "2026-11-20",
+                "unrealized_gain": 1515.85,
+                "tax_if_sold_now_st_rate_24pct": 363.80,
+                "tax_if_sold_after_conversion_lt_rate_15pct": 326.77,
+                "estimated_tax_savings_by_waiting": 37.03,
+                "note": "WAIT & SAVE LOT. Acquired 2025-11-20 (corrected from erroneous 2025-06-20); LT conversion date 2026-11-20 (1-year anniversary). days_until_lt is 223 from dataset as_of_date 2026-04-11, consistent with T-VTIAX-07 and all other lots in this file. PRD 10 Verification Table 8 states '166 days' using reference date 2026-05-27 — correct arithmetic from that date is 177 days; 166 days would require reference date 2026-06-07. PRD 10's 166-day figure is internally inconsistent with its own stated reference date (off by 11 days). unrealized_gain $1,515.85 and tax figures are for the 103.306 SpecID-selected shares per VT8; $37.03 savings figure is from VT8 and does not reconcile arithmetically with $1,515.85 gain at 24%/15% rates (which would yield $136.43 savings) — the $37.03 discrepancy in VT8 is a separate unresolved inconsistency."
+              }
             }
           ]
         },
@@ -1012,6 +1022,18 @@
           "tax_if_sold_now_at_24pct_st": 148.80,
           "tax_if_sold_after_conversion_at_15pct_lt": 93.00,
           "estimated_tax_savings_by_waiting": 55.80
+        },
+        {
+          "lot_id": "T-VTSAX-09",
+          "fund": "VTSAX",
+          "account": "ACCT-TAXABLE-001",
+          "shares": 172,
+          "days_to_lt_conversion": 223,
+          "lt_conversion_date": "2026-11-20",
+          "unrealized_gain": 1515.85,
+          "tax_if_sold_now_at_24pct_st": 363.80,
+          "tax_if_sold_after_conversion_at_15pct_lt": 326.77,
+          "estimated_tax_savings_by_waiting": 37.03
         }
       ],
       "harvestable_loss_lots_taxable_account": [
