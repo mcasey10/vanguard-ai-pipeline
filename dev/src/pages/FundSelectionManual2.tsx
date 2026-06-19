@@ -494,8 +494,15 @@ export default function FundSelectionManual2() {
             </div>
           </div>
 
-          {/* Summary Banner — real values from primary scenario (Verification Table 8)
-              relative wrapper anchors the Real-time Tax coach mark bubble */}
+          {/* Summary Banner — static values from primary scenario (Verification Table 8).
+              TODO (REQ-B3-001/B3-002): Summary Banner recalculation is NOT yet wired.
+              Applied amounts in ActiveFundRow are local component state; they are not
+              lifted to this parent and do not feed the banner. Wiring requires:
+                1. Lifting appliedCents per fund up to FundSelectionManual2 state
+                2. Passing onApply(ticker, cents) callback down to each ActiveFundRow
+                3. Running the optimization/tax engine against updated amounts
+                4. Updating SALE TOTAL, EST. ST/LT GAINS, EST. NET TAX, IMPACT accordingly
+              Implement when the engine (REQ-OE-001 through REQ-OE-010) is built. */}
           <div className="flex items-center px-8 w-full relative">
             <div className="flex flex-1 items-start bg-[#e8f5f0] px-6 py-4">
 
