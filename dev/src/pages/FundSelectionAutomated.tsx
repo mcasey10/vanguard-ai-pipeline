@@ -72,17 +72,13 @@ export default function FundSelectionAutomated() {
   const [optMode, setOptMode] = useState<'tax' | 'balance'>('tax')
 
   // Coach marks — REQ-G-019/G-020
-  // tipsVisible: whether tips are currently active (Show Tips was clicked)
-  // *Dismissed: per-mark dismissed state within the current activation
-  // Re-clicking Show Tips resets both to not-dismissed (re-activation per REQ-G-020)
-  const [tipsVisible, setTipsVisible] = useState(false)
-  const [taxMarkDismissed, setTaxMarkDismissed] = useState(false)
-  const [ytdMarkDismissed, setYtdMarkDismissed] = useState(false)
+  // hintsVisible: whether the "?" hint indicators are shown (Hide tips / Show tips toggle)
+  // openMark: which coach mark bubble is currently open — only one at a time
+  const [hintsVisible, setHintsVisible] = useState(true)
+  const [openMark, setOpenMark] = useState<'tax' | 'ytd' | null>(null)
 
-  function handleShowTips() {
-    setTipsVisible(true)
-    setTaxMarkDismissed(false)
-    setYtdMarkDismissed(false)
+  function handleHintClick(mark: 'tax' | 'ytd') {
+    setOpenMark(prev => (prev === mark ? null : mark))
   }
 
   const canRecalculate = inputCents !== appliedCents && inputCents > 0
@@ -104,15 +100,18 @@ export default function FundSelectionAutomated() {
       {/* Show Tips control — fixed over Global Header (x=978, y=20 in Figma frame).
           Page-specific; positioned here rather than in PortalShell/GlobalHeader
           to avoid coupling the shared shell to per-screen tip state. */}
+      {/* Show Tips / Hide Tips toggle — hides or restores the "?" hint indicators */}
       <button
-        onClick={handleShowTips}
+        onClick={() => { setHintsVisible(v => !v); setOpenMark(null) }}
         className="fixed z-50 flex items-center gap-[5px] cursor-pointer"
         style={{ top: 20, left: 978 }}
       >
         <div className="w-[14px] h-[14px] border border-vg-ink rounded-[7px] flex items-center justify-center shrink-0">
           <span className="text-[9px] text-vg-ink leading-none">?</span>
         </div>
-        <span className="text-[13px] text-vg-ink underline whitespace-nowrap">Show tips</span>
+        <span className="text-[13px] text-vg-ink underline whitespace-nowrap">
+          {hintsVisible ? 'Hide tips' : 'Show tips'}
+        </span>
       </button>
 
       <div className="flex flex-col items-start w-full">
@@ -214,14 +213,36 @@ export default function FundSelectionAutomated() {
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
-                <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">TAX BRACKET</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">TAX BRACKET</span>
+                  {hintsVisible && (
+                    <button
+                      onClick={() => handleHintClick('tax')}
+                      className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer"
+                      aria-label="Learn about tax bracket"
+                    >
+                      <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
+                    </button>
+                  )}
+                </div>
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">24% ST / 15% LT</span>
                 <a className="text-[12px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Change</a>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
-                <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
+                  {hintsVisible && (
+                    <button
+                      onClick={() => handleHintClick('ytd')}
+                      className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer"
+                      aria-label="Learn about YTD realized gains"
+                    >
+                      <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
+                    </button>
+                  )}
+                </div>
                 <span className="text-[12px] text-vg-ink whitespace-nowrap">ST $1,245</span>
                 <span className="text-[12px] text-vg-ink whitespace-nowrap">LT $8,750</span>
               </div>
@@ -268,23 +289,21 @@ export default function FundSelectionAutomated() {
                 top: 84 places the mark 8px above the banner bottom; the upward arrow
                 overlaps the column bottom edge, pointing into TAX BRACKET.
                 Anchor: x=200 from the frame/wrapper left edge. */}
-            {tipsVisible && !taxMarkDismissed && (
+            {openMark === 'tax' && (
               <div className="absolute z-40" style={{ left: 200, top: 84 }}>
                 <CoachMarkBubble
                   text="We're using a mid-range tax rate as a starting point. If you know your bracket, you can select it below for a more accurate estimate."
-                  onDismiss={() => setTaxMarkDismissed(true)}
+                  onDismiss={() => setOpenMark(null)}
                 />
               </div>
             )}
 
-            {/* Coach Mark — YTD REALIZED column
-                top: 92 places the mark exactly at the banner bottom edge.
-                Anchor: x=390 from the frame/wrapper left edge. */}
-            {tipsVisible && !ytdMarkDismissed && (
+            {/* Coach Mark — YTD REALIZED column */}
+            {openMark === 'ytd' && (
               <div className="absolute z-40" style={{ left: 390, top: 92 }}>
                 <CoachMarkBubble
                   text="This shows capital gains you've already realized this year. Selling more shares adds to this total."
-                  onDismiss={() => setYtdMarkDismissed(true)}
+                  onDismiss={() => setOpenMark(null)}
                 />
               </div>
             )}
