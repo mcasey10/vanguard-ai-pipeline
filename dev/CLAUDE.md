@@ -401,3 +401,49 @@ the frame.
 | NF-2                    | 628:25899 | VSR-26     |
 | Cost Basis Dialog       | 660:4200  | VSR-22     |
 | Target Allocation Modal | 667:3618  | VSR-75     |
+
+---
+
+## Coach mark overlay frames — Figma prototype artifact, not real screen content
+
+Each Stage 1 screen (FS-AUTO-1, FS-MAN-1, FS-MAN-2, FS-MAN-LOT) has a
+SEPARATE sibling frame named "[Screen Name] Tips Overlay" containing the
+actual Coach Mark / Tooltip instances for that screen. These overlay
+frames are NOT children of their corresponding main screen frame — they
+are independent frames, deliberately positioned off-canvas (canvas y=5045,
+well below all main frames) and connected to their main frame only via a
+Figma prototype ON_CLICK interaction on the Controls/Show Tips control.
+
+This structure exists because static Figma prototypes have no native
+conditional-visibility-on-click mechanism that persists state cleanly —
+the overlay frame is a workaround for that tool limitation, not a
+reflection of real application architecture.
+
+**Overlay frame canvas positions and corresponding screens:**
+
+| Main frame            | Overlay frame canvas position | Overlay size |
+| --------------------- | ----------------------------- | ------------ |
+| FS-AUTO-1 (249:272)   | (0, 5045)                     | 1440×1015    |
+| FS-MAN-1 (250:369)    | (1520, 5045)                  | 1440×987     |
+| FS-MAN-2 (382:1501)   | (3040, 5045)                  | 1440×1082    |
+| FS-MAN-LOT (382:1866) | (4560, 5045)                  | 1440×1762    |
+
+**When implementing a screen's coach marks in code:**
+
+1. Reading only the main frame's node ID will NOT surface its coach marks —
+   you must separately locate and read the corresponding "[Screen Name]
+   Tips Overlay" frame to find the actual Coach Mark instances, their
+   text content, and their anchor positioning.
+2. Do NOT replicate the overlay-frame mechanism in the React
+   implementation. The actual show/hide behavior (REQ-G-019/G-020 — shown
+   on first session only, individually dismissible, collectively
+   dismissible, re-activatable via Show Tips) is real application logic
+   and should be implemented with React state (a dismissed/visible
+   boolean per mark, or a shared state object), with the coach marks
+   conditionally rendered inline and absolutely positioned relative to
+   their anchor elements — not as a separate overlay page or modal.
+3. The overlay frame's content (text, anchor point) is the source of
+   truth for WHAT to build. The overlay frame's mechanism (separate
+   frame, prototype link, canvas position) is NOT something to build —
+   it only existed to make Figma's static prototype demonstrate the
+   interaction at all.
