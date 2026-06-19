@@ -127,7 +127,8 @@ type TaxData = {
 function ActiveFundRow({
   fund,
   taxData,
-  initialCents,
+  appliedCents,
+  onApply,
   showAllocationHint,
   showHarvestableHint,
   hintsVisible,
@@ -136,16 +137,16 @@ function ActiveFundRow({
 }: {
   fund: FundRow
   taxData: TaxData
-  initialCents: number
+  appliedCents: number           // lifted to parent — parent is source of truth
+  onApply: (ticker: string, cents: number) => void
   showAllocationHint: boolean
   showHarvestableHint: boolean
   hintsVisible: boolean
-  onHintClick: (mark: string) => void
+  onHintClick: (mark: 'tax' | 'allocation' | 'harvestable') => void
   onCancel: () => void
 }) {
-  const [appliedCents, setAppliedCents] = useState(initialCents)
-  const [inputCents, setInputCents]   = useState(initialCents)
-  const [inputDisplay, setInputDisplay] = useState(formatDollar(initialCents))
+  const [inputCents, setInputCents]     = useState(appliedCents)
+  const [inputDisplay, setInputDisplay] = useState(formatDollar(appliedCents))
 
   const hasChange = inputCents !== appliedCents
 
@@ -158,7 +159,7 @@ function ActiveFundRow({
 
   function handleApply() {
     if (!hasChange) return
-    setAppliedCents(inputCents)
+    onApply(fund.ticker, inputCents)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -388,6 +389,28 @@ const ROTH_FUNDS: FundRow[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Static banner placeholder — named seam for engine replacement (REQ-OE-001–010)
+// TODO (step 3 of 3): Replace this with real output from the optimization engine.
+// Steps 1–2 (lifting appliedCents, wiring onApply callback) are complete — the
+// parent now holds the current applied amount per fund. What's missing is step 3:
+// passing those amounts into the engine and using its output to update the banner.
+// Replace getStaticPrimaryScenarioBannerValues() with engine output when built.
+// ---------------------------------------------------------------------------
+
+function getStaticPrimaryScenarioBannerValues() {
+  return {
+    saleTotal: '$25,000',
+    salePct: '2.9% of portfolio',
+    estSTGains: '$1,515.85',
+    estLTGains: '-$1,056.65',
+    estNetTax: '$110.21',
+    effectiveRate: '0.44% effective rate',
+    impactEquity: '−0.8%',
+    impactBonds: '-0.4%',
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Coach mark text (from FS-MAN-1 overlay reads + FS-MAN-2 overlay)
 // ---------------------------------------------------------------------------
 
@@ -403,6 +426,7 @@ const COACH_MARKS = {
 
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
+  const bv = getStaticPrimaryScenarioBannerValues()
 
   // Coach marks — sequential hint-indicator pattern (per FS-AUTO-1 / FS-MAN-1 precedent)
   const [hintsVisible, setHintsVisible] = useState(true)
@@ -416,8 +440,24 @@ export default function FundSelectionManual2() {
   // Initial state: VTSAX + VBTLX active per Figma FS-MAN-2 (primary scenario)
   const [activeFunds, setActiveFunds] = useState<Set<string>>(new Set(['VTSAX', 'VBTLX']))
 
+  // Applied amounts per fund — lifted from ActiveFundRow so parent always has
+  // the current applied value for every active fund (step 1 of 3 for REQ-B3-001).
+  // Keyed by ticker. Initial values match the Figma primary-scenario amounts.
+  const [appliedAmounts, setAppliedAmounts] = useState<Record<string, number>>({
+    VTSAX: 1500000,
+    VBTLX: 1000000,
+  })
+
+  // Step 2 of 3: onApply callback — called by ActiveFundRow when the user
+  // presses Enter or clicks Apply. Updates parent state; banner recalculation
+  // (step 3) will be added here once the optimization engine is built.
+  function handleApplyAmount(ticker: string, cents: number) {
+    setAppliedAmounts(prev => ({ ...prev, [ticker]: cents }))
+  }
+
   function handleSell(ticker: string) {
     setActiveFunds(prev => new Set([...prev, ticker]))
+    setAppliedAmounts(prev => ({ ...prev, [ticker]: 0 }))
   }
 
   function handleCancel(ticker: string) {
@@ -426,6 +466,7 @@ export default function FundSelectionManual2() {
       next.delete(ticker)
       return next
     })
+    setAppliedAmounts(prev => { const next = { ...prev }; delete next[ticker]; return next })
   }
 
   // Inactive account expansion
@@ -494,22 +535,18 @@ export default function FundSelectionManual2() {
             </div>
           </div>
 
-          {/* Summary Banner — static values from primary scenario (Verification Table 8).
-              TODO (REQ-B3-001/B3-002): Summary Banner recalculation is NOT yet wired.
-              Applied amounts in ActiveFundRow are local component state; they are not
-              lifted to this parent and do not feed the banner. Wiring requires:
-                1. Lifting appliedCents per fund up to FundSelectionManual2 state
-                2. Passing onApply(ticker, cents) callback down to each ActiveFundRow
-                3. Running the optimization/tax engine against updated amounts
-                4. Updating SALE TOTAL, EST. ST/LT GAINS, EST. NET TAX, IMPACT accordingly
-              Implement when the engine (REQ-OE-001 through REQ-OE-010) is built. */}
+          {/* Summary Banner — values from getStaticPrimaryScenarioBannerValues().
+              Steps 1–2 complete: appliedAmounts is lifted to parent state and
+              onApply callback is wired. Step 3 (engine recalculation) pending:
+              replace getStaticPrimaryScenarioBannerValues() with engine output
+              once REQ-OE-001 through REQ-OE-010 are implemented. */}
           <div className="flex items-center px-8 w-full relative">
             <div className="flex flex-1 items-start bg-[#e8f5f0] px-6 py-4">
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
-                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">$25,000</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">2.9% of portfolio</span>
+                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{bv.saleTotal}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bv.salePct}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
@@ -529,13 +566,13 @@ export default function FundSelectionManual2() {
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                <span className="text-[16px] font-bold text-[#007a00] whitespace-nowrap">$1,515.85</span>
+                <span className="text-[16px] font-bold text-[#007a00] whitespace-nowrap">{bv.estSTGains}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                <span className="text-[16px] font-bold text-vg-red whitespace-nowrap">-$1,056.65</span>
+                <span className="text-[16px] font-bold text-vg-red whitespace-nowrap">{bv.estLTGains}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
@@ -547,8 +584,8 @@ export default function FundSelectionManual2() {
                     <HintBadge onClick={() => handleHintClick('tax')} />
                   )}
                 </div>
-                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">$110.21</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">0.44% effective rate</span>
+                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{bv.estNetTax}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bv.effectiveRate}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
@@ -556,11 +593,11 @@ export default function FundSelectionManual2() {
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
                 <div className="flex gap-1.5 items-center">
                   <span className="text-[12px] text-vg-ink">Equity</span>
-                  <span className="text-[12px] text-[#007a00]">−0.8%</span>
+                  <span className="text-[12px] text-[#007a00]">{bv.impactEquity}</span>
                 </div>
                 <div className="flex gap-1.5 items-center">
                   <span className="text-[12px] text-vg-ink">Bonds</span>
-                  <span className="text-[12px] text-vg-red">-0.4%</span>
+                  <span className="text-[12px] text-vg-red">{bv.impactBonds}</span>
                 </div>
                 <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">
                   Target allocation
@@ -618,7 +655,8 @@ export default function FundSelectionManual2() {
                       key={fund.ticker}
                       fund={fund}
                       taxData={TAX_DATA[fund.ticker]}
-                      initialCents={fund.ticker === 'VTSAX' ? 1500000 : 1000000}
+                      appliedCents={appliedAmounts[fund.ticker] ?? 0}
+                      onApply={handleApplyAmount}
                       showAllocationHint={fund.ticker === 'VTSAX'}
                       showHarvestableHint={fund.ticker === 'VBTLX'}
                       hintsVisible={hintsVisible}
