@@ -284,6 +284,140 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, showHint, hintsVisib
 }
 
 // ---------------------------------------------------------------------------
+// Collapsed active fund row — shown for the OTHER active fund when one is
+// expanded into lot detail. Same 96px structure as FS-MAN-2 (64px main +
+// 32px details) but "Lot details ▾" navigates to /manual-lot with that fund.
+// Matches Figma FS-MAN-LOT: 388:2534 (VBTLX at y=777, 96px when VTSAX expanded)
+// ---------------------------------------------------------------------------
+
+type CollapsedActiveFundData = {
+  ticker: string; fullName: string; shares: string; balance: string
+  sellAmount: string
+  estSTGains: string; estSTColor: string
+  estLTGains: string; estLTColor: string
+  estTax: string
+  impact: string; impactColor: string
+  rationale: string
+  waitAndSave?: string
+}
+
+function CollapsedActiveFundRow({ fund, onLotDetails }: {
+  fund: CollapsedActiveFundData
+  onLotDetails: (ticker: string) => void
+}) {
+  return (
+    <div className="flex flex-col border-b border-[#e8e9e9] w-full bg-white">
+      {/* Main Row — 64px */}
+      <div className="flex h-16 items-center overflow-hidden px-3 w-full bg-white">
+        <div className="w-[280px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+          <span className="text-[12px] text-vg-ink-muted truncate">{fund.fullName}</span>
+          <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">{fund.ticker}</a>
+        </div>
+        <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{fund.shares} shares</span>
+          <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.balance}</span>
+        </div>
+        <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
+          <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.sellAmount}</span>
+        </div>
+        <div className="w-[130px] h-full flex items-center gap-2 px-2 shrink-0 overflow-hidden">
+          <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
+          <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
+        </div>
+        <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">MinTax</span>
+            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Edit</a>
+          </div>
+        </div>
+        <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
+          <span className={`text-[14px] font-bold whitespace-nowrap ${fund.estSTColor}`}>{fund.estSTGains}</span>
+        </div>
+        <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
+          <span className={`text-[14px] font-bold whitespace-nowrap ${fund.estLTColor}`}>{fund.estLTGains}</span>
+        </div>
+        <div className="w-[85px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. TAX</span>
+          <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.estTax}</span>
+        </div>
+        <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
+          <span className={`text-[12px] font-semibold whitespace-nowrap ${fund.impactColor}`}>{fund.impact}</span>
+        </div>
+        <div className="flex flex-1 h-full items-center justify-end px-2">
+          <button className="h-[36px] w-[90px] rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink shrink-0 hover:opacity-90">Cancel</button>
+        </div>
+      </div>
+      {/* Details Row — 32px */}
+      <div className="flex h-8 items-center justify-between px-4 w-full bg-white">
+        <div className="flex items-center gap-[5px]">
+          <p className="text-[13px] italic text-vg-ink-muted">{fund.rationale}</p>
+          {fund.waitAndSave && (
+            <span className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
+              <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">WAIT &amp; SAVE {fund.waitAndSave}</span>
+            </span>
+          )}
+        </div>
+        <button onClick={() => onLotDetails(fund.ticker)} className="flex items-center gap-1 cursor-pointer shrink-0 hover:opacity-70">
+          <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">Lot details</span>
+          <span className="text-vg-ink-muted text-base leading-none">▾</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Inactive fund row for non-active funds below the active section
+function InactiveFundRowLOT({ ticker, fullName, shares, balance }: {
+  ticker: string; fullName: string; shares: string; balance: string
+}) {
+  return (
+    <div className="flex h-16 items-center overflow-hidden px-3 w-full border-b border-[#e8e9e9] bg-[#fafafa]">
+      <div className="w-[280px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+        <span className="text-[12px] text-vg-ink-muted truncate">{fullName}</span>
+        <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">{ticker}</a>
+      </div>
+      <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+        <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{shares} shares</span>
+        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{balance}</span>
+      </div>
+      <div className="w-[128px] h-full shrink-0" /><div className="w-[130px] h-full shrink-0" />
+      <div className="w-[160px] h-full shrink-0" /><div className="w-[95px] h-full shrink-0" />
+      <div className="w-[95px] h-full shrink-0" /><div className="w-[85px] h-full shrink-0" />
+      <div className="w-[110px] h-full shrink-0" />
+      <div className="flex flex-1 h-full items-center justify-end px-2">
+        <button className="h-[36px] w-[90px] rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink shrink-0 hover:opacity-90">Sell</button>
+      </div>
+    </div>
+  )
+}
+
+// Collapsed active fund data for primary scenario (the OTHER active fund)
+const COLLAPSED_FUND_DATA: Record<string, CollapsedActiveFundData> = {
+  VTSAX: {
+    ticker: 'VTSAX', fullName: 'Vanguard Total Stock Market Index Fund',
+    shares: '1,597', balance: '$231,884.40', sellAmount: '$15,000.00',
+    estSTGains: '$1,515.85', estSTColor: 'text-[#007a00]',
+    estLTGains: '$0.00', estLTColor: 'text-vg-ink',
+    estTax: '$363.80', impact: '-0.8% Equity', impactColor: 'text-[#007a00]',
+    rationale: 'Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.',
+    waitAndSave: '$37.03',
+  },
+  VBTLX: {
+    ticker: 'VBTLX', fullName: 'Vanguard Total Bond Market Index Fund',
+    shares: '5,600', balance: '$51,408.00', sellAmount: '$10,000.00',
+    estSTGains: '$0.00', estSTColor: 'text-vg-ink',
+    estLTGains: '−$1,056.65', estLTColor: 'text-[#c8102e]',
+    estTax: '$0.00', impact: '-0.4% Bonds', impactColor: 'text-[#c8102e]',
+    rationale: 'Harvesting a $1,057 long-term bond loss nets against equity gains; combined taxable gain is $459 and estimated net tax is $110.',
+  },
+}
+
+// ---------------------------------------------------------------------------
 // Static banner values (same as FS-MAN-2 primary scenario)
 // TODO: replace with engine output once REQ-OE-001–010 built
 // ---------------------------------------------------------------------------
@@ -486,7 +620,8 @@ export default function FundSelectionManualLot() {
                   <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Spec ID</span>
+                      {/* VTSAX uses SpecID in primary scenario; VBTLX uses MinTax */}
+                      <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? 'Spec ID' : 'MinTax'}</span>
                       <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Edit</a>
                     </div>
                   </div>
@@ -578,6 +713,18 @@ export default function FundSelectionManualLot() {
                   />
                 </div>
               )}
+
+              {/* Other active fund — collapsed (Figma: 388:2534, y=777, 96px) */}
+              {COLLAPSED_FUND_DATA[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'] && (
+                <CollapsedActiveFundRow
+                  fund={COLLAPSED_FUND_DATA[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX']}
+                  onLotDetails={ticker => navigate('/manual-lot', { state: { fund: ticker } })}
+                />
+              )}
+
+              {/* Inactive fund rows — VTIAX and VBIRX (Figma: 382:1898-1899, 64px each) */}
+              <InactiveFundRowLOT ticker="VTIAX" fullName="Vanguard Total Intl Stock Index Fund"  shares="3,600" balance="$139,500.00" />
+              <InactiveFundRowLOT ticker="VBIRX" fullName="Vanguard Short-Term Bond Index Fund" shares="8,100" balance="$84,402.00" />
 
               {/* Traditional IRA — collapsed, expandable */}
               <div className="flex h-16 items-center px-4 bg-[#f8f8f8] border-t border-[#e8e9e9] w-full cursor-pointer" onClick={() => toggleAccount('ira')}>
