@@ -97,7 +97,11 @@ export function SaveDiscardDialog({
 }) {
   return (
     <div className="fixed inset-0 z-50">
-      {/* Scrim — clicks outside modal close it */}
+      {/* Scrim — dismisses dialog (same outcome as × close: stay on current screen, no navigation).
+          Figma prototype interactions on the scrim element (425:1952) could not be verified from
+          metadata; both × and scrim-click resolve to the same safe outcome (no data lost, no
+          navigation), so scrim-dismiss is the deliberate choice over forced-choice (scrim=no-op).
+          If Figma ever specifies forced-choice, remove onClick here. */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       {/* Modal/Dialog — 560px, centered */}
