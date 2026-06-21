@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
+import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 
 // ---------------------------------------------------------------------------
 // Shared sub-components
@@ -470,6 +471,11 @@ export default function FundSelectionManual2() {
     navigate('/manual-lot', { state: { fund: ticker } })
   }
 
+  // Mode toggle guard — shows save/discard dialog if any applied amount is non-zero
+  const hasAmounts = Object.values(appliedAmounts).some(v => v > 0)
+  const { showDialog: showModeDialog, handleToggleClick, handleSave, handleDiscard, handleClose } =
+    useModeToggleGuard(hasAmounts)
+
   function handleSell(ticker: string) {
     setActiveFunds(prev => new Set([...prev, ticker]))
     setAppliedAmounts(prev => ({ ...prev, [ticker]: 0 }))
@@ -519,6 +525,15 @@ export default function FundSelectionManual2() {
         </span>
       </button>
 
+      {/* FS-INT-SAVEDISCARD — Mode switch save/discard dialog */}
+      {showModeDialog && (
+        <SaveDiscardDialog
+          onSave={handleSave}
+          onDiscard={handleDiscard}
+          onClose={handleClose}
+        />
+      )}
+
       {/* NF-1 — Reset confirmation dialog */}
       {showResetDialog && (
         <ResetDialog
@@ -537,7 +552,7 @@ export default function FundSelectionManual2() {
             </h1>
             <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
               <button
-                onClick={() => navigate('/automated')}
+                onClick={handleToggleClick}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink"
               >
                 <Sparkles size={16} className="text-vg-ink" />

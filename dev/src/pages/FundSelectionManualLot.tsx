@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
+import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 
 // ---------------------------------------------------------------------------
 // Coach mark bubble (same structure as FS-AUTO-1 / FS-MAN-2)
@@ -442,6 +443,11 @@ export default function FundSelectionManualLot() {
   const lots = LOT_DATA[fund] ?? VTSAX_LOTS
   const bv = getStaticPrimaryScenarioBannerValues()
 
+  // Mode toggle guard — hasAmounts always true on this screen (only reachable from FS-MAN-2
+  // which requires active fund rows with applied amounts)
+  const { showDialog: showModeDialog, handleToggleClick, handleSave, handleDiscard, handleClose } =
+    useModeToggleGuard(true)
+
   // Coach mark — Wait & Save (single mark on this screen)
   // Sequential hint-indicator pattern per dev/CLAUDE.md
   const [hintsVisible, setHintsVisible]   = useState(true)
@@ -497,6 +503,15 @@ export default function FundSelectionManualLot() {
         </span>
       </button>
 
+      {/* FS-INT-SAVEDISCARD — Mode switch save/discard dialog */}
+      {showModeDialog && (
+        <SaveDiscardDialog
+          onSave={handleSave}
+          onDiscard={handleDiscard}
+          onClose={handleClose}
+        />
+      )}
+
       <div className="flex flex-col items-start w-full">
         <div className="flex flex-col gap-6 py-10 w-full">
 
@@ -506,7 +521,7 @@ export default function FundSelectionManualLot() {
               Sell &amp; Rebalance
             </h1>
             <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
-              <button onClick={() => navigate('/automated')} className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink">
+              <button onClick={handleToggleClick} className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink">
                 <Sparkles size={16} className="text-vg-ink" />Automated
               </button>
               <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-vg-teal">
