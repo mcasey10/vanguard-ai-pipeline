@@ -134,6 +134,7 @@ function ActiveFundRow({
   hintsVisible,
   onHintClick,
   onCancel,
+  onLotDetails,
 }: {
   fund: FundRow
   taxData: TaxData
@@ -144,6 +145,7 @@ function ActiveFundRow({
   hintsVisible: boolean
   onHintClick: (mark: 'tax' | 'allocation' | 'harvestable') => void
   onCancel: () => void
+  onLotDetails: (ticker: string) => void
 }) {
   const [inputCents, setInputCents]     = useState(appliedCents)
   const [inputDisplay, setInputDisplay] = useState(formatDollar(appliedCents))
@@ -279,10 +281,13 @@ function ActiveFundRow({
             <HintBadge onClick={() => onHintClick('harvestable')} />
           )}
         </div>
-        <div className="flex items-center gap-1 cursor-pointer shrink-0">
+        <button
+          onClick={() => onLotDetails(fund.ticker)}
+          className="flex items-center gap-1 cursor-pointer shrink-0 hover:opacity-70"
+        >
           <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">Lot details</span>
           <span className="text-vg-ink-muted text-base leading-none">▾</span>
-        </div>
+        </button>
       </div>
     </div>
   )
@@ -453,6 +458,10 @@ export default function FundSelectionManual2() {
   // (step 3) will be added here once the optimization engine is built.
   function handleApplyAmount(ticker: string, cents: number) {
     setAppliedAmounts(prev => ({ ...prev, [ticker]: cents }))
+  }
+
+  function handleLotDetails(ticker: string) {
+    navigate('/manual-lot', { state: { fund: ticker } })
   }
 
   function handleSell(ticker: string) {
@@ -657,6 +666,7 @@ export default function FundSelectionManual2() {
                       taxData={TAX_DATA[fund.ticker]}
                       appliedCents={appliedAmounts[fund.ticker] ?? 0}
                       onApply={handleApplyAmount}
+                      onLotDetails={handleLotDetails}
                       showAllocationHint={fund.ticker === 'VTSAX'}
                       showHarvestableHint={fund.ticker === 'VBTLX'}
                       hintsVisible={hintsVisible}
