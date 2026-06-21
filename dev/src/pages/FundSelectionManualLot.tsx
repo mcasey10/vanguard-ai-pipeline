@@ -110,7 +110,7 @@ function fmtDollar(n: number): string {
 
 function LotDetailHeader() {
   return (
-    <div className="flex h-9 items-center overflow-clip px-3 w-full bg-[#f0f0f0] shrink-0">
+    <div className="flex h-9 items-center overflow-clip px-3 w-[1375px] bg-[#f0f0f0] shrink-0">
       <div className="w-[220px] flex items-center justify-between pr-2 shrink-0 h-full">
         <span className="text-[12px] font-semibold text-vg-ink-muted">Shares to sell</span>
       </div>
@@ -165,7 +165,7 @@ function NormalLotRow({ lot, sharesInput, onSharesChange }:
   const glColor = isGain ? 'text-[#007a00]' : 'text-[#c8102e]'
 
   return (
-    <div className="flex h-12 items-center overflow-clip px-3 w-full bg-[#fafafa] border-b border-[#e8e9e9] shrink-0">
+    <div className="flex h-12 items-center overflow-clip px-3 w-[1375px] bg-[#fafafa] border-b border-[#e8e9e9] shrink-0">
       {/* Shares to sell — 220px: input + All checkbox */}
       <div className="w-[220px] flex items-center gap-2 shrink-0 h-full">
         <input
@@ -229,7 +229,7 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, showHint, hintsVisib
 
       <div className="flex flex-col flex-1 pb-2">
         {/* Lot data row — same columns as NormalLotRow */}
-        <div className="flex h-12 items-center overflow-clip px-2 w-full">
+        <div className="flex h-12 items-center overflow-clip px-2 w-[1375px]">
           <div className="w-[220px] flex items-center gap-2 shrink-0 h-full">
             <input
               type="text"
