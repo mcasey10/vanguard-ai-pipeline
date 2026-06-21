@@ -215,7 +215,13 @@ function ActiveFundRow({
           <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
         </div>
 
-        {/* COST BASIS METHOD — 160px */}
+        {/* COST BASIS METHOD — 160px
+            TODO (REQ-B3-003): "MinTax" here and in FundSelectionManualLot.tsx are three
+            independent hardcoded literals for the canonical scenario — no shared state.
+            When implementing the user-selectable cost basis method selector, introduce
+            costBasisMethod per fund in FundSelectionManual2's state (same pattern as
+            appliedAmounts) and pass it to CollapsedActiveFundRow and to /manual-lot via
+            location.state so all three displays read from one source. */}
         <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
           <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
           <div className="flex items-center gap-1.5">
