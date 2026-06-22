@@ -965,9 +965,9 @@
         "roth_IRA": 131592.00,
         "total": 849851.40
       },
-      "total_lot_count": 32,
+      "total_lot_count": 43,
       "st_lot_count": 6,
-      "lt_lot_count": 26
+      "lt_lot_count": 37
     },
 
     "allocation_by_asset_class": {
