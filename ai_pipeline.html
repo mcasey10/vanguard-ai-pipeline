@@ -877,13 +877,14 @@
         <div class="step-num dev-num">2</div>
         <div class="step-main">
           <div class="step-title">Data model + state management</div>
-          <div class="step-desc">Implement the full TypeScript type system from the logical data model (PRD 07). Load the canonical sample dataset (pm/08-sample-dataset.json) and verify all 32 lots, 3 accounts, and 6 funds load correctly. Initialize the Zustand store with all application state slices: portfolio data, sale session (target amount, active account, mode), recommendation, manual configuration, saved scenarios, and active tax rates. Wire localStorage persistence per REQ-PS-001 through REQ-PS-007. Gate: portfolio loads with total $849,851.40, all accounts and lots present, Zustand store initializes without errors, localStorage round-trip verified.</div>
+          <div class="step-desc">Implement the full TypeScript type system from the logical data model (PRD 07). Load the canonical sample dataset (pm/08-sample-dataset.json) and verify all lots, accounts, and funds load correctly. Initialize the Zustand store with all application state slices: portfolio data, sale session (target amount, active account, mode, optimization priority), recommendation, manual configuration, saved scenarios (up to 3), and active tax rates. Wire localStorage persistence per REQ-PS-001 through REQ-PS-007. Gate: portfolio loads with total $849,851.40, all 3 accounts present, Zustand store initializes without errors, localStorage round-trip verified.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude Code<span class="tip">TypeScript interfaces (src/types/index.ts) and Zustand store (src/store/useAppStore.ts) implemented. Canonical dataset loaded from pm/08-sample-dataset.json and verified against PRD 10 Verification Tables. One dataset correction applied: T-VTSAX-09 acquisition date and Wait &amp; Save flag updated per Verification Table 8.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">TypeScript interfaces (src/types/index.ts), Zustand store (src/store/useAppStore.ts), and data loader (src/data/loader.ts) implemented. Canonical dataset loaded from pm/08-sample-dataset.json — no duplicate copy in dev/src. One dataset correction applied: T-VTSAX-09 acquisition date and Wait &amp; Save flag updated per Verification Table 8.</span></span>
+          <span class="chip chip-used">Zustand<span class="tip">Client-side state management library (v5.0.14). Chosen over React Context for an application with many interdependent state slices shared across multiple screens — portfolio data, sale session state, engine outputs, saved scenarios, and tax rate assumptions all live in a single store any screen can read from or write to directly.</span></span>
           <span class="chip chip-used">Notion MCP<span class="tip">Read PRD 07 (logical data model) and PRD 10 (sample dataset verification tables) to drive TypeScript interface definitions and confirm canonical data values.</span></span>
         </div>
       </div>
