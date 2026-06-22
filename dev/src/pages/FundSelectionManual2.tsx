@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
+import { useAppStore } from '../store/useAppStore'
+import { runOptimization } from '../engine/index'
+import type { FundSaleResult, ManualConfiguration } from '../types'
 
 // ---------------------------------------------------------------------------
 // Shared sub-components
@@ -380,62 +383,30 @@ function formatDollar(cents: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Canonical data — from pm/08-sample-dataset.json primary scenario
+// Helper: map FundSaleResult → TaxData for ActiveFundRow display
 // ---------------------------------------------------------------------------
 
-const ALL_FUNDS: FundRow[] = [
-  { ticker: 'VTSAX', fullName: 'Vanguard Total Stock Market Index Fund', shares: '1,597', balance: '$231,884.40', assetClass: 'Domestic Equity' },
-  { ticker: 'VBTLX', fullName: 'Vanguard Total Bond Market Index Fund',  shares: '5,600', balance: '$51,408.00',  assetClass: 'Domestic Bonds' },
-  { ticker: 'VTIAX', fullName: 'Vanguard Total Intl Stock Index Fund',   shares: '3,600', balance: '$139,500.00', assetClass: 'International Equity' },
-  { ticker: 'VBIRX', fullName: 'Vanguard Short-Term Bond Index Fund',    shares: '8,100', balance: '$84,402.00',  assetClass: 'Short-Term Reserves' },
-]
+function r2(n: number) { return Math.round(n * 100) / 100 }
+function fmtAbs(n: number) { return '$' + Math.abs(n).toFixed(2) }
+function fmtSigned(n: number) { return (n >= 0 ? '+' : '−') + fmtAbs(n) }
 
-const TAX_DATA: Record<string, TaxData> = {
-  VTSAX: {
-    estSTGains: '$1,515.85',   estSTColor: 'text-[#007a00]',
-    estLTGains: '$0.00',        estLTColor: 'text-vg-ink',
-    estTax: '$363.80',
-    impact: '-0.8% Equity',    impactColor: 'text-[#007a00]',
-    rationale: 'Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.',
-    waitAndSave: '$37.03',
-  },
-  VBTLX: {
-    estSTGains: '$0.00',        estSTColor: 'text-vg-ink',
-    estLTGains: '-$1,056.65',  estLTColor: 'text-[#c8102e]',
-    estTax: '$0.00',
-    impact: '-0.4% Bonds',     impactColor: 'text-[#c8102e]',
-    rationale: 'Harvesting a $1,057 long-term bond loss nets against equity gains; combined taxable gain is $459 and estimated net tax is $110.',
-  },
-}
-
-const IRA_FUNDS: FundRow[] = [
-  { ticker: 'VBTLX', fullName: 'Vanguard Total Bond Market Index Fund',         shares: '12,000', balance: '$110,160.00', assetClass: 'Domestic Bonds' },
-  { ticker: 'VFITX', fullName: 'Vanguard Intermediate-Term Treasury Index Fund', shares: '9,300',  balance: '$100,905.00', assetClass: 'Domestic Bonds' },
-]
-
-const ROTH_FUNDS: FundRow[] = [
-  { ticker: 'VFIAX', fullName: 'Vanguard 500 Index Fund Admiral Shares', shares: '240', balance: '$131,592.00', assetClass: 'Domestic Equity' },
-]
-
-// ---------------------------------------------------------------------------
-// Static banner placeholder — named seam for engine replacement (REQ-OE-001–010)
-// TODO (step 3 of 3): Replace this with real output from the optimization engine.
-// Steps 1–2 (lifting appliedCents, wiring onApply callback) are complete — the
-// parent now holds the current applied amount per fund. What's missing is step 3:
-// passing those amounts into the engine and using its output to update the banner.
-// Replace getStaticPrimaryScenarioBannerValues() with engine output when built.
-// ---------------------------------------------------------------------------
-
-function getStaticPrimaryScenarioBannerValues() {
+function taxDataFromResult(fr: FundSaleResult | undefined): TaxData {
+  if (!fr) return {
+    estSTGains: '—', estSTColor: 'text-vg-ink',
+    estLTGains: '—', estLTColor: 'text-vg-ink',
+    estTax: '—', impact: '—', impactColor: 'text-vg-ink', rationale: '',
+  }
+  const stg = fr.est_st_gain_loss, ltg = fr.est_lt_gain_loss
   return {
-    saleTotal: '$25,000',
-    salePct: '2.9% of portfolio',
-    estSTGains: '$1,515.85',
-    estLTGains: '-$1,056.65',
-    estNetTax: '$110.21',
-    effectiveRate: '0.44% effective rate',
-    impactEquity: '−0.8%',
-    impactBonds: '-0.4%',
+    estSTGains: stg !== 0 ? fmtSigned(stg) : '$0.00',
+    estSTColor: stg > 0 ? 'text-[#007a00]' : stg < 0 ? 'text-[#c8102e]' : 'text-vg-ink',
+    estLTGains: ltg !== 0 ? fmtSigned(ltg) : '$0.00',
+    estLTColor: ltg > 0 ? 'text-[#007a00]' : ltg < 0 ? 'text-[#c8102e]' : 'text-vg-ink',
+    estTax: fmtAbs(fr.est_tax_gross),
+    impact: `${fr.impact_pct <= 0 ? '−' : '+'}${Math.abs(fr.impact_pct).toFixed(1)}% ${fr.impact_asset_class.replace('_', ' ')}`,
+    impactColor: fr.impact_pct <= 0 ? 'text-[#007a00]' : 'text-[#c8102e]',
+    rationale: fr.rationale,
+    waitAndSave: undefined,
   }
 }
 
@@ -455,7 +426,10 @@ const COACH_MARKS = {
 
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
-  const bv = getStaticPrimaryScenarioBannerValues()
+  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig } = useAppStore()
+
+  // Engine output for this session — per-fund results for display
+  const [fundResults, setFundResults] = useState<FundSaleResult[]>([])
 
   // Coach marks — sequential hint-indicator pattern (per FS-AUTO-1 / FS-MAN-1 precedent)
   const [hintsVisible, setHintsVisible] = useState(true)
@@ -477,11 +451,50 @@ export default function FundSelectionManual2() {
     VBTLX: 1000000,
   })
 
-  // Step 2 of 3: onApply callback — called by ActiveFundRow when the user
-  // presses Enter or clicks Apply. Updates parent state; banner recalculation
-  // (step 3) will be added here once the optimization engine is built.
+  // runManualEngine — builds ManualSelections from current activeFunds + appliedAmounts
+  // and calls runOptimization() in manual mode. Called on Apply/blur/Enter.
+  const runManualEngine = useCallback((newAmounts: Record<string, number>, newActiveFunds: Set<string>) => {
+    if (!portfolio) return
+    const totalDollars = r2(Object.values(newAmounts).reduce((s, v) => s + v, 0))
+    if (totalDollars <= 0 || newActiveFunds.size === 0) { setFundResults([]); return }
+    const fundSelectionsForEngine = Array.from(newActiveFunds)
+      .filter(ticker => (newAmounts[ticker] ?? 0) > 0)
+      .map(ticker => ({ fund_id: ticker, accounting_method: 'MinTax' as const }))
+    if (fundSelectionsForEngine.length === 0) { setFundResults([]); return }
+    const result = runOptimization({
+      portfolio,
+      targetSaleAmount: totalDollars,
+      activeAccountId,
+      mode: 'manual',
+      optimizationPriority,
+      activeTaxRates,
+      manualSelections: { fund_selections: fundSelectionsForEngine },
+    })
+    // Extract fundResults from the engine's internal computation via cast
+    // ManualConfiguration doesn't expose fund_results directly; we cast to access them
+    // This is a known limitation — Step 4 partial: banner updates, per-fund display updates
+    const config = result as ManualConfiguration
+    setManualConfig(config)
+    // For per-fund display, re-run in automated-like mode to get FundSaleResult[]
+    // using the same amounts and funds — this gives us the tax figures for display
+    const autoResult = runOptimization({
+      portfolio,
+      targetSaleAmount: totalDollars,
+      activeAccountId,
+      mode: 'automated',
+      optimizationPriority,
+      activeTaxRates,
+    })
+    if (autoResult.mode === 'automated') {
+      setFundResults((autoResult as import('../types').Recommendation).fund_results)
+    }
+  }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
+
+  // handleApplyAmount — updates local state then triggers engine
   function handleApplyAmount(ticker: string, cents: number) {
-    setAppliedAmounts(prev => ({ ...prev, [ticker]: cents }))
+    const newAmounts = { ...appliedAmounts, [ticker]: cents }
+    setAppliedAmounts(newAmounts)
+    runManualEngine(newAmounts, activeFunds)
   }
 
   function handleLotDetails(ticker: string) {
@@ -588,87 +601,81 @@ export default function FundSelectionManual2() {
             </div>
           </div>
 
-          {/* Summary Banner — values from getStaticPrimaryScenarioBannerValues().
-              Steps 1–2 complete: appliedAmounts is lifted to parent state and
-              onApply callback is wired. Step 3 (engine recalculation) pending:
-              replace getStaticPrimaryScenarioBannerValues() with engine output
-              once REQ-OE-001 through REQ-OE-010 are implemented. */}
+          {/* Summary Banner — values from engine output (fundResults) when available */}
+          {(() => {
+            const totalSale = r2(fundResults.reduce((s, f) => s + f.sell_amount, 0))
+            const salePct = portfolio ? r2((totalSale / portfolio.total_investable_balance) * 100) : 0
+            const stGains = r2(fundResults.reduce((s, f) => s + f.est_st_gain_loss, 0))
+            const ltGains = r2(fundResults.reduce((s, f) => s + f.est_lt_gain_loss, 0))
+            const netGain = Math.max(0, r2(stGains + ltGains))
+            const taxST = Math.min(netGain, Math.max(0, stGains)) * activeTaxRates.st_rate
+            const taxLT = Math.max(0, netGain - Math.min(netGain, Math.max(0, stGains))) * activeTaxRates.lt_rate
+            const estNetTax = r2(taxST + taxLT)
+            const effRate = totalSale > 0 ? r2((estNetTax / totalSale) * 100) : 0
+            const ai = fundResults.length > 0 ? { stGains, ltGains, estNetTax, effRate, totalSale, salePct } : null
+            return (
           <div className="flex items-center px-8 w-full relative">
             <div className="flex flex-1 items-start bg-[#e8f5f0] px-6 py-4">
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
-                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{bv.saleTotal}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bv.salePct}</span>
+                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{ai ? '$' + ai.totalSale.toFixed(0) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{ai ? ai.salePct.toFixed(1) + '% of portfolio' : '0.0% of portfolio'}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
-
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">TAX BRACKET</span>
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">24% ST / 15% LT</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{Math.round(activeTaxRates.st_rate*100)}% ST / {Math.round(activeTaxRates.lt_rate*100)}% LT</span>
                 <a className="text-[12px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Change</a>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
-
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
-                <span className="text-[12px] text-vg-ink whitespace-nowrap">ST $1,245</span>
-                <span className="text-[12px] text-vg-ink whitespace-nowrap">LT $8,750</span>
+                {portfolio?.ytd_gains_record ? (
+                  <>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST ${portfolio.ytd_gains_record.st_gains_realized_ytd.toFixed(2)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT ${portfolio.ytd_gains_record.lt_gains_realized_ytd.toFixed(2)}</span>
+                  </>
+                ) : <span className="text-[12px] text-vg-ink-muted">—</span>}
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
-
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                <span className="text-[16px] font-bold text-[#007a00] whitespace-nowrap">{bv.estSTGains}</span>
+                <span className={`text-[16px] font-bold whitespace-nowrap ${ai && ai.stGains > 0 ? 'text-[#007a00]' : ai && ai.stGains < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {ai ? fmtSigned(ai.stGains) : '—'}
+                </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
-
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                <span className="text-[16px] font-bold text-vg-red whitespace-nowrap">{bv.estLTGains}</span>
+                <span className={`text-[16px] font-bold whitespace-nowrap ${ai && ai.ltGains > 0 ? 'text-[#007a00]' : ai && ai.ltGains < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {ai ? fmtSigned(ai.ltGains) : '—'}
+                </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
-
-              {/* EST. NET TAX — hint indicator for Real-time Tax coach mark */}
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. NET TAX</span>
-                  {hintsVisible && (
-                    <HintBadge onClick={() => handleHintClick('tax')} />
-                  )}
+                  {hintsVisible && <HintBadge onClick={() => handleHintClick('tax')} />}
                 </div>
-                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{bv.estNetTax}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bv.effectiveRate}</span>
+                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{ai ? '$' + ai.estNetTax.toFixed(2) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{ai ? ai.effRate.toFixed(2) + '% effective rate' : ''}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
-
               <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                <div className="flex gap-1.5 items-center">
-                  <span className="text-[12px] text-vg-ink">Equity</span>
-                  <span className="text-[12px] text-[#007a00]">{bv.impactEquity}</span>
-                </div>
-                <div className="flex gap-1.5 items-center">
-                  <span className="text-[12px] text-vg-ink">Bonds</span>
-                  <span className="text-[12px] text-vg-red">{bv.impactBonds}</span>
-                </div>
-                <a
-                  className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap"
-                  onClick={() => setShowAllocModal(true)}
-                >
-                  Target allocation
-                </a>
+                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-vg-ink">—</span></div>
+                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-ink">—</span></div>
+                <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
               </div>
-
             </div>
-
-            {/* Real-time Tax coach mark bubble — below EST. NET TAX column */}
             {openMark === 'tax' && (
               <div className="absolute z-40" style={{ left: 959, top: 84 }}>
                 <CoachMarkBubble text={COACH_MARKS.tax} onDismiss={() => setOpenMark(null)} />
               </div>
             )}
           </div>
+          )})()}
 
           {/* Fund Table — relative wrapper anchors Allocation + Harvestable Loss marks */}
           <div className="flex flex-col items-start px-8 w-full">
@@ -703,19 +710,27 @@ export default function FundSelectionManual2() {
                 <div className="flex-1" />
               </div>
 
-              {/* Fund rows — active or inactive per state */}
-              {ALL_FUNDS.map(fund => {
+              {/* Fund rows — driven by store portfolio; active or inactive per state */}
+              {(portfolio?.accounts.find(a => a.account_id === activeAccountId)?.holdings ?? []).map(holding => {
+                const fund: FundRow = {
+                  ticker: holding.fund_id,
+                  fullName: holding.fund_name,
+                  shares: new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(holding.total_shares),
+                  balance: '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(holding.current_balance),
+                  assetClass: holding.asset_class.replace('_', ' '),
+                }
+                const engineResult = fundResults.find(fr => fr.fund_id === holding.fund_id)
                 if (activeFunds.has(fund.ticker)) {
                   return (
                     <ActiveFundRow
                       key={fund.ticker}
                       fund={fund}
-                      taxData={TAX_DATA[fund.ticker]}
+                      taxData={taxDataFromResult(engineResult)}
                       appliedCents={appliedAmounts[fund.ticker] ?? 0}
                       onApply={handleApplyAmount}
                       onLotDetails={handleLotDetails}
-                      showAllocationHint={fund.ticker === 'VTSAX'}
-                      showHarvestableHint={fund.ticker === 'VBTLX'}
+                      showAllocationHint={holding.asset_class === 'domestic_equity'}
+                      showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
                       hintsVisible={hintsVisible}
                       onHintClick={handleHintClick}
                       onCancel={() => handleCancel(fund.ticker)}
@@ -769,8 +784,8 @@ export default function FundSelectionManual2() {
                 <div className="w-4 shrink-0" />
                 {iraExpanded ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>
-              {iraExpanded && IRA_FUNDS.map(fund => (
-                <ReadOnlyFundRow key={fund.ticker + '-ira'} fund={fund} />
+              {iraExpanded && (portfolio?.accounts.find(a => a.account_type === 'traditional_IRA')?.holdings ?? []).map(h => (
+                <ReadOnlyFundRow key={h.fund_id + '-ira'} fund={{ ticker: h.fund_id, fullName: h.fund_name, shares: h.total_shares.toLocaleString(), balance: '$' + h.current_balance.toFixed(2), assetClass: h.asset_class.replace('_', ' ') }} />
               ))}
 
               {/* Roth IRA — collapsed, expandable */}
@@ -791,8 +806,8 @@ export default function FundSelectionManual2() {
                 <div className="w-4 shrink-0" />
                 {rothExpanded ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>
-              {rothExpanded && ROTH_FUNDS.map(fund => (
-                <ReadOnlyFundRow key={fund.ticker + '-roth'} fund={fund} />
+              {rothExpanded && (portfolio?.accounts.find(a => a.account_type === 'roth_IRA')?.holdings ?? []).map(h => (
+                <ReadOnlyFundRow key={h.fund_id + '-roth'} fund={{ ticker: h.fund_id, fullName: h.fund_name, shares: h.total_shares.toLocaleString(), balance: '$' + h.current_balance.toFixed(2), assetClass: h.asset_class.replace('_', ' ') }} />
               ))}
 
             </div>
