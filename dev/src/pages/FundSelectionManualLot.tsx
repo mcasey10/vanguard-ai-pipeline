@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
+import { useAppStore } from '../store/useAppStore'
+import { runOptimization } from '../engine/index'
+import type { Lot as CanonicalLot } from '../types'
 
 // ---------------------------------------------------------------------------
 // Coach mark bubble (same structure as FS-AUTO-1 / FS-MAN-2)
@@ -66,37 +69,29 @@ type Lot = {
   }
 }
 
-const VTSAX_LOTS: Lot[] = [
-  // LT lots — ordered by acquisition date
-  { lotId: 'T-VTSAX-01', acquisitionDate: '03/15/2004', shares: 200,  costPerShare: 35.20,  totalCost: 7040.00,   currentValue: 29040.00, gainLoss: 22000.00,  gainLossPerShare: 110.00, holdingPeriod: 'LT' },
-  { lotId: 'T-VTSAX-02', acquisitionDate: '11/20/2008', shares: 300,  costPerShare: 25.40,  totalCost: 7620.00,   currentValue: 43560.00, gainLoss: 35940.00,  gainLossPerShare: 119.80, holdingPeriod: 'LT' },
-  { lotId: 'T-VTSAX-03', acquisitionDate: '06/10/2012', shares: 250,  costPerShare: 45.80,  totalCost: 11450.00,  currentValue: 36300.00, gainLoss: 24850.00,  gainLossPerShare: 99.40,  holdingPeriod: 'LT' },
-  { lotId: 'T-VTSAX-04', acquisitionDate: '09/15/2016', shares: 200,  costPerShare: 62.30,  totalCost: 12460.00,  currentValue: 29040.00, gainLoss: 16580.00,  gainLossPerShare: 82.90,  holdingPeriod: 'LT' },
-  { lotId: 'T-VTSAX-05', acquisitionDate: '04/01/2020', shares: 150,  costPerShare: 72.50,  totalCost: 10875.00,  currentValue: 21780.00, gainLoss: 10905.00,  gainLossPerShare: 72.70,  holdingPeriod: 'LT' },
-  { lotId: 'T-VTSAX-06', acquisitionDate: '07/15/2023', shares: 100,  costPerShare: 110.20, totalCost: 11020.00,  currentValue: 14520.00, gainLoss: 3500.00,   gainLossPerShare: 35.00,  holdingPeriod: 'LT' },
-  { lotId: 'T-VTSAX-07', acquisitionDate: '11/10/2024', shares: 75,   costPerShare: 138.50, totalCost: 10387.50,  currentValue: 10890.00, gainLoss: 502.50,    gainLossPerShare: 6.70,   holdingPeriod: 'LT' },
-  // ST lots
-  { lotId: 'T-VTSAX-08', acquisitionDate: '08/15/2025', shares: 150,  costPerShare: 132.40, totalCost: 19860.00,  currentValue: 21780.00, gainLoss: 1920.00,   gainLossPerShare: 12.80,  holdingPeriod: 'ST' },
-  { lotId: 'T-VTSAX-09', acquisitionDate: '11/20/2025', shares: 172,  costPerShare: 128.90, totalCost: 22170.80,  currentValue: 24974.40, gainLoss: 2803.60,   gainLossPerShare: 16.30,  holdingPeriod: 'ST',
-    waitAndSave: {
-      daysUntilLT: 166,          // from PRD 10 VT8 (note: arithmetically 177 from 2026-05-27; dataset uses 223 from as_of_date 2026-04-11; Figma/VT8 display 166 — see dataset note)
-      ltConversionDate: '2026-11-20',
-      savingsAmount: '$37.03',
-      noticeText: 'Your estimated federal tax will be reduced by $37.03, if you wait until this lot converts to a long-term holding. This lot converts to a long-term holding in 166 days.',
-    },
-  },
-]
-
-const VBTLX_LOTS: Lot[] = [
-  // LT lots with harvestable losses
-  { lotId: 'T-VBTLX-01', acquisitionDate: '07/15/2019', shares: 1500, costPerShare: 11.20, totalCost: 16800.00, currentValue: 13770.00, gainLoss: -3030.00, gainLossPerShare: -2.02, holdingPeriod: 'LT' },
-  { lotId: 'T-VBTLX-02', acquisitionDate: '10/20/2021', shares: 2000, costPerShare: 11.45, totalCost: 22900.00, currentValue: 18360.00, gainLoss: -4540.00, gainLossPerShare: -2.27, holdingPeriod: 'LT' },
-  { lotId: 'T-VBTLX-03', acquisitionDate: '05/10/2023', shares: 1500, costPerShare: 9.65,  totalCost: 14475.00, currentValue: 13770.00, gainLoss: -705.00,  gainLossPerShare: -0.47, holdingPeriod: 'LT' },
-  // ST lot
-  { lotId: 'T-VBTLX-04', acquisitionDate: '09/20/2025', shares: 600,  costPerShare: 9.22,  totalCost: 5532.00,  currentValue: 5508.00,  gainLoss: -24.00,   gainLossPerShare: -0.04, holdingPeriod: 'ST' },
-]
-
-const LOT_DATA: Record<string, Lot[]> = { VTSAX: VTSAX_LOTS, VBTLX: VBTLX_LOTS }
+/** Convert canonical Lot (from store) to local display Lot type */
+function toDisplayLot(l: CanonicalLot): Lot {
+  const [y, m, d] = l.acquisition_date.split('-')
+  const acqDisplay = `${m}/${d}/${y}`
+  const gainPerShare = l.current_nav - l.cost_basis_per_share
+  return {
+    lotId: l.lot_id,
+    acquisitionDate: acqDisplay,
+    shares: l.shares,
+    costPerShare: l.cost_basis_per_share,
+    totalCost: l.total_cost_basis,
+    currentValue: l.current_value,
+    gainLoss: l.unrealized_gain_loss,
+    gainLossPerShare: Math.round(gainPerShare * 100) / 100,
+    holdingPeriod: l.holding_period,
+    waitAndSave: l.wait_and_save_flag && l.wait_and_save_detail ? {
+      daysUntilLT: l.wait_and_save_detail.days_until_lt,
+      ltConversionDate: l.wait_and_save_detail.lt_conversion_date,
+      savingsAmount: '$' + l.wait_and_save_detail.estimated_tax_savings_by_waiting.toFixed(2),
+      noticeText: `Your estimated federal tax will be reduced by $${l.wait_and_save_detail.estimated_tax_savings_by_waiting.toFixed(2)}, if you wait until this lot converts to a long-term holding. This lot converts to a long-term holding in ${l.wait_and_save_detail.days_until_lt} days.`,
+    } : undefined,
+  }
+}
 
 function fmt(n: number, decimals = 2): string {
   return new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n)
@@ -162,8 +157,8 @@ function LotSectionHeader({ label }: { label: string }) {
 // Normal Lot Row (bg-[#fafafa], 48px)
 // ---------------------------------------------------------------------------
 
-function NormalLotRow({ lot, sharesInput, onSharesChange }:
-  { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void }) {
+function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit }:
+  { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void; onSharesCommit: (v: string) => void }) {
   const isGain = lot.gainLoss >= 0
   const glColor = isGain ? 'text-[#007a00]' : 'text-[#c8102e]'
 
@@ -176,6 +171,8 @@ function NormalLotRow({ lot, sharesInput, onSharesChange }:
           inputMode="numeric"
           value={sharesInput}
           onChange={e => onSharesChange(e.target.value.replace(/[^\d.]/g, ''))}
+          onBlur={e => onSharesCommit(e.target.value.replace(/[^\d.]/g, ''))}
+          onKeyDown={e => e.key === 'Enter' && onSharesCommit((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))}
           className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
         />
         <label className="flex items-center gap-1.5 cursor-pointer">
@@ -220,8 +217,8 @@ function NormalLotRow({ lot, sharesInput, onSharesChange }:
 // Wait & Save Lot Row (bg-[#fff8e8], amber left accent, inline notice)
 // ---------------------------------------------------------------------------
 
-function WaitSaveLotRow({ lot, sharesInput, onSharesChange, showHint, hintsVisible, onHintClick }:
-  { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void
+function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, showHint, hintsVisible, onHintClick }:
+  { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void; onSharesCommit: (v: string) => void
     showHint: boolean; hintsVisible: boolean; onHintClick: () => void }) {
   const ws = lot.waitAndSave!
 
@@ -239,6 +236,8 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, showHint, hintsVisib
               inputMode="numeric"
               value={sharesInput}
               onChange={e => onSharesChange(e.target.value.replace(/[^\d.]/g, ''))}
+              onBlur={e => onSharesCommit(e.target.value.replace(/[^\d.]/g, ''))}
+              onKeyDown={e => e.key === 'Enter' && onSharesCommit((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))}
               className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
             />
             <label className="flex items-center gap-1.5 cursor-pointer">
@@ -443,9 +442,14 @@ function getStaticPrimaryScenarioBannerValues() {
 export default function FundSelectionManualLot() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig } = useAppStore()
   const fund = (location.state as { fund?: string })?.fund ?? 'VTSAX'
-  const lots = LOT_DATA[fund] ?? VTSAX_LOTS
   const bv = getStaticPrimaryScenarioBannerValues()
+
+  // Derive lots from store portfolio (single source of truth — no hardcoded arrays)
+  const taxableAcct = portfolio?.accounts.find(a => a.account_id === activeAccountId)
+  const holding = taxableAcct?.holdings.find(h => h.fund_id === fund)
+  const lots: Lot[] = (holding?.lots ?? []).map(toDisplayLot)
 
   // Mode toggle guard — hasAmounts always true on this screen (only reachable from FS-MAN-2
   // which requires active fund rows with applied amounts)
@@ -476,13 +480,39 @@ export default function FundSelectionManualLot() {
     return init
   })
 
-  // TODO (state lifting): sharesInputs should be lifted to FundSelectionManual2
-  // so that lot-level checkbox/share changes update the parent's appliedAmounts
-  // and Summary Banner (same pattern as appliedCents / onApply in FS-MAN-2).
-  // Implement when the optimization engine (REQ-OE-001–010) is built.
+  // runLotEngine — called on blur/Enter on any lot share input.
+  // Builds SpecID selections from sharesInputs and calls runOptimization().
+  const runLotEngine = useCallback((inputs: Record<string, string>) => {
+    if (!portfolio) return
+    const lotOverrides = Object.entries(inputs)
+      .filter(([, v]) => parseFloat(v) > 0)
+      .map(([lotId, v]) => ({ lot_id: lotId, shares: parseFloat(v) }))
+    if (lotOverrides.length === 0) return
+    const totalDollars = lotOverrides.reduce((s, o) => {
+      const lot = holding?.lots.find(l => l.lot_id === o.lot_id)
+      return s + (lot ? o.shares * lot.current_nav : 0)
+    }, 0)
+    const result = runOptimization({
+      portfolio,
+      targetSaleAmount: Math.round(totalDollars * 100) / 100,
+      activeAccountId,
+      mode: 'manual',
+      optimizationPriority,
+      activeTaxRates,
+      manualSelections: { fund_selections: [{ fund_id: fund, accounting_method: 'specific_lot_identification', lot_overrides: lotOverrides }] },
+    })
+    setManualConfig(result as import('../types').ManualConfiguration)
+  }, [portfolio, holding, fund, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
 
   function handleSharesChange(lotId: string, value: string) {
     setSharesInputs(prev => ({ ...prev, [lotId]: value }))
+  }
+
+  function handleSharesCommit(lotId: string, value: string) {
+    // blur/Enter: update state then fire engine
+    const newInputs = { ...sharesInputs, [lotId]: value }
+    setSharesInputs(newInputs)
+    runLotEngine(newInputs)
   }
 
   // Account expansion
@@ -719,6 +749,7 @@ export default function FundSelectionManualLot() {
                         lot={lot}
                         sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
                         onSharesChange={v => handleSharesChange(lot.lotId, v)}
+                        onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
                       />
                     ))}
                   </>
@@ -734,6 +765,7 @@ export default function FundSelectionManualLot() {
                           lot={lot}
                           sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
                           onSharesChange={v => handleSharesChange(lot.lotId, v)}
+                          onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
                           showHint={true}
                           hintsVisible={hintsVisible}
                           onHintClick={() => setOpenMark(prev => prev === 'ws' ? null : 'ws')}
@@ -744,6 +776,7 @@ export default function FundSelectionManualLot() {
                           lot={lot}
                           sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
                           onSharesChange={v => handleSharesChange(lot.lotId, v)}
+                          onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
                         />
                       )
                     )}
