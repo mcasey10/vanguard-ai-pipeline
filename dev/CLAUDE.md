@@ -383,7 +383,7 @@ contains the full acceptance criteria. Read the story before implementing
 the frame.
 
 | Frame                   | Node ID   | Jira Story |
-| ----------------------- | --------- | ---------- |
+| ----------------------- | --------- | ---------- | ---------------------------------------------------------------------- |
 | FS-ENTRY-1              | 248:541   | VSR-75     |
 | FS-AUTO-1               | 249:272   | VSR-18     |
 | FS-MAN-1                | 250:369   | VSR-21     |
@@ -400,7 +400,7 @@ the frame.
 | OC-1                    | 628:26277 | VSR-28     |
 | ES-1                    | 628:26531 | VSR-78     |
 | NF-2                    | 628:25899 | VSR-26     |
-| Cost Basis Dialog       | 660:4194  | VSR-22     |  ← actual frame; 660:4200 is the disclaimer text node inside the header
+| Cost Basis Dialog       | 660:4194  | VSR-22     | ← actual frame; 660:4200 is the disclaimer text node inside the header |
 | Target Allocation Modal | 667:3618  | VSR-75     |
 
 ---
@@ -489,3 +489,66 @@ example for FS-MAN-1, FS-MAN-2, and FS-MAN-LOT.
 
 See PDB 09, entry "Coach mark interaction pattern: sequential hint
 indicators," for full rationale.
+
+---
+
+## Optimization engine — calculation methods and known data artifacts
+
+### Cost basis calculation method
+
+The engine uses proportional cost split for partial lot sales:
+partial_cost = (shares_sold / total_shares) × total_cost_basis
+gain_loss = proceeds - partial_cost
+
+Do NOT compute gain as `shares_sold × (NAV - cost_per_share)`. The
+per-share cost figure in the dataset is rounded to 2 decimal places;
+multiplying by shares sold produces a slightly different result than
+the proportional split from the stored total_cost_basis. The
+proportional split method is the standard for lot accounting and is
+what the engine implements.
+
+### Known rounding artifacts — do not treat as bugs
+
+The following discrepancies between PRD 10 Verification Table 8
+figures and engine output are expected and documented. They arise
+because VT8 was hand-constructed by working backwards from a rounded
+per-share gain rather than forward from lot records. The engine
+produces the arithmetically correct result from stored data.
+
+| Figure                          | VT8 states | Engine produces | Difference | Cause                                                       |
+| ------------------------------- | ---------- | --------------- | ---------- | ----------------------------------------------------------- |
+| T-VTSAX-09 partial sale gain    | $1,515.85  | $1,515.50       | 35¢        | VT8 used backwards construction from rounded $14.67/sh gain |
+| EST. NET TAX (primary scenario) | $110.21    | $110.12         | 9¢         | Cascades from the 35¢ gain difference above                 |
+
+These are recorded in `dev/src/engine/index.ts` as the
+`KNOWN_ROUNDING_ARTIFACTS` constant. The Figma screens display
+VT8's figures ($1,515.85, $110.21) — those display values are
+correct as design artifacts. The engine's computed values ($1,515.50,
+$110.12) are correct as calculated results. Do not attempt to make
+the engine match VT8's figures exactly — it cannot be done by any
+standard lot accounting method from the stored data.
+
+### Known VT9 inconsistency — informational only
+
+Verification Table 9 Scenario 2 requests selling 103.306 shares from
+lot T-VTSAX-07, which contains only 75 shares. The engine correctly
+caps at 75 shares. This is a VT9 authoring error — do not modify the
+engine to accommodate it. The verify script handles this as an
+informational note, not a hard assertion.
+
+### Dataset corrections applied during Dev phase
+
+The following lot records were corrected in pm/08-sample-dataset.json
+during Step 2/3 of the Dev phase. The original values were wrong
+relative to PRD 10 Verification Tables:
+
+| Lot        | Field                | Old value | Corrected value |
+| ---------- | -------------------- | --------- | --------------- |
+| T-VTSAX-09 | cost_basis_per_share | 128.90    | 130.53          |
+| T-VBTLX-02 | cost_basis_per_share | 11.45     | 10.15           |
+| T-VTSAX-07 | cost_basis_per_share | 138.50    | 117.37          |
+| T-VTIAX-06 | cost_basis_per_share | 37.80     | 27.20           |
+
+PRD 10 VT9 Scenario 1 VBTLX cost basis was also corrected in Notion
+from $12,472.77 to $11,056.65 to match VT8's internally consistent
+figure.
