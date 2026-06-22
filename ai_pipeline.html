@@ -846,13 +846,13 @@
       <div class="phase-inputs-lbl">Inputs for this phase</div>
       <div class="phase-inputs-items">
         <a class="input-item" href="https://www.notion.so/33edcac9574a808da907cc9decefb512" target="_blank">Notion PRD workspace</a>
-        <span class="input-item">Figma Design + Dev Mode (wired prototype)</span>
-        <span class="input-item">Screen inventory + annotated wireframes (PDB)</span>
-        <span class="input-item">PDB — PD decisions log</span>
-        <span class="input-item">Sample dataset JSON</span>
-        <span class="input-item">Lovable reference implementation</span>
+        <span class="input-item">Figma Screens file (jz82GrOp8RE2QGh81V0qbs)</span>
+        <span class="input-item">Figma DS Library (krtNgOD3jL5U6WmUMT32u6)</span>
+        <span class="input-item">Screen inventory + PD decisions log (PDB)</span>
+        <span class="input-item">Sample dataset JSON (pm/08-sample-dataset.json)</span>
         <span class="input-item">Jira backlog (VSR project)</span>
         <a class="input-item" href="https://github.com/mcasey10/vanguard-ai-pipeline" target="_blank">vanguard-ai-pipeline repo</a>
+        <span class="input-item">dev/CLAUDE.md (standing rules for CC sessions)</span>
       </div>
     </div>
 
@@ -860,22 +860,14 @@
       <div class="step-head">
         <div class="step-num dev-num">1</div>
         <div class="step-main">
-          <div class="step-title">Project scaffold + component generation</div>
-          <div class="step-desc">Generate app scaffold and translate Figma components to production code. The Lovable logic validation prototype serves as the reference implementation for the optimization engine. Claude Code handles multi-file agentic implementation reading from the PDB decisions log and PRD via Notion MCP.</div>
+          <div class="step-title">App shell + routing</div>
+          <div class="step-desc">Build the application container: Vite + React 18 + TypeScript + Tailwind v3, React Router v6, PortalShell layout component (Global Header, L2 Nav, content area), design tokens, Inter font. No screens, no data, no business logic — just the structural container every screen will render inside. Gate: dev server runs, portal shell renders correctly at 1440px fixed width centered, routing resolves placeholder routes for all four stages.</div>
         </div>
       </div>
       <div class="step-footer">
-        <span class="tag t3">T3</span><span class="sep"></span>
-        <div class="tools-row">
-          <span class="chip chip-pending">v0 by Vercel<span class="tip">Reclassified to PD phase (steps 4 and 6) for structural exploration and wireframing. In Dev phase, may be used for translating Figma component specs into production React components. Strong candidate for React component scaffold from Figma specs.</span></span>
-          <span class="chip chip-pending">Lovable<span class="tip">Used in PM phase for logic validation — may be revisited for initial app scaffold before Claude Code takes over for business logic.</span></span>
-          <span class="chip chip-pending">Replit<span class="tip">Full-stack application builder with database integration — worth evaluating for the initial scaffold, particularly if a hosted backend is needed from the start.</span></span>
-          <span class="chip chip-pending">Base44<span class="tip">Newer entrant in the code-forward tier — not yet evaluated. Worth including in the scaffold comparison experiment alongside Lovable and v0.</span></span>
-        </div>
-        <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started. Primary planned tool for agentic implementation.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Built the Vite + React + TypeScript + Tailwind scaffold and PortalShell component (GlobalHeader, L2Nav) via Figma MCP. Vanguard design tokens applied from pd/CLAUDE.md. Shell confirmed at 1440px fixed width, centered (mx-auto), with correct L1/L2 nav active states and drop shadow.</span></span>
         </div>
       </div>
     </div>
@@ -884,15 +876,15 @@
       <div class="step-head">
         <div class="step-num dev-num">2</div>
         <div class="step-main">
-          <div class="step-title">Data model + API layer</div>
-          <div class="step-desc">Implement the logical data model from the PRD. Build API routes, data fetching, and state management. The canonical sample dataset drives unit test coverage from the first commit.</div>
+          <div class="step-title">Data model + state management</div>
+          <div class="step-desc">Implement the full TypeScript type system from the logical data model (PRD 07). Load the canonical sample dataset (pm/08-sample-dataset.json) and verify all 32 lots, 3 accounts, and 6 funds load correctly. Initialize the Zustand store with all application state slices: portfolio data, sale session (target amount, active account, mode), recommendation, manual configuration, saved scenarios, and active tax rates. Wire localStorage persistence per REQ-PS-001 through REQ-PS-007. Gate: portfolio loads with total $849,851.40, all accounts and lots present, Zustand store initializes without errors, localStorage round-trip verified.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started.</span></span>
-          <span class="chip chip-pending">Cursor<span class="tip">Dev phase not yet started. Alternative to Claude Code for multi-file agentic editing.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">TypeScript interfaces (src/types/index.ts) and Zustand store (src/store/useAppStore.ts) implemented. Canonical dataset loaded from pm/08-sample-dataset.json and verified against PRD 10 Verification Tables. One dataset correction applied: T-VTSAX-09 acquisition date and Wait &amp; Save flag updated per Verification Table 8.</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Read PRD 07 (logical data model) and PRD 10 (sample dataset verification tables) to drive TypeScript interface definitions and confirm canonical data values.</span></span>
         </div>
       </div>
     </div>
@@ -901,14 +893,15 @@
       <div class="step-head">
         <div class="step-num dev-num">3</div>
         <div class="step-main">
-          <div class="step-title">Optimization engine implementation</div>
-          <div class="step-desc">Tax calculation logic, lot selection algorithm, rebalancing engine, Wait &amp; Save detection, harvestable loss identification, account priority ordering, and accounting method switching. Lovable prototype provides the reference implementation; Claude Code implements production-quality version from REQ-OE-001 through REQ-OE-010.</div>
+          <div class="step-title">Optimization engine</div>
+          <div class="step-desc">Implement all business logic: tax calculation per lot (ST at 24%, LT at 15% at default bracket), lot selection per accounting method (MinTax, HIFO, FIFO, AvgCost, SpecID), account withdrawal priority (Taxable → Traditional IRA → Roth IRA — never inferred, always explicit per dev/CLAUDE.md), allocation impact calculation per asset class, Wait &amp; Save detection (lots within 30 days of LT conversion), harvestable loss identification, portfolio-level gain/loss netting (EST. NET TAX vs. per-fund gross EST. TAX), and dual optimization modes (Tax-first / Balance-first). Gate: all 15 coverage cases from PRD 10's sample data coverage map pass with figures matching Verification Tables 8 and 9 exactly.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started. Key insight from logic validation: account withdrawal priority order (taxable → traditional IRA → Roth) must be an explicit CLAUDE.md constraint, not inferred.</span></span>
+          <span class="chip chip-pending">Claude Code<span class="tip">Primary implementation tool. Reads REQ-OE-001 through REQ-OE-010 via Notion MCP. Account withdrawal priority (Taxable → TradIRA → Roth) is a hard rule in dev/CLAUDE.md — never derived from tax efficiency. Engine output must match PRD 10 Verification Tables exactly before screen implementation begins.</span></span>
+          <span class="chip chip-pending">Notion MCP<span class="tip">Reads REQ-OE-001 through REQ-OE-010 and PRD 10 Verification Tables as the test oracle for all 15 coverage cases.</span></span>
         </div>
       </div>
     </div>
@@ -917,14 +910,24 @@
       <div class="step-head">
         <div class="step-num dev-num">4</div>
         <div class="step-main">
-          <div class="step-title">Testing + quality assurance</div>
-          <div class="step-desc">Unit tests against the 15 coverage cases from the canonical sample dataset. Integration tests for the optimization engine across all accounting methods and optimization modes. Claude Code writes tests against its own implementation.</div>
+          <div class="step-title">Screen implementation</div>
+          <div class="step-desc">Build all application screens via Claude Code + Figma MCP, reading each Figma frame by node ID and implementing it connected to real Zustand state and the optimization engine from the first screen. Each screen reads from and writes to the Zustand store — no local component state for business data. The engine is called on every user action that changes the recommendation. Navigation carries real session state. Gate per screen: Jira story acceptance criteria pass with real data from the canonical dataset.</div>
         </div>
       </div>
       <div class="step-footer">
+        <span class="tag t3">T3</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-skipped">Lovable<span class="tip">Evaluated for Figma-to-screen generation — abandoned. Lovable's Figma integration requires the desktop app (Mac-only) or Builder.io Enterprise plugin. Neither available on Windows.</span></span>
+          <span class="chip chip-skipped">v0 by Vercel<span class="tip">Evaluated for component generation from Figma specs — not used. Claude Code + Figma MCP provided direct Figma frame reading, which produced higher fidelity than v0's image-interpretation approach and eliminated a tool-handoff step.</span></span>
+          <span class="chip chip-skipped">Replit<span class="tip">Considered as an alternative full-stack scaffold — not needed. Application is client-side only; Vite + Vercel deployment is sufficient.</span></span>
+        </div>
+        <span class="sep"></span>
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Primary screen implementation tool. Reads Figma frames via Figma MCP (one frame at a time by node ID — silent truncation risk at full-page reads documented in dev/CLAUDE.md). Reads acceptance criteria via Atlassian Rovo MCP, reads PRD requirements and PDB decisions log via Notion MCP. All screens connected to Zustand store and optimization engine.</span></span>
+          <span class="chip chip-used">Figma MCP<span class="tip">Reads native Figma Design frames from the Screens file (jz82GrOp8RE2QGh81V0qbs) and DS Library (krtNgOD3jL5U6WmUMT32u6) for design context, metadata, and component structure. Key constraint: coach mark instances live in separate sibling overlay frames at canvas y=5045, not inside their corresponding main screen frames — documented in dev/CLAUDE.md.</span></span>
+          <span class="chip chip-used">Atlassian Rovo MCP<span class="tip">Reads Jira story acceptance criteria before each screen is implemented and verifies completion after.</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Reads PRD functional requirements and PDB decisions log during implementation to resolve ambiguities and verify behavior against spec.</span></span>
         </div>
       </div>
     </div>
@@ -933,20 +936,14 @@
       <div class="step-head">
         <div class="step-num dev-num">5</div>
         <div class="step-main">
-          <div class="step-title">Deployment</div>
-          <div class="step-desc">Configure and execute deployment to a hosting platform. Claude Code writes deployment configuration files (Dockerfile, Vercel config, GitHub Actions workflows) in the same session as the application code. For a portfolio project, Vercel or Railway handle deployment on push — no separate DevOps role required. A separate DevOps role is only needed for complex infrastructure.</div>
+          <div class="step-title">Testing + quality assurance</div>
+          <div class="step-desc">Unit tests for the optimization engine against all 15 coverage cases from PRD 10's sample data coverage map — figures must match Verification Tables 8 and 9 exactly. Integration tests for complete user flows (FS-ENTRY-1 through ES-1, both Automated and Manual paths). Claude Code writes tests against its own implementation. Gate: full test suite passes with no failures.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started. Writes deployment configuration (Dockerfile, vercel.json, GitHub Actions) alongside application code in the same session.</span></span>
-        </div>
-        <span class="sep"></span>
-        <span class="tag t3">T3</span><span class="sep"></span>
-        <div class="tools-row">
-          <span class="chip chip-pending">Vercel<span class="tip">Primary deployment target — deploy-on-push from GitHub, zero-config for Next.js/React applications. Free tier sufficient for portfolio project.</span></span>
-          <span class="chip chip-pending">Railway<span class="tip">Alternative to Vercel if a persistent backend (FastAPI, PostgreSQL) is needed alongside the React frontend.</span></span>
+          <span class="chip chip-pending">Claude Code<span class="tip">Writes Vitest unit tests for the optimization engine and Playwright integration tests for complete user flows. Test oracle is PRD 10 Verification Tables — not inferred expected values.</span></span>
         </div>
       </div>
     </div>
@@ -955,33 +952,56 @@
       <div class="step-head">
         <div class="step-num dev-num">6</div>
         <div class="step-main">
-          <div class="step-title">PR creation + ticket management</div>
-          <div class="step-desc">Agents create GitHub PRs, update Jira tickets, and post summaries — closing the loop back to the PM backlog without manual status updates. n8n can orchestrate cross-system automation (Jira + GitHub + Slack) beyond what individual MCP connections support.</div>
+          <div class="step-title">Deployment</div>
+          <div class="step-desc">Deploy to Vercel. Claude Code writes vercel.json configuration and GitHub Actions workflow for deploy-on-push from main. Application accessible at a public URL with the canonical dataset as the data source. Gate: application loads correctly at the public Vercel URL, all routes resolve, optimization engine produces correct figures in the deployed environment.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Dev phase not yet started.</span></span>
+          <span class="chip chip-pending">Claude Code<span class="tip">Writes vercel.json and GitHub Actions workflow alongside application code in the same session.</span></span>
+        </div>
+        <span class="sep"></span>
+        <span class="tag t3">T3</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-pending">Vercel<span class="tip">Primary deployment target. Deploy-on-push from GitHub main branch. Free tier sufficient for this application — static Vite build, no server required.</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head">
+        <div class="step-num dev-num">7</div>
+        <div class="step-main">
+          <div class="step-title">PR creation + ticket management</div>
+          <div class="step-desc">Agents create GitHub PRs, update Jira tickets to reflect completion, and post summaries — closing the loop back to the PM backlog without manual status updates. Demonstrates T5 orchestrated agentic workflow across Jira, GitHub, and Notion simultaneously.</div>
+        </div>
+      </div>
+      <div class="step-footer">
+        <span class="tag t4">T4</span><span class="sep"></span>
+        <div class="tools-row">
+          <span class="chip chip-pending">Claude Code<span class="tip">Creates PRs and coordinates with MCP tools for cross-system updates.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t5">T5 emerging</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">GitHub MCP<span class="tip">Dev phase not yet started.</span></span>
-          <span class="chip chip-pending">Slack MCP<span class="tip">Dev phase not yet started.</span></span>
-          <span class="chip chip-pending">n8n<span class="tip">Open-source workflow automation — can orchestrate cross-system pipelines connecting Jira, GitHub, Slack, and Notion in ways that go beyond individual MCP connections. Strong candidate for T5 orchestration in the Dev phase.</span></span>
+          <span class="chip chip-pending">GitHub MCP<span class="tip">Creates pull requests and links to Jira stories.</span></span>
+          <span class="chip chip-pending">Atlassian Rovo MCP<span class="tip">Transitions Jira stories to Done and adds completion comments with links to merged PRs.</span></span>
+          <span class="chip chip-pending">n8n<span class="tip">Open-source workflow automation — orchestrates cross-system pipelines connecting Jira, GitHub, and Notion beyond what individual MCP connections support.</span></span>
         </div>
       </div>
     </div>
 
     <div class="handoff">
-      <div class="handoff-lbl">Dev outputs (planned)</div>
+      <div class="handoff-lbl">Dev outputs</div>
       <div class="handoff-items">
-        <span class="handoff-item">Deployed application</span>
+        <span class="handoff-item">Deployed application (Vercel)</span>
+        <span class="handoff-item">Optimization engine (REQ-OE-001 through REQ-OE-010)</span>
         <span class="handoff-item">Test suite (15 coverage cases)</span>
         <span class="handoff-item">GitHub PRs</span>
         <span class="handoff-item">Updated Jira backlog</span>
-        <span class="handoff-item">Deployment configuration</span>
+        <span class="handoff-item">Deployment configuration (vercel.json + GitHub Actions)</span>
+        <span class="handoff-item">dev/CLAUDE.md (standing rules, updated throughout)</span>
       </div>
     </div>
 
