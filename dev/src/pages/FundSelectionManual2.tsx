@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
+import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
+import { TargetAllocationModal } from '../components/TargetAllocationModal'
 
 // ---------------------------------------------------------------------------
 // Shared sub-components
@@ -151,6 +153,11 @@ function ActiveFundRow({
   const [inputCents, setInputCents]     = useState(appliedCents)
   const [inputDisplay, setInputDisplay] = useState(formatDollar(appliedCents))
 
+  // Local method display — updated by CostBasisDialog "Continue" for this row only.
+  // NOT lifted to parent; the TODO in this file's COST BASIS METHOD comment still applies.
+  const [displayMethod, setDisplayMethod] = useState<CostBasisMethod>('MinTax')
+  const [showMethodDialog, setShowMethodDialog] = useState(false)
+
   const hasChange = inputCents !== appliedCents
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -226,9 +233,19 @@ function ActiveFundRow({
         <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
           <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">MinTax</span>
-            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Edit</a>
+            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{displayMethod}</span>
+            <a
+              className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap"
+              onClick={() => setShowMethodDialog(true)}
+            >Edit</a>
           </div>
+          {showMethodDialog && (
+            <CostBasisDialog
+              currentMethod={displayMethod}
+              onConfirm={method => { setDisplayMethod(method); setShowMethodDialog(false) }}
+              onClose={() => setShowMethodDialog(false)}
+            />
+          )}
         </div>
 
         {/* EST. ST GAINS — 95px */}
@@ -471,6 +488,9 @@ export default function FundSelectionManual2() {
     navigate('/manual-lot', { state: { fund: ticker } })
   }
 
+  // Target Allocation Modal
+  const [showAllocModal, setShowAllocModal] = useState(false)
+
   // Mode toggle guard — shows save/discard dialog if any applied amount is non-zero
   const hasAmounts = Object.values(appliedAmounts).some(v => v > 0)
   const { showDialog: showModeDialog, handleToggleClick, handleSave, handleDiscard, handleClose } =
@@ -524,6 +544,9 @@ export default function FundSelectionManual2() {
           {hintsVisible ? 'Hide tips' : 'Show tips'}
         </span>
       </button>
+
+      {/* Target Allocation Modal */}
+      {showAllocModal && <TargetAllocationModal onClose={() => setShowAllocModal(false)} />}
 
       {/* FS-INT-SAVEDISCARD — Mode switch save/discard dialog */}
       {showModeDialog && (
@@ -629,7 +652,10 @@ export default function FundSelectionManual2() {
                   <span className="text-[12px] text-vg-ink">Bonds</span>
                   <span className="text-[12px] text-vg-red">{bv.impactBonds}</span>
                 </div>
-                <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">
+                <a
+                  className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap"
+                  onClick={() => setShowAllocModal(true)}
+                >
                   Target allocation
                 </a>
               </div>

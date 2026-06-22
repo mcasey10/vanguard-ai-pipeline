@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
+import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
+import { TargetAllocationModal } from '../components/TargetAllocationModal'
 
 // ---------------------------------------------------------------------------
 // Coach mark bubble (same structure as FS-AUTO-1 / FS-MAN-2)
@@ -302,9 +304,11 @@ type CollapsedActiveFundData = {
   waitAndSave?: string
 }
 
-function CollapsedActiveFundRow({ fund, onLotDetails }: {
+function CollapsedActiveFundRow({ fund, onLotDetails, displayMethod, onEditClick }: {
   fund: CollapsedActiveFundData
   onLotDetails: (ticker: string) => void
+  displayMethod: CostBasisMethod
+  onEditClick: () => void
 }) {
   return (
     <div className="flex flex-col border-b border-[#e8e9e9] w-full bg-white">
@@ -329,8 +333,8 @@ function CollapsedActiveFundRow({ fund, onLotDetails }: {
         <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
           <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">MinTax</span>
-            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Edit</a>
+            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{displayMethod}</span>
+            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={onEditClick}>Edit</a>
           </div>
         </div>
         <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
@@ -453,6 +457,15 @@ export default function FundSelectionManualLot() {
   const [hintsVisible, setHintsVisible]   = useState(true)
   const [openMark, setOpenMark]           = useState<'ws' | null>(null)
 
+  // Modal state
+  const [showAllocModal,  setShowAllocModal]  = useState(false)
+  // Cost basis for expanded fund row (local display only — same scope as ActiveFundRow in FS-MAN-2)
+  const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(fund === 'VTSAX' ? 'SpecID' : 'MinTax')
+  const [showExpandedCBD, setShowExpandedCBD] = useState(false)
+  // Cost basis for the collapsed other-fund row
+  const [collapsedMethod, setCollapsedMethod] = useState<CostBasisMethod>(fund === 'VTSAX' ? 'MinTax' : 'SpecID')
+  const [showCollapsedCBD, setShowCollapsedCBD] = useState(false)
+
   // Per-lot shares input state
   // Initial values: T-VTSAX-09 pre-populated with primary scenario SpecID amount
   const [sharesInputs, setSharesInputs] = useState<Record<string, string>>(() => {
@@ -502,6 +515,27 @@ export default function FundSelectionManualLot() {
           {hintsVisible ? 'Hide tips' : 'Show tips'}
         </span>
       </button>
+
+      {/* Target Allocation Modal */}
+      {showAllocModal && <TargetAllocationModal onClose={() => setShowAllocModal(false)} />}
+
+      {/* Cost Basis Dialog — expanded fund row */}
+      {showExpandedCBD && (
+        <CostBasisDialog
+          currentMethod={expandedMethod}
+          onConfirm={m => { setExpandedMethod(m); setShowExpandedCBD(false) }}
+          onClose={() => setShowExpandedCBD(false)}
+        />
+      )}
+
+      {/* Cost Basis Dialog — collapsed other-fund row */}
+      {showCollapsedCBD && (
+        <CostBasisDialog
+          currentMethod={collapsedMethod}
+          onConfirm={m => { setCollapsedMethod(m); setShowCollapsedCBD(false) }}
+          onClose={() => setShowCollapsedCBD(false)}
+        />
+      )}
 
       {/* FS-INT-SAVEDISCARD — Mode switch save/discard dialog */}
       {showModeDialog && (
@@ -572,7 +606,7 @@ export default function FundSelectionManualLot() {
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
                 <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-[#007a00]">{bv.impactEquity}</span></div>
                 <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-red">{bv.impactBonds}</span></div>
-                <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Target allocation</a>
+                <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
               </div>
             </div>
           </div>
@@ -635,9 +669,8 @@ export default function FundSelectionManualLot() {
                   <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
                     <div className="flex items-center gap-1.5">
-                      {/* VTSAX uses SpecID in primary scenario; VBTLX uses MinTax */}
-                      <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? 'Spec ID' : 'MinTax'}</span>
-                      <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Edit</a>
+                      <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{expandedMethod}</span>
+                      <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowExpandedCBD(true)}>Edit</a>
                     </div>
                   </div>
                   <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
@@ -734,6 +767,8 @@ export default function FundSelectionManualLot() {
                 <CollapsedActiveFundRow
                   fund={COLLAPSED_FUND_DATA[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX']}
                   onLotDetails={ticker => navigate('/manual-lot', { state: { fund: ticker } })}
+                  displayMethod={collapsedMethod}
+                  onEditClick={() => setShowCollapsedCBD(true)}
                 />
               )}
 

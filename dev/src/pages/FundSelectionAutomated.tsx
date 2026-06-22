@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
+import { TargetAllocationModal } from '../components/TargetAllocationModal'
 
 function centsToDollars(cents: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -76,6 +77,7 @@ export default function FundSelectionAutomated() {
   // openMark: which coach mark bubble is currently open — only one at a time
   const [hintsVisible, setHintsVisible] = useState(true)
   const [openMark, setOpenMark] = useState<'tax' | 'ytd' | null>(null)
+  const [showAllocModal, setShowAllocModal] = useState(false)
 
   function handleHintClick(mark: 'tax' | 'ytd') {
     setOpenMark(prev => (prev === mark ? null : mark))
@@ -113,6 +115,9 @@ export default function FundSelectionAutomated() {
           {hintsVisible ? 'Hide tips' : 'Show tips'}
         </span>
       </button>
+
+      {/* Target Allocation Modal */}
+      {showAllocModal && <TargetAllocationModal onClose={() => setShowAllocModal(false)} />}
 
       <div className="flex flex-col items-start w-full">
         <div className="flex flex-col gap-6 py-10 w-full">
@@ -277,7 +282,10 @@ export default function FundSelectionAutomated() {
                   <span className="text-[12px] text-vg-ink">Bonds</span>
                   <span className="text-[12px] text-vg-red">-0.4%</span>
                 </div>
-                <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">
+                <a
+                  className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap"
+                  onClick={() => setShowAllocModal(true)}
+                >
                   Target allocation
                 </a>
               </div>

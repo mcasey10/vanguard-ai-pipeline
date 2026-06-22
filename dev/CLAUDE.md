@@ -245,7 +245,8 @@ NF-1 (reset): 572:3190 SC-1 (2-scenario): 628:24446
 SC-1A (1-auto): 628:24765 SC-1M (1-manual): 628:25084
 SC-1B (3-scenario):628:25404 NF-2 (delete): 628:25899
 OC-1: 628:26277 ES-1: 628:26531
-Cost Basis Dialog: 660:4200 Target Alloc Modal: 667:3618
+Cost Basis Dialog: 660:4194 Target Alloc Modal: 667:3618
+NOTE: 660:4200 is the disclaimer text node INSIDE the dialog header — not the dialog frame itself.
 
 ---
 
@@ -399,7 +400,7 @@ the frame.
 | OC-1                    | 628:26277 | VSR-28     |
 | ES-1                    | 628:26531 | VSR-78     |
 | NF-2                    | 628:25899 | VSR-26     |
-| Cost Basis Dialog       | 660:4200  | VSR-22     |
+| Cost Basis Dialog       | 660:4194  | VSR-22     |  ← actual frame; 660:4200 is the disclaimer text node inside the header
 | Target Allocation Modal | 667:3618  | VSR-75     |
 
 ---
