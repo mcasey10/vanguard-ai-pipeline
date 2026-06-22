@@ -1,0 +1,653 @@
+/**
+ * Optimization engine — dev/src/engine/index.ts
+ *
+ * Primary export: runOptimization(params) → OptimizationResult
+ *
+ * Implements REQ-OE-001 through REQ-OE-010. No UI dependencies.
+ * All inputs come from the Zustand store via OptimizationParams.
+ *
+ * Critical constraints (from dev/CLAUDE.md):
+ * 1. Account withdrawal priority: Taxable → Traditional IRA → Roth IRA. HARD RULE.
+ * 2. IRA tax treatment: Traditional IRA = ordinary income (not capital gains).
+ *    Roth IRA = tax-free. Capital gains logic applies ONLY to taxable brokerage.
+ * 3. EST. TAX (per-fund gross) ≠ EST. NET TAX (portfolio-level after netting).
+ * 4. SpecID is Manual mode only.
+ * 5. Wait & Save suppressed in Automated mode (flagged but NOT excluded from selection).
+ * 6. State tax out of scope for v1.
+ *
+ * Cost basis calculation: uses proportional split
+ *   partial_cost = (shares_sold / total_shares) × total_cost_basis
+ *   gain = proceeds - partial_cost
+ * NOT shares_sold × cost_per_share (avoids rounding artifacts).
+ */
+
+import type {
+  Portfolio,
+  Account,
+  FundHolding,
+  Lot,
+  AccountingMethod,
+  Recommendation,
+  ManualConfiguration,
+  FundSaleResult,
+  LotSaleDetail,
+  WaitAndSaveNotice,
+  AllocationImpact,
+  TaxAssumptionSet,
+} from '../types'
+
+// ---------------------------------------------------------------------------
+// Public types
+// ---------------------------------------------------------------------------
+
+export interface ManualLotOverride {
+  lot_id: string
+  shares: number
+}
+
+export interface ManualFundSelection {
+  fund_id: string
+  accounting_method: AccountingMethod
+  lot_overrides?: ManualLotOverride[]   // required when method = specific_lot_identification
+}
+
+export interface ManualSelections {
+  fund_selections: ManualFundSelection[]
+}
+
+export interface OptimizationParams {
+  portfolio: Portfolio
+  targetSaleAmount: number
+  activeAccountId: string
+  mode: 'automated' | 'manual'
+  optimizationPriority: 'tax-first' | 'balance-first'
+  activeTaxRates: { st_rate: number; lt_rate: number }
+  manualSelections?: ManualSelections
+}
+
+export type OptimizationResult = Recommendation | ManualConfiguration
+
+// ---------------------------------------------------------------------------
+// KNOWN_ROUNDING_ARTIFACTS — documented discrepancies between engine output
+// and PRD 10 Verification Tables that arise from VT8 construction method.
+// ---------------------------------------------------------------------------
+
+export const KNOWN_ROUNDING_ARTIFACTS = {
+  // VT8 was constructed by working backwards from a rounded per-share gain
+  // (+$14.67/sh displayed) rather than forward from the lot record.
+  // Engine uses proportional cost split; VT8's $13,484.18 cost implies
+  // $130.5266/sh which doesn't match the stored $130.53/sh.
+  VTSAX_T09_PARTIAL_SALE: {
+    description: 'T-VTSAX-09 partial sale (103.306/172 shares)',
+    engine_gain: 1515.50,         // (103.306/172) × 22451.16 → proceeds 15000.03 - cost 13484.53
+    vt8_stated_gain: 1515.85,     // VT8: $15,000.03 - $13,484.18 (backwards from $14.67 display)
+    delta: 0.35,
+    net_tax_engine: 110.12,       // ($1515.50 - $1056.65) × 24% = $458.85 × 24%
+    net_tax_vt8: 110.21,          // ($1515.85 - $1056.65) × 24% = $459.20 × 24%
+    net_tax_delta: 0.09,
+  },
+} as const
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/** Round to 2 decimal places — standard financial rounding */
+function r2(n: number): number { return Math.round(n * 100) / 100 }
+
+/** Compute partial-sale cost basis via proportional split (REQ-OE-001 standard) */
+function partialCost(sharesSold: number, totalShares: number, totalCostBasis: number): number {
+  return (sharesSold / totalShares) * totalCostBasis
+}
+
+/** Applicable tax rate for a lot given its holding period and account type */
+function taxRate(
+  holdingPeriod: 'LT' | 'ST',
+  accountType: Account['account_type'],
+  rates: { st_rate: number; lt_rate: number }
+): number {
+  if (accountType === 'traditional_IRA') return rates.st_rate  // ordinary income rate (approx)
+  if (accountType === 'roth_IRA') return 0                      // tax-free
+  return holdingPeriod === 'LT' ? rates.lt_rate : rates.st_rate
+}
+
+// (lotTaxCost is used implicitly via the taxEfficiency calculation in selectFundsAutomated)
+
+// ---------------------------------------------------------------------------
+// Lot selection per accounting method
+// ---------------------------------------------------------------------------
+
+interface LotSale {
+  lot: Lot
+  shares: number
+  proceeds: number
+  gain: number
+  tax: number
+}
+
+function selectLots(
+  holding: FundHolding,
+  targetAmount: number,
+  method: AccountingMethod,
+  accountType: Account['account_type'],
+  rates: { st_rate: number; lt_rate: number },
+  lotOverrides?: ManualLotOverride[]
+): LotSale[] {
+  const nav = holding.lots[0]?.current_nav ?? 0
+  const lots = [...holding.lots]
+  const result: LotSale[] = []
+  let remaining = targetAmount
+
+  if (method === 'specific_lot_identification') {
+    // SpecID — caller specifies exact lots
+    for (const override of (lotOverrides ?? [])) {
+      const lot = lots.find(l => l.lot_id === override.lot_id)
+      if (!lot || override.shares <= 0) continue
+      const sharesToSell = Math.min(override.shares, lot.shares)
+      const proceeds = r2(sharesToSell * lot.current_nav)
+      const cost = partialCost(sharesToSell, lot.shares, lot.total_cost_basis)
+      const gain = r2(proceeds - cost)
+      const tax = gain > 0 ? r2(gain * taxRate(lot.holding_period, accountType, rates)) : 0
+      result.push({ lot, shares: sharesToSell, proceeds, gain, tax })
+    }
+    return result
+  }
+
+  if (method === 'average_cost') {
+    // Average cost — all lots have the same cost per share
+    const totalShares = lots.reduce((s, l) => s + l.shares, 0)
+    const totalCost = lots.reduce((s, l) => s + l.total_cost_basis, 0)
+    const avgCostPerShare = totalShares > 0 ? totalCost / totalShares : 0
+    const sharesToSell = Math.min(remaining / nav, totalShares)
+    const proceeds = r2(sharesToSell * nav)
+    const cost = r2(sharesToSell * avgCostPerShare)
+    const gain = r2(proceeds - cost)
+    // For average cost, use a synthetic lot entry
+    const syntheticLot: Lot = {
+      lot_id: `${holding.fund_id}-avgcost`,
+      acquisition_date: lots[0]?.acquisition_date ?? '',
+      shares: totalShares,
+      cost_basis_per_share: avgCostPerShare,
+      total_cost_basis: totalCost,
+      current_nav: nav,
+      current_value: totalShares * nav,
+      unrealized_gain_loss: gain,
+      holding_period: 'LT', // conservative; actual breakdown complex for avg cost
+      days_to_lt_conversion: null,
+      lt_conversion_date: null,
+    }
+    const tax = gain > 0 ? r2(gain * taxRate('LT', accountType, rates)) : 0
+    return [{ lot: syntheticLot, shares: sharesToSell, proceeds, gain, tax }]
+  }
+
+  // Sort lots per method
+  let sorted: Lot[]
+  if (method === 'FIFO') {
+    sorted = lots.sort((a, b) => a.acquisition_date.localeCompare(b.acquisition_date))
+  } else if (method === 'HIFO') {
+    sorted = lots.sort((a, b) => b.cost_basis_per_share - a.cost_basis_per_share)
+  } else {
+    // MinTax — sort by marginal tax per dollar of proceeds (ascending = most beneficial first)
+    // Loss lots: (nav - basis) < 0 → negative taxImpact → come first ✓
+    // Gain lots: (nav - basis) > 0 → positive taxImpact → lowest gain comes first ✓
+    // Prefer LT over ST at equal taxImpact (LT taxed at lower rate — REQ-OE-003)
+    sorted = lots.sort((a, b) => {
+      const taxImpactA = (a.current_nav - a.cost_basis_per_share) / a.current_nav * taxRate(a.holding_period, accountType, rates)
+      const taxImpactB = (b.current_nav - b.cost_basis_per_share) / b.current_nav * taxRate(b.holding_period, accountType, rates)
+      if (Math.abs(taxImpactA - taxImpactB) > 0.0001) return taxImpactA - taxImpactB
+      if (a.holding_period !== b.holding_period) return a.holding_period === 'LT' ? -1 : 1
+      return 0
+    })
+  }
+
+  // Greedily fill target amount from sorted lots
+  for (const lot of sorted) {
+    if (remaining <= 0.005) break
+    const maxShares = lot.shares
+    const maxProceeds = maxShares * lot.current_nav
+    const sharesToSell = maxProceeds <= remaining
+      ? maxShares
+      : remaining / lot.current_nav
+
+    const actualShares = Math.min(sharesToSell, maxShares)
+    const proceeds = r2(actualShares * lot.current_nav)
+    const cost = partialCost(actualShares, lot.shares, lot.total_cost_basis)
+    const gain = r2(proceeds - cost)
+    const tax = gain > 0 ? r2(gain * taxRate(lot.holding_period, accountType, rates)) : 0
+
+    result.push({ lot, shares: actualShares, proceeds, gain, tax })
+    remaining = r2(remaining - proceeds)
+  }
+
+  return result
+}
+
+// ---------------------------------------------------------------------------
+// Allocation impact
+// ---------------------------------------------------------------------------
+
+function computeAllocationImpact(
+  portfolio: Portfolio,
+  fundResults: FundSaleResult[]
+): AllocationImpact {
+  const soldByFund: Record<string, number> = {}
+  for (const fr of fundResults) soldByFund[fr.fund_id] = fr.sell_amount
+
+  const totalSold = Object.values(soldByFund).reduce((s, v) => s + v, 0)
+  const newPortfolioTotal = portfolio.total_investable_balance - totalSold
+
+  // Compute current values per asset class across ALL accounts
+  const classValues: Record<string, number> = {
+    domestic_equity: 0, international_equity: 0,
+    domestic_bonds: 0, short_term_reserves: 0,
+  }
+  for (const acct of portfolio.accounts) {
+    for (const h of acct.holdings) {
+      classValues[h.asset_class] = (classValues[h.asset_class] ?? 0) + h.current_balance
+    }
+  }
+
+  const before = {
+    domestic_equity: portfolio.current_allocation.domestic_equity_pct,
+    international_equity: portfolio.current_allocation.international_equity_pct,
+    domestic_bonds: portfolio.current_allocation.domestic_bonds_pct,
+    short_term_reserves: portfolio.current_allocation.short_term_reserves_pct,
+  }
+
+  // After-sale values: subtract sold amounts from their respective asset classes
+  const assetClassMap: Record<string, string> = {}
+  for (const acct of portfolio.accounts) {
+    for (const h of acct.holdings) {
+      assetClassMap[h.fund_id] = h.asset_class
+    }
+  }
+
+  const afterValues = { ...classValues }
+  for (const [fundId, sold] of Object.entries(soldByFund)) {
+    const assetClass = assetClassMap[fundId]
+    if (assetClass) afterValues[assetClass] = (afterValues[assetClass] ?? 0) - sold
+  }
+
+  const pct = (v: number) => newPortfolioTotal > 0 ? r2((v / newPortfolioTotal) * 100) : 0
+
+  return {
+    domestic_equity_before: before.domestic_equity,
+    international_equity_before: before.international_equity,
+    domestic_bonds_before: before.domestic_bonds,
+    short_term_reserves_before: before.short_term_reserves,
+    domestic_equity_after: pct(afterValues.domestic_equity ?? 0),
+    international_equity_after: pct(afterValues.international_equity ?? 0),
+    domestic_bonds_after: pct(afterValues.domestic_bonds ?? 0),
+    short_term_reserves_after: pct(afterValues.short_term_reserves ?? 0),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Fund-level result builder
+// ---------------------------------------------------------------------------
+
+function buildFundResult(
+  holding: FundHolding,
+  account: Account,
+  lotSales: LotSale[],
+  method: AccountingMethod,
+  portfolio: Portfolio
+): FundSaleResult {
+  const sellAmount = r2(lotSales.reduce((s, ls) => s + ls.proceeds, 0))
+  const lotDetails: LotSaleDetail[] = lotSales.map(ls => ({
+    lot_id: ls.lot.lot_id,
+    shares_to_sell: ls.shares,
+    proceeds: ls.proceeds,
+    cost_basis: r2(partialCost(ls.shares, ls.lot.shares, ls.lot.total_cost_basis)),
+    realized_gain_loss: ls.gain,
+    holding_period: ls.lot.holding_period,
+  }))
+
+  const estSTGain = r2(lotSales.filter(ls => ls.lot.holding_period === 'ST').reduce((s, ls) => s + ls.gain, 0))
+  const estLTGain = r2(lotSales.filter(ls => ls.lot.holding_period === 'LT').reduce((s, ls) => s + ls.gain, 0))
+
+  // Per-fund gross tax (before portfolio netting) — REQ-EC-001 / CLAUDE.md constraint 3
+  let estTaxGross = 0
+  if (account.account_type === 'taxable_brokerage') {
+    const stGain = Math.max(0, estSTGain)
+    const ltGain = Math.max(0, estLTGain)
+    estTaxGross = r2(stGain * 0.24 + ltGain * 0.15)  // Note: actual rates from params handled in caller
+  }
+  // IRA: ordinary income or tax-free — gross tax not applicable for display (shown as $0 in UI)
+
+  // Allocation impact for this fund
+  const totalSold = sellAmount
+  const newTotal = portfolio.total_investable_balance - totalSold
+  const fundAssetClass = holding.asset_class
+  const classCurrentValue = portfolio.accounts
+    .flatMap(a => a.holdings)
+    .filter(h => h.asset_class === fundAssetClass)
+    .reduce((s, h) => s + h.current_balance, 0)
+  const classAfterValue = classCurrentValue - totalSold
+  const afterPct = newTotal > 0 ? r2((classAfterValue / newTotal) * 100) : 0
+
+  // Simple per-fund impact text
+  const beforePct = r2((classCurrentValue / portfolio.total_investable_balance) * 100)
+  const impactDelta = r2(afterPct - beforePct)
+
+  const rationale = buildRationale(holding, lotSales, method, impactDelta)
+
+  return {
+    fund_id: holding.fund_id,
+    fund_name: holding.fund_name,
+    sell_amount: sellAmount,
+    accounting_method: method,
+    lots_sold: lotDetails,
+    est_st_gain_loss: estSTGain,
+    est_lt_gain_loss: estLTGain,
+    est_tax_gross: estTaxGross,
+    impact_pct: impactDelta,
+    impact_asset_class: fundAssetClass,
+    rationale,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rationale sentence generation (REQ-OE-007, CD-3.1)
+// ---------------------------------------------------------------------------
+
+function buildRationale(
+  holding: FundHolding,
+  lotSales: LotSale[],
+  method: AccountingMethod,
+  impactDelta: number
+): string {
+  const hasLoss = lotSales.some(ls => ls.gain < 0)
+  const totalGain = r2(lotSales.reduce((s, ls) => s + ls.gain, 0))
+  const assetClass = holding.asset_class.replace('_', ' ')
+  const lotDesc = lotSales.length === 1
+    ? `lot acquired ${lotSales[0].lot.acquisition_date.substring(0, 7).replace('-', ' ')}`
+    : `${lotSales.length} lots`
+
+  if (hasLoss && totalGain < 0) {
+    return `Harvesting a ${Math.abs(totalGain).toFixed(0)} ${lotSales[0].lot.holding_period === 'LT' ? 'long-term' : 'short-term'} ${assetClass} loss offsets realized gains and reduces estimated net tax.`
+  }
+
+  const directionText = impactDelta < 0 ? 'reduces' : 'increases'
+  const overweightText = impactDelta < 0 ? 'overweight' : 'underweight'
+
+  if (method === 'specific_lot_identification') {
+    return `Selling the selected ${lotDesc} limits estimated tax to $${Math.max(0, totalGain * 0.24).toFixed(2)} while helping address ${assetClass} allocation.`
+  }
+
+  return `Selling this ${assetClass} holding ${directionText} ${overweightText} exposure and contributes $${Math.abs(totalGain).toFixed(0)} to the estimated tax impact.`
+}
+
+// ---------------------------------------------------------------------------
+// Wait & Save notice detection (REQ-OE-006)
+// ---------------------------------------------------------------------------
+
+function detectWaitAndSave(
+  fundResults: FundSaleResult[],
+  account: Account,
+  rates: { st_rate: number; lt_rate: number }
+): WaitAndSaveNotice[] {
+  const notices: WaitAndSaveNotice[] = []
+
+  for (const fr of fundResults) {
+    const holding = account.holdings.find(h => h.fund_id === fr.fund_id)
+    if (!holding) continue
+
+    for (const lotDetail of fr.lots_sold) {
+      const lot = holding.lots.find(l => l.lot_id === lotDetail.lot_id)
+      if (!lot) continue
+      if (lot.days_to_lt_conversion === null) continue
+      if (lot.days_to_lt_conversion > 30) continue  // REQ-OE-006: ≤30 days triggers flag
+
+      // Tax savings from waiting: gain would be taxed at LT instead of ST
+      const savingsPerShare = r2((rates.st_rate - rates.lt_rate) * (lot.current_nav - lot.cost_basis_per_share))
+      const savings = r2(savingsPerShare * lotDetail.shares_to_sell)
+
+      notices.push({
+        lot_id: lot.lot_id,
+        fund_id: fr.fund_id,
+        days_until_lt: lot.days_to_lt_conversion,
+        lt_conversion_date: lot.lt_conversion_date ?? '',
+        tax_savings_by_waiting: Math.max(0, savings),
+      })
+    }
+  }
+
+  return notices
+}
+
+// ---------------------------------------------------------------------------
+// Automated fund selection — tax-first greedy
+// ---------------------------------------------------------------------------
+
+interface LotCandidate {
+  holding: FundHolding
+  lot: Lot
+  /** Marginal tax per dollar of proceeds (negative = beneficial) */
+  taxEfficiency: number
+}
+
+function selectFundsAutomated(
+  account: Account,
+  targetAmount: number,
+  optimizationPriority: 'tax-first' | 'balance-first',
+  rates: { st_rate: number; lt_rate: number },
+  portfolio: Portfolio
+): Map<string, LotSale[]> {
+  // Build list of all sellable lots in the active account
+  const candidates: LotCandidate[] = []
+
+  for (const holding of account.holdings) {
+    for (const lot of holding.lots) {
+      const gainPerShare = lot.current_nav - lot.cost_basis_per_share
+      const applicableRate = taxRate(lot.holding_period, account.account_type, rates)
+      const taxPerShare = gainPerShare * applicableRate
+      const taxPerDollar = lot.current_nav > 0 ? taxPerShare / lot.current_nav : 0
+
+      candidates.push({ holding, lot, taxEfficiency: taxPerDollar })
+    }
+  }
+
+  if (optimizationPriority === 'tax-first') {
+    // Sort: most negative (losses first) → least tax per dollar
+    candidates.sort((a, b) => {
+      if (Math.abs(a.taxEfficiency - b.taxEfficiency) > 0.0001) return a.taxEfficiency - b.taxEfficiency
+      // LT preferred over ST at same efficiency (REQ-OE-003)
+      if (a.lot.holding_period !== b.lot.holding_period) return a.lot.holding_period === 'LT' ? -1 : 1
+      return 0
+    })
+  } else {
+    // Balance-first: prioritize selling overweight asset classes
+    const target = portfolio.target_allocation
+    const allocationDrift: Record<string, number> = {
+      domestic_equity: portfolio.current_allocation.domestic_equity_pct - (target?.domestic_equity_pct ?? 0),
+      international_equity: portfolio.current_allocation.international_equity_pct - (target?.international_equity_pct ?? 0),
+      domestic_bonds: portfolio.current_allocation.domestic_bonds_pct - (target?.domestic_bonds_pct ?? 0),
+      short_term_reserves: portfolio.current_allocation.short_term_reserves_pct - (target?.short_term_reserves_pct ?? 0),
+    }
+    candidates.sort((a, b) => {
+      // Prefer selling overweight asset classes (positive drift)
+      const driftA = allocationDrift[a.holding.asset_class] ?? 0
+      const driftB = allocationDrift[b.holding.asset_class] ?? 0
+      if (Math.abs(driftA - driftB) > 0.01) return driftB - driftA  // Higher drift = more urgent to sell
+      // Tiebreak: tax efficiency
+      return a.taxEfficiency - b.taxEfficiency
+    })
+  }
+
+  // Greedy fill: sell from best candidates until target amount reached
+  const fundSales = new Map<string, LotSale[]>()
+  let remaining = targetAmount
+
+  for (const candidate of candidates) {
+    if (remaining <= 0.005) break
+
+    const { holding, lot } = candidate
+    const maxProceeds = lot.shares * lot.current_nav
+    const toSell = Math.min(maxProceeds, remaining)
+    const sharesToSell = toSell / lot.current_nav
+
+    const proceeds = r2(sharesToSell * lot.current_nav)
+    const cost = partialCost(sharesToSell, lot.shares, lot.total_cost_basis)
+    const gain = r2(proceeds - cost)
+    const tax = gain > 0 ? r2(gain * taxRate(lot.holding_period, account.account_type, rates)) : 0
+
+    if (!fundSales.has(holding.fund_id)) fundSales.set(holding.fund_id, [])
+    fundSales.get(holding.fund_id)!.push({ lot, shares: sharesToSell, proceeds, gain, tax })
+
+    remaining = r2(remaining - proceeds)
+  }
+
+  return fundSales
+}
+
+// ---------------------------------------------------------------------------
+// Main export
+// ---------------------------------------------------------------------------
+
+export function runOptimization(params: OptimizationParams): OptimizationResult {
+  const {
+    portfolio, targetSaleAmount, activeAccountId, mode,
+    optimizationPriority, activeTaxRates, manualSelections,
+  } = params
+
+  // Find active account (CLAUDE.md constraint 1: priority is Taxable → IRA → Roth,
+  // but the CALLER selects the active account — the engine operates within it only)
+  const account = portfolio.accounts.find(a => a.account_id === activeAccountId)
+  if (!account) throw new Error(`Account ${activeAccountId} not found in portfolio`)
+
+  const taxSet: TaxAssumptionSet = {
+    st_rate: activeTaxRates.st_rate,
+    lt_rate: activeTaxRates.lt_rate,
+    income_bracket_label: `${(activeTaxRates.st_rate * 100).toFixed(0)}% ST / ${(activeTaxRates.lt_rate * 100).toFixed(0)}% LT`,
+    source: 'default',
+    selection_timestamp: new Date().toISOString(),
+  }
+
+  const fundResults: FundSaleResult[] = []
+
+  if (mode === 'automated') {
+    const fundSales = selectFundsAutomated(
+      account, targetSaleAmount, optimizationPriority, activeTaxRates, portfolio
+    )
+
+    for (const [fundId, lotSales] of fundSales) {
+      const holding = account.holdings.find(h => h.fund_id === fundId)
+      if (!holding || lotSales.length === 0) continue
+      // Determine method: MinTax for automated (REQ-OE-005 note: engine uses its own logic)
+      const method: AccountingMethod = 'MinTax'
+      const fr = buildFundResult(holding, account, lotSales, method, portfolio)
+      // Apply actual tax rates (buildFundResult uses 24%/15% defaults; correct here)
+      const estSTGain = Math.max(0, fr.est_st_gain_loss)
+      const estLTGain = Math.max(0, fr.est_lt_gain_loss)
+      if (account.account_type === 'taxable_brokerage') {
+        fr.est_tax_gross = r2(estSTGain * activeTaxRates.st_rate + estLTGain * activeTaxRates.lt_rate)
+      }
+      fundResults.push(fr)
+    }
+
+    // Portfolio-level netting (REQ-EC-001 / CLAUDE.md constraint 3)
+    const totalSTGain = r2(fundResults.reduce((s, fr) => s + fr.est_st_gain_loss, 0))
+    const totalLTGain = r2(fundResults.reduce((s, fr) => s + fr.est_lt_gain_loss, 0))
+    const netGain = r2(totalSTGain + totalLTGain)
+    // All gains net against all losses at portfolio level; negative net = $0 tax
+    const netTaxable = Math.max(0, netGain)
+    // Apply blended rate: if net is positive, attribute tax first to ST gains
+    const taxableAtST = Math.min(netTaxable, Math.max(0, totalSTGain))
+    const taxableAtLT = Math.max(0, netTaxable - taxableAtST)
+    const estNetTax = r2(taxableAtST * activeTaxRates.st_rate + taxableAtLT * activeTaxRates.lt_rate)
+    const totalSaleAmount = r2(fundResults.reduce((s, fr) => s + fr.sell_amount, 0))
+    const effectiveRate = totalSaleAmount > 0 ? r2((estNetTax / totalSaleAmount) * 100) / 100 : 0
+
+    const allocationImpact = computeAllocationImpact(portfolio, fundResults)
+    const waitAndSave = detectWaitAndSave(fundResults, account, activeTaxRates)
+
+    const allFundRationale = fundResults.length === 1
+      ? fundResults[0].rationale
+      : `This recommendation minimizes your estimated tax impact (${estNetTax.toFixed(2)} net) while moving your portfolio toward its target allocation.`
+
+    const rec: Recommendation = {
+      recommendation_id: `rec-${Date.now()}`,
+      mode: 'automated',
+      optimization_priority: optimizationPriority,
+      fund_results: fundResults,
+      est_net_tax: estNetTax,
+      effective_rate: effectiveRate,
+      allocation_impact: allocationImpact,
+      plain_language_rationale: allFundRationale,
+      wait_and_save_notices: waitAndSave,
+      tax_assumption_set: taxSet,
+      timestamp: new Date().toISOString(),
+    }
+    return rec
+
+  } else {
+    // Manual mode
+    if (!manualSelections || manualSelections.fund_selections.length === 0) {
+      return {
+        mode: 'manual',
+        active_fund_ids: [],
+        fund_selections: [],
+        applied_amounts: {},
+        total_sell_amount: 0,
+      }
+    }
+
+    for (const sel of manualSelections.fund_selections) {
+      const holding = account.holdings.find(h => h.fund_id === sel.fund_id)
+      if (!holding) continue
+
+      // Determine how much to sell: for SpecID, sum of lot overrides; otherwise caller must provide
+      let sellAmount = targetSaleAmount / manualSelections.fund_selections.length // fallback split
+      if (sel.lot_overrides && sel.lot_overrides.length > 0) {
+        sellAmount = r2(sel.lot_overrides.reduce((s, o) => {
+          const lot = holding.lots.find(l => l.lot_id === o.lot_id)
+          return s + (lot ? o.shares * lot.current_nav : 0)
+        }, 0))
+      }
+
+      const lotSales = selectLots(
+        holding, sellAmount, sel.accounting_method, account.account_type,
+        activeTaxRates, sel.lot_overrides
+      )
+
+      if (lotSales.length === 0) continue
+      const fr = buildFundResult(holding, account, lotSales, sel.accounting_method, portfolio)
+      const estSTGain = Math.max(0, fr.est_st_gain_loss)
+      const estLTGain = Math.max(0, fr.est_lt_gain_loss)
+      if (account.account_type === 'taxable_brokerage') {
+        fr.est_tax_gross = r2(estSTGain * activeTaxRates.st_rate + estLTGain * activeTaxRates.lt_rate)
+      }
+      fundResults.push(fr)
+    }
+
+    const totalSTGain = r2(fundResults.reduce((s, fr) => s + fr.est_st_gain_loss, 0))
+    const totalLTGain = r2(fundResults.reduce((s, fr) => s + fr.est_lt_gain_loss, 0))
+    const netGain = r2(totalSTGain + totalLTGain)
+    const totalSaleAmount = r2(fundResults.reduce((s, fr) => s + fr.sell_amount, 0))
+    void netGain // net tax available via fundResults for callers that need it
+
+    const config: ManualConfiguration = {
+      mode: 'manual',
+      active_fund_ids: fundResults.map(fr => fr.fund_id),
+      fund_selections: fundResults.map(fr => ({
+        fund_id: fr.fund_id,
+        sell_amount: fr.sell_amount,
+        accounting_method: fr.accounting_method,
+        lots_selected: fr.lots_sold,
+      })),
+      applied_amounts: Object.fromEntries(fundResults.map(fr => [fr.fund_id, fr.sell_amount])),
+      total_sell_amount: totalSaleAmount,
+    }
+    return config
+  }
+}
+
+/**
+ * Convenience: get net tax figures from any OptimizationResult.
+ * Returns null for ManualConfiguration (net tax only available on Recommendation).
+ */
+export function getNetTaxFromResult(result: OptimizationResult): number | null {
+  if (result.mode === 'automated') return (result as Recommendation).est_net_tax
+  return null
+}
