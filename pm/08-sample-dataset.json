@@ -154,11 +154,11 @@
               "lot_id": "T-VTSAX-07",
               "acquisition_date": "2024-11-10",
               "shares": 75,
-              "cost_basis_per_share": 138.5,
-              "total_cost_basis": 10387.5,
+              "cost_basis_per_share": 117.37,
+              "total_cost_basis": 8802.75,
               "current_nav": 145.2,
               "current_value": 10890.0,
-              "unrealized_gain_loss": 502.5,
+              "unrealized_gain_loss": 2087.25,
               "holding_period": "LT",
               "days_to_lt_conversion": null,
               "note": "Acquired Nov 10 2024; LT conversion date was Nov 10 2025, already LT as of April 11 2026."
@@ -282,11 +282,11 @@
               "lot_id": "T-VTIAX-06",
               "acquisition_date": "2024-09-05",
               "shares": 500,
-              "cost_basis_per_share": 37.8,
-              "total_cost_basis": 18900.0,
+              "cost_basis_per_share": 27.2,
+              "total_cost_basis": 13600.0,
               "current_nav": 38.75,
               "current_value": 19375.0,
-              "unrealized_gain_loss": 475.0,
+              "unrealized_gain_loss": 5775.0,
               "holding_period": "LT",
               "days_to_lt_conversion": null,
               "note": "Acquired Sept 5 2024; LT conversion date was Sept 5 2025, already LT as of April 11 2026."
@@ -832,11 +832,11 @@
       "VTSAX": {
         "account": "ACCT-TAXABLE-001",
         "total_shares": 1597,
-        "total_cost_basis": 113163.66,
+        "total_cost_basis": 111578.91,
         "current_value": 231884.4,
-        "total_unrealized_gain_loss": 118720.74,
+        "total_unrealized_gain_loss": 120305.49,
         "unrealized_st_gain_loss": 4443.24,
-        "unrealized_lt_gain_loss": 114277.5,
+        "unrealized_lt_gain_loss": 115862.25,
         "lot_count": 9,
         "st_lot_count": 2,
         "lt_lot_count": 7
@@ -844,11 +844,11 @@
       "VTIAX": {
         "account": "ACCT-TAXABLE-001",
         "total_shares": 3600,
-        "total_cost_basis": 107080.0,
+        "total_cost_basis": 101780.0,
         "current_value": 139500.0,
-        "total_unrealized_gain_loss": 32420.0,
+        "total_unrealized_gain_loss": 37720.0,
         "unrealized_st_gain_loss": 620.0,
-        "unrealized_lt_gain_loss": 31800.0,
+        "unrealized_lt_gain_loss": 37100.0,
         "lot_count": 7,
         "st_lot_count": 1,
         "lt_lot_count": 6
@@ -917,8 +917,8 @@
     "by_account": {
       "ACCT-TAXABLE-001": {
         "current_value": 507194.4,
-        "total_cost_basis": 362643.66,
-        "total_unrealized_gain_loss": 144550.74,
+        "total_cost_basis": 355758.91,
+        "total_unrealized_gain_loss": 151435.49,
         "fund_balances": {
           "VTSAX": 231884.4,
           "VTIAX": 139500.0,
@@ -949,8 +949,8 @@
     },
     "portfolio_totals": {
       "total_current_value": 849851.4,
-      "total_cost_basis": 657583.16,
-      "total_unrealized_gain_loss": 192268.24,
+      "total_cost_basis": 650698.41,
+      "total_unrealized_gain_loss": 199152.99,
       "account_sum_check": {
         "taxable": 507194.4,
         "traditional_IRA": 211065.0,

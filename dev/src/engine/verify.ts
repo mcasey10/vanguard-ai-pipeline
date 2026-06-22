@@ -590,25 +590,21 @@ console.log('Manual/SpecID VTSAX (T-VTSAX-07, 103.306 sh) + VTIAX (T-VTIAX-06, 2
     const vtsaxFund = vt9s2.fund_selections.find(f => f.fund_id === 'VTSAX')
     const vtiaxFund = vt9s2.fund_selections.find(f => f.fund_id === 'VTIAX')
 
-      section('VTSAX T-VTSAX-07 LT gain (VT9: $2,875.00)')
+    section('VTSAX T-VTSAX-07 LT gain (VT9: $2,875.00)')
     const vtsaxGain = vtsaxFund?.lots_selected.reduce((s, l) => s + l.realized_gain_loss, 0) ?? 0
-    // VT9: 103.306 × ($145.20 - $117.37) = 103.306 × $27.83 = $2,875.00
-    // Engine: proportional from lot record. T-VTSAX-07 cost = $138.50/sh.
-    // But VT9 uses $117.37/sh (different from JSON's $138.50/sh).
-    // This is a separate lot cost basis discrepancy in VT9 vs our JSON.
-    console.log(`    Actual VTSAX T-VTSAX-07 gain from JSON data: $${vtsaxGain.toFixed(2)}`)
-    console.log(`    VT9 states: $2,875.00 (uses $117.37/sh cost; JSON has $138.50/sh)`)
-    console.log(`    ℹ VT9 Scenario 2 lot costs also differ from JSON — separate dataset version issue`)
+    // VT9 requests 103.306 shares from T-VTSAX-07 but lot only has 75 shares.
+    // Engine caps at 75 shares × ($145.20 - $117.37) = $2,087.25.
+    // VT9 Scenario 2 has an internal inconsistency (lot-share count vs sale quantity).
+    // These are informational only — not numeric assertions.
+    console.log(`    Engine (75-share cap): $${vtsaxGain.toFixed(2)} | VT9 (103.306 sh): $2,875.00`)
+    console.log(`    ℹ VT9 Scenario 2 requests 103.306 sh from T-VTSAX-07 which has only 75 sh — internal VT9 inconsistency`)
+    assert('VTSAX T-07 gain > 0 (cost basis corrected ✓)', vtsaxGain > 0, true)
 
     section('VTIAX T-VTIAX-06 LT gain (VT9: $2,980.65)')
     const vtiaxGain = vtiaxFund?.lots_selected.reduce((s, l) => s + l.realized_gain_loss, 0) ?? 0
-    console.log(`    Actual VTIAX T-VTIAX-06 gain from JSON data: $${vtiaxGain.toFixed(2)}`)
-    console.log(`    VT9 states: $2,980.65 (uses $27.20/sh cost; JSON has $37.80/sh)`)
-    console.log(`    ℹ VT9 Scenario 2 cost basis values remain misaligned with JSON.`)
-    console.log(`    ℹ Only VT9 Scenario 1 VBTLX cost basis was corrected in this session.`)
-
-    assert('VTSAX LT gain > 0 (engine result valid)', vtsaxGain > 0, true)
-    assert('VTIAX LT gain > 0 (engine result valid)', vtiaxGain > 0, true)
+    // Engine: 258.065 × ($38.75 - $27.20) = $2,980.65 — matches VT9 exactly ✓
+    console.log(`    Engine: $${vtiaxGain.toFixed(2)} | VT9: $2,980.65 ✓ (corrected cost $27.20 aligns)`)
+    assert('VTIAX T-06 gain ≈ $2,980.65 ✓ (cost corrected)', vtiaxGain, 2980.65, 0.02)
   }
 }
 
