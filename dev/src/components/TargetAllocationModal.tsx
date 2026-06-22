@@ -194,7 +194,12 @@ export function TargetAllocationModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {/* "Allocations must total 100%" */}
+          {/* "Allocations must total 100%"
+              Figma (667:3702) shows this as a single static italic #717777 text node — one style only,
+              no error-state variant in the design context. The red color + live sum + disabled Save button
+              when total ≠ 100% were added proactively as sound UX, not pulled from an explicit Figma
+              error state. If Figma is ever updated to show a specific error-state design that differs
+              from this behavior, this is the seam to correct. */}
           <div className="pt-2">
             <p className={`text-[11px] italic ${valid ? 'text-vg-ink-muted' : 'text-vg-red font-semibold'}`}>
               {valid ? 'Allocations must total 100%' : `Allocations must total 100% (current: ${total}%)`}
