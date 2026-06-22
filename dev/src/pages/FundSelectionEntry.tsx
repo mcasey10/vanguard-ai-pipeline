@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
-
-type Mode = 'automated' | 'manual'
+import { useAppStore } from '../store/useAppStore'
 
 export default function FundSelectionEntry() {
   const navigate = useNavigate()
-  const [mode, setMode] = useState<Mode>('automated')
-  const [rawAmount, setRawAmount] = useState('')
+  const { mode: storeMode, setTargetSaleAmount, setMode } = useAppStore()
 
-  // Format a numeric string as a dollar display value
+  const [rawAmount, setRawAmount] = useState('')
+  const [mode, setLocalMode] = useState<'automated' | 'manual'>(storeMode)
+
   function formatDollar(value: string): string {
     const digits = value.replace(/\D/g, '')
     if (!digits) return ''
@@ -25,43 +25,43 @@ export default function FundSelectionEntry() {
     setRawAmount(digits)
   }
 
+  function handleModeChange(m: 'automated' | 'manual') {
+    setLocalMode(m)
+  }
+
+  function handleSubmit() {
+    const dollars = parseInt(rawAmount, 10) / 100
+    setTargetSaleAmount(dollars)
+    setMode(mode)
+    navigate(mode === 'automated' ? '/automated' : '/manual')
+  }
+
   const displayAmount = rawAmount ? '$' + formatDollar(rawAmount) : ''
   const hasAmount = rawAmount.length > 0 && parseInt(rawAmount, 10) > 0
 
   return (
     <div className="flex flex-col items-start w-full">
-      {/* Content area — matches Figma Content frame (py-10 = 40px) */}
       <div className="flex flex-col gap-6 py-10 w-full bg-white">
 
-        {/* Row 1 — Page title + mode toggle (Figma: Heading/Page Title with Toggle) */}
+        {/* Row 1 — Page title + mode toggle */}
         <div className="flex items-center justify-between px-8 h-14">
           <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">
             Sell &amp; Rebalance
           </h1>
-
-          {/* Automated / Manual pill toggle
-              Figma: Controls/Mode Toggle
-              Border 1.5px solid #040505, 100px radius, 36px height
-              Active pill: #00bda3 bg, white bold text
-              Inactive: transparent, #040505 bold text */}
           <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
             <button
-              onClick={() => setMode('automated')}
+              onClick={() => handleModeChange('automated')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[14px] font-bold transition-colors ${
-                mode === 'automated'
-                  ? 'bg-vg-teal text-white'
-                  : 'bg-transparent text-vg-ink'
+                mode === 'automated' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
               }`}
             >
               <Sparkles size={16} className={mode === 'automated' ? 'text-white' : 'text-vg-ink'} />
               Automated
             </button>
             <button
-              onClick={() => setMode('manual')}
+              onClick={() => handleModeChange('manual')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold transition-colors ${
-                mode === 'manual'
-                  ? 'bg-vg-teal text-white'
-                  : 'bg-transparent text-vg-ink'
+                mode === 'manual' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
               }`}
             >
               <PenLine size={16} className={mode === 'manual' ? 'text-white' : 'text-vg-ink'} />
@@ -70,16 +70,10 @@ export default function FundSelectionEntry() {
           </div>
         </div>
 
-        {/* Row 2 — Amount input + CTA (Figma: Row 2 — Amount Input)
-            Input group: 200px wide, 48px tall
-            Button: black pill, 201px wide, 48px tall */}
+        {/* Row 2 — Amount input + CTA */}
         <div className="flex items-end gap-3 px-8">
-          {/* Input group */}
           <div className="flex flex-col gap-2">
-            <label
-              htmlFor="sale-amount"
-              className="text-[12px] text-vg-ink leading-normal whitespace-nowrap"
-            >
+            <label htmlFor="sale-amount" className="text-[12px] text-vg-ink leading-normal whitespace-nowrap">
               How much would you like to sell?
             </label>
             <input
@@ -88,17 +82,16 @@ export default function FundSelectionEntry() {
               inputMode="numeric"
               value={displayAmount}
               onChange={handleAmountChange}
+              onKeyDown={e => e.key === 'Enter' && hasAmount && handleSubmit()}
               placeholder="$0.00"
               className="w-[200px] h-[48px] px-3 border border-vg-ink rounded-[4px]
                 text-[14px] text-vg-ink text-right placeholder:text-vg-ink-muted
                 bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
             />
           </div>
-
-          {/* Primary CTA button — black pill, "Get recommendation" */}
           <button
             disabled={!hasAmount}
-            onClick={() => navigate('/automated', { state: { amount: parseInt(rawAmount, 10) } })}
+            onClick={handleSubmit}
             className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold
               whitespace-nowrap transition-opacity
               disabled:opacity-40 disabled:cursor-not-allowed
@@ -108,7 +101,7 @@ export default function FundSelectionEntry() {
           </button>
         </div>
 
-        {/* Explanation text (Figma: Explanation Wrap) */}
+        {/* Explanation text */}
         <div className="px-8">
           <p className="text-[14px] text-vg-ink-muted leading-normal max-w-[1111px]">
             Enter the amount you&apos;d like to raise from your portfolio. We&apos;ll generate a

@@ -1,23 +1,14 @@
-import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
-
-function centsToDollars(cents: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(cents / 100)
-}
+import { useAppStore } from '../store/useAppStore'
+import { runOptimization } from '../engine/index'
+import type { Recommendation } from '../types'
 
 function RadioDot({ selected }: { selected: boolean }) {
   return (
-    <div
-      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-        selected ? 'border-vg-ink' : 'border-vg-ink-muted'
-      }`}
-    >
+    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? 'border-vg-ink' : 'border-vg-ink-muted'}`}>
       {selected && <div className="w-2 h-2 rounded-full bg-vg-ink" />}
     </div>
   )
@@ -25,31 +16,11 @@ function RadioDot({ selected }: { selected: boolean }) {
 
 function CoachMarkBubble({ text, onDismiss }: { text: string; onDismiss: () => void }) {
   return (
-    // drop-shadow filter applied to whole container so arrow gets the same shadow
     <div className="relative" style={{ filter: 'drop-shadow(0px 4px 8px rgba(4,5,5,0.2))' }}>
-      {/* Upward-pointing triangle arrow — CSS border trick */}
-      <div
-        className="absolute"
-        style={{
-          left: 133,
-          top: -8,
-          width: 0,
-          height: 0,
-          borderLeft: '7px solid transparent',
-          borderRight: '7px solid transparent',
-          borderBottom: '8px solid white',
-        }}
-      />
-      {/* Bubble body */}
+      <div className="absolute" style={{ left: 133, top: -8, width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderBottom: '8px solid white' }} />
       <div className="bg-white rounded-[4px] w-[280px]">
         <div className="flex items-center justify-end pt-[10px] pb-[4px] px-[12px]">
-          <button
-            onClick={onDismiss}
-            className="text-[14px] text-vg-ink-muted cursor-pointer leading-none"
-            aria-label="Dismiss tip"
-          >
-            ×
-          </button>
+          <button onClick={onDismiss} className="text-[14px] text-vg-ink-muted cursor-pointer leading-none" aria-label="Dismiss tip">×</button>
         </div>
         <div className="px-[12px] pb-[12px]">
           <p className="text-[13px] text-vg-ink leading-normal">{text}</p>
@@ -59,50 +30,108 @@ function CoachMarkBubble({ text, onDismiss }: { text: string; onDismiss: () => v
   )
 }
 
+function fmt(n: number, decimals = 2): string {
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n)
+}
+function fmtDollar(n: number): string {
+  return '$' + fmt(Math.abs(n))
+}
+function fmtSigned(n: number): string {
+  return (n >= 0 ? '+' : '−') + fmtDollar(n)
+}
+
 export default function FundSelectionAutomated() {
-  const location = useLocation()
   const navigate = useNavigate()
 
-  const initialCents = (location.state as { amount?: number })?.amount ?? 2500000
+  const {
+    portfolio, targetSaleAmount, activeAccountId, optimizationPriority, activeTaxRates,
+    recommendation, setRecommendation, setTargetSaleAmount, setOptimizationPriority,
+  } = useAppStore()
 
-  const [appliedCents, setAppliedCents] = useState(initialCents)
-  const [inputCents, setInputCents] = useState(initialCents)
-  const [inputDisplay, setInputDisplay] = useState(centsToDollars(initialCents))
+  // Local input state for the amount field (display only — store is source of truth)
+  const [inputDisplay, setInputDisplay] = useState(
+    targetSaleAmount ? fmtDollar(targetSaleAmount) : ''
+  )
+  const [inputDollars, setInputDollars] = useState(targetSaleAmount ?? 0)
+  const [isDirty, setIsDirty] = useState(false)
 
-  // Optimization mode — visual state only; TODO: wire to optimization engine once built
-  const [optMode, setOptMode] = useState<'tax' | 'balance'>('tax')
-
-  // Coach marks — REQ-G-019/G-020
-  // hintsVisible: whether the "?" hint indicators are shown (Hide tips / Show tips toggle)
-  // openMark: which coach mark bubble is currently open — only one at a time
   const [hintsVisible, setHintsVisible] = useState(true)
   const [openMark, setOpenMark] = useState<'tax' | 'ytd' | null>(null)
   const [showAllocModal, setShowAllocModal] = useState(false)
 
-  function handleHintClick(mark: 'tax' | 'ytd') {
-    setOpenMark(prev => (prev === mark ? null : mark))
-  }
+  // ── Engine call ──────────────────────────────────────────────────────────
 
-  const canRecalculate = inputCents !== appliedCents && inputCents > 0
+  const runEngine = useCallback((amount: number, priority: typeof optimizationPriority) => {
+    if (!portfolio || amount <= 0) return
+    const result = runOptimization({
+      portfolio,
+      targetSaleAmount: amount,
+      activeAccountId,
+      mode: 'automated',
+      optimizationPriority: priority,
+      activeTaxRates,
+    })
+    setRecommendation(result as Recommendation)
+  }, [portfolio, activeAccountId, activeTaxRates, setRecommendation])
+
+  // Run engine on mount if recommendation is null or stale
+  useEffect(() => {
+    const amt = targetSaleAmount ?? 0
+    if (amt > 0 && !recommendation) {
+      runEngine(amt, optimizationPriority)
+    }
+  }, []) // intentionally run once on mount
+
+  // ── Derived display values ───────────────────────────────────────────────
+
+  const rec = recommendation as Recommendation | null
+  const totalSale = rec ? rec.fund_results.reduce((s, f) => s + f.sell_amount, 0) : (targetSaleAmount ?? 0)
+  const salePct = portfolio ? (totalSale / portfolio.total_investable_balance) * 100 : 0
+
+  const estSTGains = rec ? rec.fund_results.reduce((s, f) => s + f.est_st_gain_loss, 0) : null
+  const estLTGains = rec ? rec.fund_results.reduce((s, f) => s + f.est_lt_gain_loss, 0) : null
+  const estNetTax = rec?.est_net_tax ?? null
+  const effectiveRate = rec?.effective_rate ?? null
+
+  const ytd = portfolio?.ytd_gains_record
+  const taxRates = activeTaxRates
+
+  // Account data from store
+  const accounts = portfolio?.accounts ?? []
+  const taxableAcct = accounts.find(a => a.account_id === activeAccountId)
+  const iraAcct = accounts.find(a => a.account_type === 'traditional_IRA')
+  const rothAcct = accounts.find(a => a.account_type === 'roth_IRA')
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, '')
-    const cents = parseInt(digits || '0', 10)
-    setInputCents(cents)
-    setInputDisplay(digits === '' ? '' : centsToDollars(cents))
+    const dollars = parseInt(digits || '0', 10) / 100
+    setInputDollars(dollars)
+    setInputDisplay(digits === '' ? '' : fmtDollar(dollars))
+    setIsDirty(dollars !== (targetSaleAmount ?? 0))
   }
 
   function handleRecalculate() {
-    if (!canRecalculate) return
-    setAppliedCents(inputCents)
+    if (!isDirty || inputDollars <= 0) return
+    setTargetSaleAmount(inputDollars)
+    setIsDirty(false)
+    runEngine(inputDollars, optimizationPriority)
   }
+
+  function handleOptMode(priority: 'tax-first' | 'balance-first') {
+    setOptimizationPriority(priority)
+    runEngine(targetSaleAmount ?? 0, priority)
+  }
+
+  // ── Allocation impact display ─────────────────────────────────────────────
+
+  const ai = rec?.allocation_impact
+  const equityDelta = ai ? ((ai.domestic_equity_after + ai.international_equity_after) - (ai.domestic_equity_before + ai.international_equity_before)) : null
+  const bondsDelta  = ai ? (ai.domestic_bonds_after - ai.domestic_bonds_before) : null
 
   return (
     <>
-      {/* Show Tips control — fixed over Global Header (x=978, y=20 in Figma frame).
-          Page-specific; positioned here rather than in PortalShell/GlobalHeader
-          to avoid coupling the shared shell to per-screen tip state. */}
-      {/* Show Tips / Hide Tips toggle — hides or restores the "?" hint indicators */}
       <button
         onClick={() => { setHintsVisible(v => !v); setOpenMark(null) }}
         className="fixed z-50 flex items-center gap-[5px] cursor-pointer"
@@ -116,104 +145,68 @@ export default function FundSelectionAutomated() {
         </span>
       </button>
 
-      {/* Target Allocation Modal */}
       {showAllocModal && <TargetAllocationModal onClose={() => setShowAllocModal(false)} />}
 
       <div className="flex flex-col items-start w-full">
         <div className="flex flex-col gap-6 py-10 w-full">
 
-          {/* Row 1 — Page title + mode toggle */}
+          {/* Row 1 — Title + mode toggle */}
           <div className="flex items-center justify-between px-8 h-14">
-            <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">
-              Sell &amp; Rebalance
-            </h1>
+            <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">Sell &amp; Rebalance</h1>
             <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
               <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-vg-teal">
                 <Sparkles size={16} className="text-white" />
                 <span className="text-[14px] font-bold text-white">Automated</span>
               </div>
-              <button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink"
-              >
-                <PenLine size={16} className="text-vg-ink" />
-                Manual
+              <button onClick={() => navigate('/manual')} className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink">
+                <PenLine size={16} className="text-vg-ink" />Manual
               </button>
             </div>
           </div>
 
-          {/* Row 2 — Amount input + Recalculate + Optimization priority toggle */}
+          {/* Row 2 — Amount input + Recalculate + Optimization priority */}
           <div className="flex items-end gap-3 px-8 w-full">
-            {/* Amount input group */}
             <div className="flex flex-col gap-2 shrink-0">
-              <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">
-                Total sell amount
-              </label>
+              <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">Total sell amount</label>
               <input
                 type="text"
                 inputMode="numeric"
                 value={inputDisplay}
                 onChange={handleAmountChange}
-                className="w-[200px] h-[48px] px-3 border border-vg-ink rounded-[4px]
-                  text-[14px] text-vg-ink text-right bg-white focus:outline-none
-                  focus:ring-2 focus:ring-vg-ink/20"
+                onKeyDown={e => e.key === 'Enter' && handleRecalculate()}
+                onBlur={handleRecalculate}
+                className="w-[200px] h-[48px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
               />
             </div>
-
-            {/* Recalculate button */}
             <button
               onClick={handleRecalculate}
-              disabled={!canRecalculate}
-              className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink
-                text-[14px] font-bold text-vg-ink bg-white shrink-0
-                disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={!isDirty || inputDollars <= 0}
+              className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-[14px] font-bold text-vg-ink bg-white shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Recalculate
             </button>
-
-            {/* Optimization priority toggle — pushed to right side of row.
-                TODO: wire to optimization engine once built (REQ-OE-002).
-                Switching to Balance-first should re-run the recommendation
-                with objective weights swapped; currently visual state only. */}
             <div className="ml-auto flex flex-col gap-2 shrink-0">
-              <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">
-                Optimization priority
-              </label>
+              <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">Optimization priority</label>
               <div className="flex items-center border border-vg-ink rounded-full p-[2px] h-[36px]">
-                <button
-                  onClick={() => setOptMode('tax')}
-                  className={`flex items-center justify-center px-[12px] h-full rounded-full
-                    text-[14px] font-bold whitespace-nowrap transition-colors ${
-                    optMode === 'tax'
-                      ? 'bg-vg-ink text-white'
-                      : 'text-vg-ink'
-                  }`}
-                >
-                  Tax-first
-                </button>
-                <button
-                  onClick={() => setOptMode('balance')}
-                  className={`flex items-center justify-center px-[12px] h-full rounded-[30px]
-                    text-[14px] font-bold whitespace-nowrap transition-colors ${
-                    optMode === 'balance'
-                      ? 'bg-vg-ink text-white'
-                      : 'text-vg-ink'
-                  }`}
-                >
-                  Balance-first
-                </button>
+                {(['tax-first', 'balance-first'] as const).map(p => (
+                  <button key={p} onClick={() => handleOptMode(p)}
+                    className={`flex items-center justify-center px-[12px] h-full rounded-full text-[14px] font-bold whitespace-nowrap transition-colors ${optimizationPriority === p ? 'bg-vg-ink text-white' : 'text-vg-ink'}`}
+                  >
+                    {p === 'tax-first' ? 'Tax-first' : 'Balance-first'}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Summary Banner — relative container anchors the coach marks */}
+          {/* Summary Banner */}
           <div className="flex items-center px-8 w-full relative">
             <div className="flex flex-1 items-start bg-[#e8f5f0] px-6 py-4">
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
-                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">$25,000</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">1.5% of portfolio</span>
+                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">${fmt(totalSale, 0)}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{fmt(salePct, 1)}% of portfolio</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
@@ -221,16 +214,12 @@ export default function FundSelectionAutomated() {
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">TAX BRACKET</span>
                   {hintsVisible && (
-                    <button
-                      onClick={() => handleHintClick('tax')}
-                      className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer"
-                      aria-label="Learn about tax bracket"
-                    >
+                    <button onClick={() => setOpenMark(prev => prev === 'tax' ? null : 'tax')} className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer" aria-label="Learn about tax bracket">
                       <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
                     </button>
                   )}
                 </div>
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">24% ST / 15% LT</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fmt(taxRates.st_rate * 100, 0)}% ST / {fmt(taxRates.lt_rate * 100, 0)}% LT</span>
                 <a className="text-[12px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Change</a>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
@@ -239,80 +228,74 @@ export default function FundSelectionAutomated() {
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
                   {hintsVisible && (
-                    <button
-                      onClick={() => handleHintClick('ytd')}
-                      className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer"
-                      aria-label="Learn about YTD realized gains"
-                    >
+                    <button onClick={() => setOpenMark(prev => prev === 'ytd' ? null : 'ytd')} className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer" aria-label="Learn about YTD realized gains">
                       <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
                     </button>
                   )}
                 </div>
-                <span className="text-[12px] text-vg-ink whitespace-nowrap">ST $1,245</span>
-                <span className="text-[12px] text-vg-ink whitespace-nowrap">LT $8,750</span>
+                {ytd ? (
+                  <>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST {fmtDollar(ytd.st_gains_realized_ytd)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT {fmtDollar(ytd.lt_gains_realized_ytd)}</span>
+                  </>
+                ) : <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">—</span>}
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                <span className="text-[16px] font-bold text-[#007a00] whitespace-nowrap">$1,515.85</span>
+                <span className={`text-[16px] font-bold whitespace-nowrap ${estSTGains !== null && estSTGains > 0 ? 'text-[#007a00]' : estSTGains !== null && estSTGains < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {estSTGains !== null ? fmtSigned(estSTGains) : '—'}
+                </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                <span className="text-[16px] font-bold text-vg-red whitespace-nowrap">-$1,056.65</span>
+                <span className={`text-[16px] font-bold whitespace-nowrap ${estLTGains !== null && estLTGains > 0 ? 'text-[#007a00]' : estLTGains !== null && estLTGains < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {estLTGains !== null ? fmtSigned(estLTGains) : '—'}
+                </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. NET TAX</span>
-                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">$110.21</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">0.44% effective rate</span>
+                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{estNetTax !== null ? fmtDollar(estNetTax) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">
+                  {effectiveRate !== null ? `${fmt(effectiveRate * 100, 2)}% effective rate` : ''}
+                </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
               <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                <div className="flex gap-1.5 items-center">
-                  <span className="text-[12px] text-vg-ink">Equity</span>
-                  <span className="text-[12px] text-[#007a00]">−0.8%</span>
-                </div>
-                <div className="flex gap-1.5 items-center">
-                  <span className="text-[12px] text-vg-ink">Bonds</span>
-                  <span className="text-[12px] text-vg-red">-0.4%</span>
-                </div>
-                <a
-                  className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap"
-                  onClick={() => setShowAllocModal(true)}
-                >
+                {equityDelta !== null && (
+                  <div className="flex gap-1.5 items-center">
+                    <span className="text-[12px] text-vg-ink">Equity</span>
+                    <span className={`text-[12px] ${equityDelta <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>{equityDelta <= 0 ? '−' : '+'}{fmt(Math.abs(equityDelta), 1)}%</span>
+                  </div>
+                )}
+                {bondsDelta !== null && (
+                  <div className="flex gap-1.5 items-center">
+                    <span className="text-[12px] text-vg-ink">Bonds</span>
+                    <span className={`text-[12px] ${bondsDelta >= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>{bondsDelta >= 0 ? '+' : '−'}{fmt(Math.abs(bondsDelta), 1)}%</span>
+                  </div>
+                )}
+                <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>
                   Target allocation
                 </a>
               </div>
 
             </div>
 
-            {/* Coach Mark — TAX BRACKET column
-                Positioned relative to this wrapper (which is 92px tall = banner height).
-                top: 84 places the mark 8px above the banner bottom; the upward arrow
-                overlaps the column bottom edge, pointing into TAX BRACKET.
-                Anchor: x=200 from the frame/wrapper left edge. */}
             {openMark === 'tax' && (
               <div className="absolute z-40" style={{ left: 200, top: 84 }}>
-                <CoachMarkBubble
-                  text="We're using a mid-range tax rate as a starting point. If you know your bracket, you can select it below for a more accurate estimate."
-                  onDismiss={() => setOpenMark(null)}
-                />
+                <CoachMarkBubble text="We're using a mid-range tax rate as a starting point. If you know your bracket, you can select it below for a more accurate estimate." onDismiss={() => setOpenMark(null)} />
               </div>
             )}
-
-            {/* Coach Mark — YTD REALIZED column */}
             {openMark === 'ytd' && (
               <div className="absolute z-40" style={{ left: 390, top: 92 }}>
-                <CoachMarkBubble
-                  text="This shows capital gains you've already realized this year. Selling more shares adds to this total."
-                  onDismiss={() => setOpenMark(null)}
-                />
+                <CoachMarkBubble text="This shows capital gains you've already realized this year. Selling more shares adds to this total." onDismiss={() => setOpenMark(null)} />
               </div>
             )}
           </div>
@@ -321,163 +304,124 @@ export default function FundSelectionAutomated() {
           <div className="flex flex-col items-start px-8 w-full">
             <div className="flex flex-col items-start w-full border border-[#e8e9e9]">
 
-              {/* Account: Taxable Brokerage (selected) */}
+              {/* Taxable Brokerage account header */}
               <div className="flex h-16 items-center px-4 bg-[#f8f8f8] border-b border-[#e8e9e9] w-full">
                 <RadioDot selected={true} />
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Taxable Brokerage</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...4782</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...{taxableAcct?.account_id.slice(-4) ?? '4782'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">
-                  62% Equity / 28% Bonds / 10% Other
-                </span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Equity / 28% Bonds / 10% Other</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$507,194.40</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? fmtDollar(taxableAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
               </div>
 
-              {/* Column header row — only FUND + POSITION per Figma (265:654) */}
+              {/* Column header */}
               <div className="flex h-9 items-center px-3 bg-[#f8f8f8] border border-[#e0e0e0] w-full shrink-0">
-                <div className="w-[280px] px-2 flex items-center h-full shrink-0">
-                  <span className="text-[12px] font-semibold text-vg-ink">FUND</span>
-                </div>
-                <div className="w-[140px] px-2 flex items-center h-full shrink-0">
-                  <span className="text-[12px] font-semibold text-vg-ink">POSITION</span>
-                </div>
+                <div className="w-[280px] px-2 flex items-center h-full shrink-0"><span className="text-[12px] font-semibold text-vg-ink">FUND</span></div>
+                <div className="w-[140px] px-2 flex items-center h-full shrink-0"><span className="text-[12px] font-semibold text-vg-ink">POSITION</span></div>
                 <div className="flex-1" />
               </div>
 
-              {/* VTSAX row */}
-              <div className="flex flex-col border-b border-[#e8e9e9] w-full bg-white">
-                <div className="flex h-16 items-center overflow-hidden px-3 w-full">
-                  <div className="w-[280px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[13px] text-vg-ink-muted truncate">
-                      Vanguard Total Stock Market Index Fund
-                    </span>
-                    <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">VTSAX</a>
+              {/* Engine-driven fund rows */}
+              {rec?.fund_results.map(fr => {
+                const holding = taxableAcct?.holdings.find(h => h.fund_id === fr.fund_id)
+                const stGain = fr.est_st_gain_loss
+                const ltGain = fr.est_lt_gain_loss
+                return (
+                  <div key={fr.fund_id} className="flex flex-col border-b border-[#e8e9e9] w-full bg-white">
+                    <div className="flex h-16 items-center overflow-hidden px-3 w-full">
+                      <div className="w-[280px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+                        <span className="text-[13px] text-vg-ink-muted truncate">{holding?.fund_name ?? fr.fund_id}</span>
+                        <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">{fr.fund_id}</a>
+                      </div>
+                      <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+                        <span className="text-[11px] text-vg-ink-muted whitespace-nowrap">{holding ? fmt(holding.total_shares, 0) : '—'} shares</span>
+                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{holding ? fmtDollar(holding.current_balance) : '—'}</span>
+                      </div>
+                      <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
+                        <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
+                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fmtDollar(fr.sell_amount)}</span>
+                      </div>
+                      <div className="w-[130px] h-full shrink-0" />
+                      <div className="w-[160px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden text-vg-ink-muted">
+                        <span className="text-[12px] whitespace-nowrap">Cost Basis Method</span>
+                        <span className="text-[14px] font-bold whitespace-nowrap">{fr.accounting_method}</span>
+                      </div>
+                      <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+                        <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
+                        <span className={`text-[14px] font-bold whitespace-nowrap ${stGain > 0 ? 'text-[#007a00]' : stGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>{stGain !== 0 ? fmtSigned(stGain) : '$0.00'}</span>
+                      </div>
+                      <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+                        <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
+                        <span className={`text-[14px] font-bold whitespace-nowrap ${ltGain > 0 ? 'text-[#007a00]' : ltGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>{ltGain !== 0 ? fmtSigned(ltGain) : '$0.00'}</span>
+                      </div>
+                      <div className="w-[85px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+                        <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. TAX</span>
+                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fmtDollar(fr.est_tax_gross)}</span>
+                      </div>
+                      <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
+                        <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
+                        <span className={`text-[12px] font-semibold whitespace-nowrap ${fr.impact_pct <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
+                          {fr.impact_pct <= 0 ? '−' : '+'}{fmt(Math.abs(fr.impact_pct), 1)}% {fr.impact_asset_class.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <div className="flex-1 h-full" />
+                    </div>
+                    <div className="flex h-8 items-center px-4 w-full bg-white">
+                      <p className="text-[13px] italic text-vg-ink-muted">{fr.rationale}</p>
+                    </div>
                   </div>
-                  <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[11px] text-vg-ink-muted whitespace-nowrap">1,597 shares</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$231,884.40</span>
-                  </div>
-                  <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$15,000.00</span>
-                  </div>
-                  <div className="w-[130px] h-full shrink-0" />
-                  <div className="w-[160px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden text-vg-ink-muted">
-                    <span className="text-[12px] whitespace-nowrap">Cost Basis Method</span>
-                    <span className="text-[14px] font-bold whitespace-nowrap">MinTax</span>
-                  </div>
-                  <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                    <span className="text-[14px] font-bold text-[#007a00] whitespace-nowrap">$1,515.85</span>
-                  </div>
-                  <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$0.00</span>
-                  </div>
-                  <div className="w-[85px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. TAX</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$363.80</span>
-                  </div>
-                  <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                    <span className="text-[12px] font-semibold text-[#007a00] whitespace-nowrap">-0.8% Equity</span>
-                  </div>
-                  <div className="flex-1 h-full" />
-                </div>
-                <div className="flex h-8 items-center px-4 w-full bg-white">
-                  <p className="text-[13px] italic text-vg-ink-muted">
-                    Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.
-                  </p>
-                </div>
-              </div>
+                )
+              })}
 
-              {/* VBTLX row */}
-              <div className="flex flex-col border-b border-[#e8e9e9] w-full bg-white">
-                <div className="flex h-16 items-center overflow-hidden px-3 w-full">
-                  <div className="w-[280px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[12px] text-vg-ink-muted truncate">
-                      Vanguard Total Bond Market Index Fund
-                    </span>
-                    <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">VBTLX</a>
-                  </div>
-                  <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">5,600 shares</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$51,408.00</span>
-                  </div>
-                  <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$10,000.00</span>
-                  </div>
-                  <div className="w-[130px] h-full shrink-0" />
-                  <div className="w-[160px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden text-vg-ink-muted">
-                    <span className="text-[10px] whitespace-nowrap">&nbsp;</span>
-                    <span className="text-[14px] font-bold whitespace-nowrap">MinTax</span>
-                  </div>
-                  <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$0.00</span>
-                  </div>
-                  <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                    <span className="text-[14px] font-bold text-vg-red whitespace-nowrap">-$1,056.65</span>
-                  </div>
-                  <div className="w-[85px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. TAX</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$0.00</span>
-                  </div>
-                  <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                    <span className="text-[14px] font-semibold text-vg-ink whitespace-nowrap">-0.4% Bonds</span>
-                  </div>
-                  <div className="flex-1 h-full" />
+              {/* Placeholder when engine hasn't run yet */}
+              {!rec && (
+                <div className="flex h-16 items-center px-4 w-full bg-white border-b border-[#e8e9e9]">
+                  <span className="text-[14px] text-vg-ink-muted italic">Generating recommendation…</span>
                 </div>
-                <div className="flex h-8 items-center px-4 w-full bg-white">
-                  <p className="text-[13px] italic text-vg-ink-muted">
-                    Harvesting a $1,057 long-term bond loss nets against equity gains; combined taxable gain is $459 and estimated net tax is $110.
-                  </p>
-                </div>
-              </div>
+              )}
 
-              {/* Account: Traditional IRA (unselected) */}
+              {/* Traditional IRA */}
               <div className="flex h-16 items-center px-4 bg-[#f8f8f8] border-b border-[#e8e9e9] w-full">
                 <RadioDot selected={false} />
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center flex-wrap">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Traditional IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...2973</span>
-                  <div className="w-2 shrink-0" />
-                  <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
-                    <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">
-                      Remaining 2026 RMD: $3,668
-                    </span>
-                  </div>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...{iraAcct?.account_id.slice(-4) ?? '2973'}</span>
+                  {iraAcct?.rmd_record && (
+                    <>
+                      <div className="w-2 shrink-0" />
+                      <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
+                        <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">
+                          Remaining 2026 RMD: {fmtDollar(Math.round(iraAcct.rmd_record.rmd_remaining))}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">
-                  22% Equity / 78% Bonds / 0% Other
-                </span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Equity / 78% Bonds / 0% Other</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$211,065.00</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct ? fmtDollar(iraAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
               </div>
 
-              {/* Account: Roth IRA (unselected) */}
+              {/* Roth IRA */}
               <div className="flex h-16 items-center px-4 bg-[#f8f8f8] border-b border-[#e8e9e9] w-full">
                 <RadioDot selected={false} />
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Roth IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...8148</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...{rothAcct?.account_id.slice(-4) ?? '8148'}</span>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$131,592.00</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct ? fmtDollar(rothAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
               </div>
 
@@ -486,12 +430,8 @@ export default function FundSelectionAutomated() {
 
           {/* Footer */}
           <div className="flex gap-3 items-center justify-end px-8 w-full">
-            <button className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap">
-              Review order
-            </button>
-            <button className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap">
-              Go to Scenario Analysis
-            </button>
+            <button className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap">Review order</button>
+            <button className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap">Go to Scenario Analysis</button>
           </div>
 
         </div>
