@@ -108,7 +108,7 @@ function fmtDollar(n: number): string {
 
 function LotDetailHeader() {
   return (
-    <div className="flex h-9 items-center overflow-clip px-3 w-[1375px] bg-[#f0f0f0] shrink-0">
+    <div className="flex h-9 items-center overflow-clip px-3 w-full bg-[#f0f0f0] shrink-0">
       <div className="w-[220px] flex items-center justify-between pr-2 shrink-0 h-full">
         <span className="text-[12px] font-semibold text-vg-ink-muted">Shares to sell</span>
       </div>
@@ -145,10 +145,11 @@ function LotDetailHeader() {
 // Section header for LT / ST groupings
 // ---------------------------------------------------------------------------
 
-function LotSectionHeader({ label }: { label: string }) {
+function LotSectionHeader({ label, showViewDefs }: { label: string; showViewDefs: boolean }) {
   return (
-    <div className="flex h-9 items-center px-3 bg-[#f8f8f8] border-t border-[#e8e9e9] w-full shrink-0">
-      <span className="text-[12px] font-semibold text-vg-ink-muted">{label}</span>
+    <div className="flex h-9 items-center justify-between overflow-clip px-4 w-full shrink-0 whitespace-nowrap">
+      <span className="text-[13px] font-semibold text-vg-ink">{label}</span>
+      <a className={`text-[12px] underline cursor-pointer ${showViewDefs ? 'text-[#1255cc]' : 'text-transparent'}`}>View definitions</a>
     </div>
   )
 }
@@ -801,12 +802,13 @@ export default function FundSelectionManualLot() {
                 </div>
 
                 {/* Lot Detail Section — Table Section with 32px left indent (Figma: padding-left: 32) */}
+                {/* Each group (LT/ST) has: section header → column header → lot rows */}
                 <div className="pl-8 w-full flex flex-col">
-                <LotDetailHeader />
 
                 {ltLots.length > 0 && (
                   <>
-                    <LotSectionHeader label="Long-term holdings" />
+                    <LotSectionHeader label="Long-term holdings" showViewDefs={true} />
+                    <LotDetailHeader />
                     {ltLots.map(lot => (
                       <NormalLotRow
                         key={lot.lotId}
@@ -821,7 +823,8 @@ export default function FundSelectionManualLot() {
 
                 {stLots.length > 0 && (
                   <>
-                    <LotSectionHeader label="Short-term holdings" />
+                    <LotSectionHeader label="Short-term holdings" showViewDefs={false} />
+                    <LotDetailHeader />
                     {stLots.map(lot =>
                       lot.waitAndSave ? (
                         <WaitSaveLotRow
