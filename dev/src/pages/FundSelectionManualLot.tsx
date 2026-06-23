@@ -854,12 +854,12 @@ export default function FundSelectionManualLot() {
                     36px section header + 40px totals row, shown once engine has fired */}
                 {bannerData && (
                   <>
-                    {/* Section header: "Total impact of selected shares to sell" (36px) */}
-                    <div className="flex h-9 items-center justify-between overflow-clip px-3 w-full bg-[#f8f8f8] border-t border-[#e8e9e9] shrink-0">
+                    {/* Section header: "Total impact of selected shares to sell" — px-4 aligns with LT/ST headers */}
+                    <div className="flex h-9 items-center justify-between overflow-clip px-4 w-full shrink-0">
                       <span className="text-[13px] font-semibold text-vg-ink whitespace-nowrap">Total impact of selected shares to sell</span>
                     </div>
-                    {/* Totals row (40px) — columns aligned to lot table */}
-                    <div className="flex h-10 items-center overflow-clip px-3 w-full bg-white border-t border-[#e8e9e9] shrink-0">
+                    {/* Totals row (40px) — inherits Table Section bg (#f8f8f7), columns aligned to lot table */}
+                    <div className="flex h-10 items-center overflow-clip px-3 w-full shrink-0">
                       {/* t1 — Total selected shares to sell (220px) */}
                       <div className="w-[220px] flex flex-col items-start justify-center h-full shrink-0 overflow-clip">
                         <span className="text-[11px] text-vg-ink-muted">Total selected shares to sell</span>
