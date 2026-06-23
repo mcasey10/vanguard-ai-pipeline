@@ -801,9 +801,9 @@ export default function FundSelectionManualLot() {
                   </button>
                 </div>
 
-                {/* Lot Detail Section — Table Section with 32px left indent (Figma: padding-left: 32) */}
+                {/* Lot Detail Section — Figma: bg-[#f8f8f7], border-l #e8e9e9, pl-32, overflow-clip */}
                 {/* Each group (LT/ST) has: section header → column header → lot rows */}
-                <div className="pl-8 w-full flex flex-col">
+                <div className="pl-8 w-full flex flex-col bg-[#f8f8f7] border-l border-[#e8e9e9] overflow-clip">
 
                 {ltLots.length > 0 && (
                   <>
