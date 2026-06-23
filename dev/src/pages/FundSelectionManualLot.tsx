@@ -783,7 +783,7 @@ export default function FundSelectionManualLot() {
                     <span className={`text-[12px] font-semibold whitespace-nowrap ${fund === 'VTSAX' ? 'text-[#007a00]' : 'text-[#c8102e]'}`}>{fund === 'VTSAX' ? '-0.8% Equity' : '-0.4% Bonds'}</span>
                   </div>
                   <div className="flex flex-1 h-full items-center justify-end px-2">
-                    <button className="h-[36px] w-[90px] rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink shrink-0 hover:opacity-90">Cancel</button>
+                    <button onClick={() => navigate('/manual-2')} className="h-[36px] w-[90px] rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink shrink-0 hover:opacity-90 active:opacity-80 transition-opacity">Cancel</button>
                   </div>
                 </div>
 
