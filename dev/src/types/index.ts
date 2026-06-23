@@ -152,6 +152,7 @@ export interface Account {
   account_balance: number
   rmd_applicable: boolean
   settlement_account_id: string
+  masked_number: string         // display suffix, e.g. "...4782" (from pm/08-sample-dataset.json)
   holdings: FundHolding[]
   rmd_record?: RMDRecord       // populated from rmd_records[] where account_id matches
 }

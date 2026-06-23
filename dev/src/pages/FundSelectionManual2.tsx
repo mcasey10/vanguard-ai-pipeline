@@ -455,7 +455,9 @@ export default function FundSelectionManual2() {
   // and calls runOptimization() in manual mode. Called on Apply/blur/Enter.
   const runManualEngine = useCallback((newAmounts: Record<string, number>, newActiveFunds: Set<string>) => {
     if (!portfolio) return
-    const totalDollars = r2(Object.values(newAmounts).reduce((s, v) => s + v, 0))
+    // appliedAmounts stores values in cents (same unit as ActiveFundRow inputCents).
+    // Divide by 100 to convert to dollars before passing to runOptimization.
+    const totalDollars = r2(Object.values(newAmounts).reduce((s, v) => s + v, 0) / 100)
     if (totalDollars <= 0 || newActiveFunds.size === 0) { setFundResults([]); return }
     const fundSelectionsForEngine = Array.from(newActiveFunds)
       .filter(ticker => (newAmounts[ticker] ?? 0) > 0)
@@ -503,6 +505,11 @@ export default function FundSelectionManual2() {
 
   // Target Allocation Modal
   const [showAllocModal, setShowAllocModal] = useState(false)
+
+  // Account references (for masked_number display)
+  const taxableAcct = portfolio?.accounts.find(a => a.account_type === 'taxable_brokerage')
+  const iraAcct2    = portfolio?.accounts.find(a => a.account_type === 'traditional_IRA')
+  const rothAcct2   = portfolio?.accounts.find(a => a.account_type === 'roth_IRA')
 
   // Mode toggle guard — shows save/discard dialog if any applied amount is non-zero
   const hasAmounts = Object.values(appliedAmounts).some(v => v > 0)
@@ -687,7 +694,7 @@ export default function FundSelectionManual2() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Taxable Brokerage</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...4782</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct?.masked_number ?? '...4782'}</span>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">
@@ -769,7 +776,7 @@ export default function FundSelectionManual2() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center flex-wrap">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Traditional IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...2973</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct2?.masked_number ?? '...2973'}</span>
                   <div className="w-2 shrink-0" />
                   <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
                     <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">
@@ -797,7 +804,7 @@ export default function FundSelectionManual2() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Roth IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...8148</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct2?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>

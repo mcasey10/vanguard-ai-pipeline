@@ -482,7 +482,8 @@
             }
           ]
         }
-      ]
+      ],
+      "masked_number": "...4782"
     },
     {
       "account_id": "ACCT-TRAD-IRA-001",
@@ -676,7 +677,8 @@
             }
           ]
         }
-      ]
+      ],
+      "masked_number": "...2973"
     },
     {
       "account_id": "ACCT-ROTH-IRA-001",
@@ -792,7 +794,8 @@
             }
           ]
         }
-      ]
+      ],
+      "masked_number": "...8148"
     }
   ],
   "rmd_records": [

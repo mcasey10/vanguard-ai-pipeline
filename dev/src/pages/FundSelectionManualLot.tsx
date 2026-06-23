@@ -448,6 +448,8 @@ export default function FundSelectionManualLot() {
 
   // Derive lots from store portfolio (single source of truth — no hardcoded arrays)
   const taxableAcct = portfolio?.accounts.find(a => a.account_id === activeAccountId)
+  const iraAcct     = portfolio?.accounts.find(a => a.account_type === 'traditional_IRA')
+  const rothAcct    = portfolio?.accounts.find(a => a.account_type === 'roth_IRA')
   const holding = taxableAcct?.holdings.find(h => h.fund_id === fund)
   const lots: Lot[] = (holding?.lots ?? []).map(toDisplayLot)
 
@@ -651,7 +653,7 @@ export default function FundSelectionManualLot() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Taxable Brokerage</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...4782</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct?.masked_number ?? '...4782'}</span>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Equity / 28% Bonds / 10% Other</span>
@@ -815,7 +817,7 @@ export default function FundSelectionManualLot() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center flex-wrap">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Traditional IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...2973</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct?.masked_number ?? '...2973'}</span>
                   <div className="w-2 shrink-0" />
                   <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
                     <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">Remaining 2026 RMD: $3,668</span>
@@ -835,7 +837,7 @@ export default function FundSelectionManualLot() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Roth IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...8148</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>

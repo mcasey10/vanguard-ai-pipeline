@@ -365,17 +365,22 @@ function buildRationale(
     : `${lotSales.length} lots`
 
   if (hasLoss && totalGain < 0) {
-    return `Harvesting a ${Math.abs(totalGain).toFixed(0)} ${lotSales[0].lot.holding_period === 'LT' ? 'long-term' : 'short-term'} ${assetClass} loss offsets realized gains and reduces estimated net tax.`
+    // Loss lot — reference tax benefit; avoid "harvesting" jargon per CD-2.1
+    const lossAmt = Math.abs(totalGain).toFixed(2)
+    const holdingPeriod = lotSales[0].lot.holding_period === 'LT' ? 'long-term' : 'short-term'
+    return `Selling this ${holdingPeriod} ${assetClass} position at a loss of $${lossAmt} offsets realized gains elsewhere and reduces your estimated net tax.`
   }
 
   const directionText = impactDelta < 0 ? 'reduces' : 'increases'
   const overweightText = impactDelta < 0 ? 'overweight' : 'underweight'
 
   if (method === 'specific_lot_identification') {
-    return `Selling the selected ${lotDesc} limits estimated tax to $${Math.max(0, totalGain * 0.24).toFixed(2)} while helping address ${assetClass} allocation.`
+    // SpecID — reference the specific lot selection and its tax effect
+    return `Selling the selected ${lotDesc} realizes a gain of $${Math.abs(totalGain).toFixed(2)} and moves ${assetClass} allocation closer to target.`
   }
 
-  return `Selling this ${assetClass} holding ${directionText} ${overweightText} exposure and contributes $${Math.abs(totalGain).toFixed(0)} to the estimated tax impact.`
+  // General gain lot — reference both allocation direction and the realized gain figure
+  return `Selling this ${assetClass} position ${directionText} its ${overweightText} allocation and realizes a gain of $${Math.abs(totalGain).toFixed(2)}.`
 }
 
 // ---------------------------------------------------------------------------

@@ -40,6 +40,7 @@ function buildPortfolioFromRaw(raw: typeof rawDataset): Portfolio {
     account_balance: acct.account_balance,
     rmd_applicable: acct.rmd_applicable,
     settlement_account_id: acct.settlement_account_id,
+    masked_number: (acct as Record<string, unknown>).masked_number as string ?? '',
     holdings: acct.holdings.map(h => ({
       fund_id: h.fund_id,
       fund_name: h.fund_name,

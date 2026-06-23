@@ -127,7 +127,7 @@ export default function FundSelectionManual() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Taxable Brokerage</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...4782</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct?.masked_number ?? '...4782'}</span>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Equity / 28% Bonds / 10% Other</span>
@@ -174,7 +174,7 @@ export default function FundSelectionManual() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center flex-wrap">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Traditional IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...2973</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct?.masked_number ?? '...2973'}</span>
                   {iraAcct?.rmd_record && (
                     <>
                       <div className="w-2 shrink-0" />
@@ -211,7 +211,7 @@ export default function FundSelectionManual() {
                 <div className="w-2 shrink-0" />
                 <div className="flex gap-1 items-center">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Roth IRA</span>
-                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">...8148</span>
+                  <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>
