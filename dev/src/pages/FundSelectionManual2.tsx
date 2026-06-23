@@ -739,48 +739,41 @@ export default function FundSelectionManual2() {
                 <div className="flex-1" />
               </div>
 
-              {/* Fund rows — active funds first (portfolio order), inactive funds below (portfolio order) */}
-              {(() => {
-                const allHoldings = portfolio?.accounts.find(a => a.account_id === activeAccountId)?.holdings ?? []
-                const ordered = [
-                  ...allHoldings.filter(h => activeFunds.has(h.fund_id)),
-                  ...allHoldings.filter(h => !activeFunds.has(h.fund_id)),
-                ]
-                return ordered.map(holding => {
-                  const fund: FundRow = {
-                    ticker: holding.fund_id,
-                    fullName: holding.fund_name,
-                    shares: new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(holding.total_shares),
-                    balance: '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(holding.current_balance),
-                    assetClass: holding.asset_class.replace('_', ' '),
-                  }
-                  const engineResult = fundResults.find(fr => fr.fund_id === holding.fund_id)
-                  if (activeFunds.has(fund.ticker)) {
-                    return (
-                      <ActiveFundRow
-                        key={fund.ticker}
-                        fund={fund}
-                        taxData={taxDataFromResult(engineResult)}
-                        appliedCents={appliedAmounts[fund.ticker] ?? 0}
-                        onApply={handleApplyAmount}
-                        onLotDetails={handleLotDetails}
-                        showAllocationHint={holding.asset_class === 'domestic_equity'}
-                        showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
-                        hintsVisible={hintsVisible}
-                        onHintClick={handleHintClick}
-                        onCancel={() => handleCancel(fund.ticker)}
-                      />
-                    )
-                  }
+              {/* Fund rows — always in portfolio order; active/inactive state shown by row variant */}
+              {(portfolio?.accounts.find(a => a.account_id === activeAccountId)?.holdings ?? []).map(holding => {
+                const fund: FundRow = {
+                  ticker: holding.fund_id,
+                  fullName: holding.fund_name,
+                  shares: new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(holding.total_shares),
+                  balance: '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(holding.current_balance),
+                  assetClass: holding.asset_class.replace('_', ' '),
+                }
+                const engineResult = fundResults.find(fr => fr.fund_id === holding.fund_id)
+                if (activeFunds.has(fund.ticker)) {
                   return (
-                    <InactiveFundRow
+                    <ActiveFundRow
                       key={fund.ticker}
                       fund={fund}
-                      onSell={() => handleSell(fund.ticker)}
+                      taxData={taxDataFromResult(engineResult)}
+                      appliedCents={appliedAmounts[fund.ticker] ?? 0}
+                      onApply={handleApplyAmount}
+                      onLotDetails={handleLotDetails}
+                      showAllocationHint={holding.asset_class === 'domestic_equity'}
+                      showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
+                      hintsVisible={hintsVisible}
+                      onHintClick={handleHintClick}
+                      onCancel={() => handleCancel(fund.ticker)}
                     />
                   )
-                })
-              })()}
+                }
+                return (
+                  <InactiveFundRow
+                    key={fund.ticker}
+                    fund={fund}
+                    onSell={() => handleSell(fund.ticker)}
+                  />
+                )
+              })}
 
               {/* Coach Mark — Allocation (IMPACT column, anchored near VTSAX row) */}
               {openMark === 'allocation' && (
