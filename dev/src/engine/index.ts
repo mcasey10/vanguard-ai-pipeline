@@ -417,15 +417,36 @@ function detectWaitAndSave(
 }
 
 // ---------------------------------------------------------------------------
-// Automated fund selection — tax-first greedy
+// Automated fund selection — two-phase dual-objective (REQ-OE-002)
+//
+// A pure lot-level combined score cannot produce the correct fund mix: loss lots
+// from near-neutral asset classes (VBIRX, drift −0.07%) always outscore gain lots
+// from overweight classes (VTSAX, drift +2.77%) at any tax weight, because they
+// have good tax scores AND non-penalized allocation scores simultaneously.
+//
+// The correct implementation uses a FUND-LEVEL two-phase selection:
+//
+//   Phase 1 (allocation): sell from overweight asset classes, sorted by drift
+//     descending. Budget = targetAmount × allocFraction.
+//   Phase 2 (loss harvest): harvest losses from loss-carrying funds, sorted by
+//     total unrealized loss descending. Budget = remaining target.
+//   Phase 3 (gap fill): if target still unmet, fill with remaining funds by MinTax.
+//
+// Budget split:
+//   tax-first:    allocFraction = 0.60 (60% overweight reduction, 40% loss harvest)
+//   balance-first: allocFraction = 0.70 (70% overweight reduction, 30% loss harvest)
+//
+// This produces the VT8 fund selection (VTSAX + VBTLX) for a $25,000 tax-first sale:
+//   Phase 1: $15,000 from VTSAX (drift +2.77%, most overweight equity)
+//   Phase 2: $10,000 from VBTLX (total unrealized loss −$5,699, largest in account)
+//
+// Lot-level differences from VT8 (known, documented):
+//   - Engine selects T-VTSAX-08 (MinTax, gain +$12.80/sh) vs VT8's T-VTSAX-09 (SpecID)
+//   - Engine selects T-VBTLX-01 (loss −$2.02/sh, corrected cost) vs VT8's T-VBTLX-02
+//     (VT8 used old $11.45 cost which made T-VBTLX-02 appear largest; corrected costs
+//     make T-VBTLX-01 the correct MinTax choice)
+//   - NET TAX ≈ $0 (corrected losses fully offset corrected gains) vs VT8's $110.12
 // ---------------------------------------------------------------------------
-
-interface LotCandidate {
-  holding: FundHolding
-  lot: Lot
-  /** Marginal tax per dollar of proceeds (negative = beneficial) */
-  taxEfficiency: number
-}
 
 function selectFundsAutomated(
   account: Account,
@@ -434,68 +455,76 @@ function selectFundsAutomated(
   rates: { st_rate: number; lt_rate: number },
   portfolio: Portfolio
 ): Map<string, LotSale[]> {
-  // Build list of all sellable lots in the active account
-  const candidates: LotCandidate[] = []
 
-  for (const holding of account.holdings) {
-    for (const lot of holding.lots) {
-      const gainPerShare = lot.current_nav - lot.cost_basis_per_share
-      const applicableRate = taxRate(lot.holding_period, account.account_type, rates)
-      const taxPerShare = gainPerShare * applicableRate
-      const taxPerDollar = lot.current_nav > 0 ? taxPerShare / lot.current_nav : 0
-
-      candidates.push({ holding, lot, taxEfficiency: taxPerDollar })
-    }
+  // Allocation drift per asset class (positive = overweight = sell preferred)
+  const ta = portfolio.target_allocation
+  const drift: Record<string, number> = {
+    domestic_equity:      portfolio.current_allocation.domestic_equity_pct      - (ta?.domestic_equity_pct      ?? 0),
+    international_equity: portfolio.current_allocation.international_equity_pct - (ta?.international_equity_pct ?? 0),
+    domestic_bonds:       portfolio.current_allocation.domestic_bonds_pct       - (ta?.domestic_bonds_pct       ?? 0),
+    short_term_reserves:  portfolio.current_allocation.short_term_reserves_pct  - (ta?.short_term_reserves_pct  ?? 0),
   }
 
-  if (optimizationPriority === 'tax-first') {
-    // Sort: most negative (losses first) → least tax per dollar
-    candidates.sort((a, b) => {
-      if (Math.abs(a.taxEfficiency - b.taxEfficiency) > 0.0001) return a.taxEfficiency - b.taxEfficiency
-      // LT preferred over ST at same efficiency (REQ-OE-003)
-      if (a.lot.holding_period !== b.lot.holding_period) return a.lot.holding_period === 'LT' ? -1 : 1
-      return 0
-    })
-  } else {
-    // Balance-first: prioritize selling overweight asset classes
-    const target = portfolio.target_allocation
-    const allocationDrift: Record<string, number> = {
-      domestic_equity: portfolio.current_allocation.domestic_equity_pct - (target?.domestic_equity_pct ?? 0),
-      international_equity: portfolio.current_allocation.international_equity_pct - (target?.international_equity_pct ?? 0),
-      domestic_bonds: portfolio.current_allocation.domestic_bonds_pct - (target?.domestic_bonds_pct ?? 0),
-      short_term_reserves: portfolio.current_allocation.short_term_reserves_pct - (target?.short_term_reserves_pct ?? 0),
-    }
-    candidates.sort((a, b) => {
-      // Prefer selling overweight asset classes (positive drift)
-      const driftA = allocationDrift[a.holding.asset_class] ?? 0
-      const driftB = allocationDrift[b.holding.asset_class] ?? 0
-      if (Math.abs(driftA - driftB) > 0.01) return driftB - driftA  // Higher drift = more urgent to sell
-      // Tiebreak: tax efficiency
-      return a.taxEfficiency - b.taxEfficiency
-    })
-  }
+  // Budget split between allocation improvement and loss harvesting
+  const allocFraction = optimizationPriority === 'tax-first' ? 0.60 : 0.70
+  let allocBudget = r2(targetAmount * allocFraction)
+  let lossBudget  = r2(targetAmount - allocBudget)
 
-  // Greedy fill: sell from best candidates until target amount reached
   const fundSales = new Map<string, LotSale[]>()
-  let remaining = targetAmount
 
-  for (const candidate of candidates) {
-    if (remaining <= 0.005) break
+  // ── PHASE 1: Allocation — sell from overweight asset classes ──────────────
+  // Sorted by drift magnitude descending (most overweight first).
+  // Within each fund, MinTax lot selection. REQ-OE-003: LT preferred over ST.
+  const overweightHoldings = account.holdings
+    .filter(h => (drift[h.asset_class] ?? 0) > 0)
+    .sort((a, b) => (drift[b.asset_class] ?? 0) - (drift[a.asset_class] ?? 0))
 
-    const { holding, lot } = candidate
-    const maxProceeds = lot.shares * lot.current_nav
-    const toSell = Math.min(maxProceeds, remaining)
-    const sharesToSell = toSell / lot.current_nav
+  for (const holding of overweightHoldings) {
+    if (allocBudget <= 0.005) break
+    const toFill = Math.min(allocBudget, holding.current_balance)
+    const lotSales = selectLots(holding, toFill, 'MinTax', account.account_type, rates)
+    if (lotSales.length === 0) continue
+    const proceeds = r2(lotSales.reduce((s, ls) => s + ls.proceeds, 0))
+    fundSales.set(holding.fund_id, lotSales)
+    allocBudget = r2(allocBudget - proceeds)
+  }
 
-    const proceeds = r2(sharesToSell * lot.current_nav)
-    const cost = partialCost(sharesToSell, lot.shares, lot.total_cost_basis)
-    const gain = r2(proceeds - cost)
-    const tax = gain > 0 ? r2(gain * taxRate(lot.holding_period, account.account_type, rates)) : 0
+  // ── PHASE 2: Tax — harvest losses from loss-carrying funds ────────────────
+  // REQ-OE-004: prioritize lots with unrealized losses to offset realized gains.
+  // Sorted by total unrealized loss ascending (most negative = largest loss first).
+  // Skip funds already selected in Phase 1. MinTax within each fund.
+  const lossHoldings = account.holdings
+    .filter(h => h.total_unrealized_gain_loss < 0 && !fundSales.has(h.fund_id))
+    .sort((a, b) => a.total_unrealized_gain_loss - b.total_unrealized_gain_loss)
 
-    if (!fundSales.has(holding.fund_id)) fundSales.set(holding.fund_id, [])
-    fundSales.get(holding.fund_id)!.push({ lot, shares: sharesToSell, proceeds, gain, tax })
+  for (const holding of lossHoldings) {
+    if (lossBudget <= 0.005) break
+    const toFill = Math.min(lossBudget, holding.current_balance)
+    const lotSales = selectLots(holding, toFill, 'MinTax', account.account_type, rates)
+    if (lotSales.length === 0) continue
+    const proceeds = r2(lotSales.reduce((s, ls) => s + ls.proceeds, 0))
+    fundSales.set(holding.fund_id, lotSales)
+    lossBudget = r2(lossBudget - proceeds)
+  }
 
-    remaining = r2(remaining - proceeds)
+  // ── PHASE 3: Gap fill — if target not yet met, fill with remaining funds ──
+  // Sorted by total_unrealized_gain_loss ascending (losses first, smallest gains next).
+  const totalSoFar = r2([...fundSales.values()].flat().reduce((s, ls) => s + ls.proceeds, 0))
+  let remaining = r2(targetAmount - totalSoFar)
+
+  if (remaining > 0.005) {
+    const remainingHoldings = account.holdings
+      .filter(h => !fundSales.has(h.fund_id))
+      .sort((a, b) => a.total_unrealized_gain_loss - b.total_unrealized_gain_loss)
+
+    for (const holding of remainingHoldings) {
+      if (remaining <= 0.005) break
+      const lotSales = selectLots(holding, Math.min(remaining, holding.current_balance), 'MinTax', account.account_type, rates)
+      if (lotSales.length === 0) continue
+      const proceeds = r2(lotSales.reduce((s, ls) => s + ls.proceeds, 0))
+      fundSales.set(holding.fund_id, lotSales)
+      remaining = r2(remaining - proceeds)
+    }
   }
 
   return fundSales
