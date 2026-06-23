@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
@@ -422,17 +422,24 @@ const COLLAPSED_FUND_DATA: Record<string, CollapsedActiveFundData> = {
 }
 
 // ---------------------------------------------------------------------------
-// Static banner values (same as FS-MAN-2 primary scenario)
-// TODO: replace with engine output once REQ-OE-001–010 built
+// Helpers
 // ---------------------------------------------------------------------------
 
-function getStaticPrimaryScenarioBannerValues() {
-  return {
-    saleTotal: '$25,000', salePct: '2.9% of portfolio',
-    estSTGains: '$1,515.85', estLTGains: '-$1,056.65',
-    estNetTax: '$110.21', effectiveRate: '0.44% effective rate',
-    impactEquity: '−0.8%', impactBonds: '-0.4%',
-  }
+function r2(n: number) { return Math.round(n * 100) / 100 }
+function fmtSigned(n: number) { return (n >= 0 ? '+' : '−') + '$' + Math.abs(n).toFixed(2) }
+
+interface LotBannerData {
+  totalSale: number
+  salePct: number
+  stGainLoss: number
+  ltGainLoss: number
+  estNetTax: number
+  effRate: number
+  // Totals row fields
+  totalShares: number
+  totalCost: number
+  pricePerShare: number
+  priceDate: string
 }
 
 // ---------------------------------------------------------------------------
@@ -444,7 +451,7 @@ export default function FundSelectionManualLot() {
   const location = useLocation()
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig } = useAppStore()
   const fund = (location.state as { fund?: string })?.fund ?? 'VTSAX'
-  const bv = getStaticPrimaryScenarioBannerValues()
+  const [bannerData, setBannerData] = useState<LotBannerData | null>(null)
 
   // Derive lots from store portfolio (single source of truth — no hardcoded arrays)
   const taxableAcct = portfolio?.accounts.find(a => a.account_id === activeAccountId)
@@ -489,14 +496,36 @@ export default function FundSelectionManualLot() {
     const lotOverrides = Object.entries(inputs)
       .filter(([, v]) => parseFloat(v) > 0)
       .map(([lotId, v]) => ({ lot_id: lotId, shares: parseFloat(v) }))
-    if (lotOverrides.length === 0) return
-    const totalDollars = lotOverrides.reduce((s, o) => {
+    if (lotOverrides.length === 0) { setBannerData(null); return }
+
+    // Compute banner + totals row values directly from lot selections (SpecID — exact lots known)
+    let stGainLoss = 0, ltGainLoss = 0, totalSale = 0, totalShares = 0, totalCost = 0
+    let pricePerShare = 0, priceDate = ''
+    for (const o of lotOverrides) {
       const lot = holding?.lots.find(l => l.lot_id === o.lot_id)
-      return s + (lot ? o.shares * lot.current_nav : 0)
-    }, 0)
+      if (!lot) continue
+      const proceeds = o.shares * lot.current_nav
+      const partialCost = (o.shares / lot.shares) * lot.total_cost_basis
+      const gainLoss = r2(proceeds - partialCost)
+      if (lot.holding_period === 'ST') stGainLoss = r2(stGainLoss + gainLoss)
+      else ltGainLoss = r2(ltGainLoss + gainLoss)
+      totalSale = r2(totalSale + proceeds)
+      totalShares = r2(totalShares + o.shares)
+      totalCost = r2(totalCost + partialCost)
+      pricePerShare = lot.current_nav
+    }
+    priceDate = '05/27/2026' // canonical portfolio reference date
+    const netGain = Math.max(0, r2(stGainLoss + ltGainLoss))
+    const taxST = Math.min(netGain, Math.max(0, stGainLoss)) * activeTaxRates.st_rate
+    const taxLT = Math.max(0, netGain - Math.min(netGain, Math.max(0, stGainLoss))) * activeTaxRates.lt_rate
+    const estNetTax = r2(taxST + taxLT)
+    const effRate = totalSale > 0 ? r2((estNetTax / totalSale) * 100) : 0
+    const salePct = r2((totalSale / portfolio.total_investable_balance) * 100)
+    setBannerData({ totalSale, salePct, stGainLoss, ltGainLoss, estNetTax, effRate, totalShares, totalCost, pricePerShare, priceDate })
+
     const result = runOptimization({
       portfolio,
-      targetSaleAmount: Math.round(totalDollars * 100) / 100,
+      targetSaleAmount: Math.round(totalSale * 100) / 100,
       activeAccountId,
       mode: 'manual',
       optimizationPriority,
@@ -511,11 +540,17 @@ export default function FundSelectionManualLot() {
   }
 
   function handleSharesCommit(lotId: string, value: string) {
-    // blur/Enter: update state then fire engine
     const newInputs = { ...sharesInputs, [lotId]: value }
     setSharesInputs(newInputs)
     runLotEngine(newInputs)
   }
+
+  // Auto-fire engine on mount when inputs are already pre-populated
+  // (mirrors FS-MAN-2 mount-time call so banner shows live figures on arrival)
+  useEffect(() => {
+    const hasSelections = Object.values(sharesInputs).some(v => parseFloat(v) > 0)
+    if (hasSelections) runLotEngine(sharesInputs)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Account expansion
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set())
@@ -597,47 +632,55 @@ export default function FundSelectionManualLot() {
             </div>
           </div>
 
-          {/* Summary Banner — same static values as FS-MAN-2 */}
+          {/* Summary Banner — reactive from bannerData (computed in runLotEngine) */}
           <div className="flex items-center px-8 w-full">
             <div className="flex flex-1 items-start bg-[#e8f5f0] px-6 py-4">
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
-                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{bv.saleTotal}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bv.salePct}</span>
+                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{bannerData ? '$' + bannerData.totalSale.toFixed(2) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bannerData ? bannerData.salePct.toFixed(1) + '% of portfolio' : '0.0% of portfolio'}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">TAX BRACKET</span>
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">24% ST / 15% LT</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{Math.round(activeTaxRates.st_rate * 100)}% ST / {Math.round(activeTaxRates.lt_rate * 100)}% LT</span>
                 <a className="text-[12px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Change</a>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
-                <span className="text-[12px] text-vg-ink whitespace-nowrap">ST $1,245</span>
-                <span className="text-[12px] text-vg-ink whitespace-nowrap">LT $8,750</span>
+                {portfolio?.ytd_gains_record ? (
+                  <>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST ${portfolio.ytd_gains_record.st_gains_realized_ytd.toFixed(2)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT ${portfolio.ytd_gains_record.lt_gains_realized_ytd.toFixed(2)}</span>
+                  </>
+                ) : <span className="text-[12px] text-vg-ink-muted">—</span>}
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                <span className="text-[16px] font-bold text-[#007a00] whitespace-nowrap">{bv.estSTGains}</span>
+                <span className={`text-[16px] font-bold whitespace-nowrap ${bannerData && bannerData.stGainLoss > 0 ? 'text-[#007a00]' : bannerData && bannerData.stGainLoss < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {bannerData ? fmtSigned(bannerData.stGainLoss) : '—'}
+                </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                <span className="text-[16px] font-bold text-vg-red whitespace-nowrap">{bv.estLTGains}</span>
+                <span className={`text-[16px] font-bold whitespace-nowrap ${bannerData && bannerData.ltGainLoss > 0 ? 'text-[#007a00]' : bannerData && bannerData.ltGainLoss < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {bannerData ? fmtSigned(bannerData.ltGainLoss) : '—'}
+                </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. NET TAX</span>
-                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{bv.estNetTax}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bv.effectiveRate}</span>
+                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{bannerData ? '$' + bannerData.estNetTax.toFixed(2) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bannerData ? bannerData.effRate.toFixed(2) + '% effective rate' : ''}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-[#007a00]">{bv.impactEquity}</span></div>
-                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-red">{bv.impactBonds}</span></div>
+                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-vg-ink">—</span></div>
+                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-ink">—</span></div>
                 <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
               </div>
             </div>
@@ -782,6 +825,54 @@ export default function FundSelectionManualLot() {
                         />
                       )
                     )}
+                  </>
+                )}
+
+                {/* Lot Detail Totals — Figma: I388:2116;455:754;569:6624
+                    36px section header + 40px totals row, shown once engine has fired */}
+                {bannerData && (
+                  <>
+                    {/* Section header: "Total impact of selected shares to sell" (36px) */}
+                    <div className="flex h-9 items-center justify-between overflow-clip px-3 w-full bg-[#f8f8f8] border-t border-[#e8e9e9] shrink-0">
+                      <span className="text-[13px] font-semibold text-vg-ink whitespace-nowrap">Total impact of selected shares to sell</span>
+                    </div>
+                    {/* Totals row (40px) — columns aligned to lot table */}
+                    <div className="flex h-10 items-center overflow-clip px-3 w-[1375px] bg-white border-t border-[#e8e9e9] shrink-0">
+                      {/* t1 — Total selected shares to sell (220px) */}
+                      <div className="w-[220px] flex flex-col items-start justify-center h-full shrink-0 overflow-clip">
+                        <span className="text-[11px] text-vg-ink-muted">Total selected shares to sell</span>
+                        <span className="text-[12px] font-semibold text-vg-ink whitespace-nowrap">{bannerData.totalShares.toFixed(3)}</span>
+                      </div>
+                      <div className="flex-1 min-w-px" />
+                      {/* t2 — empty (Shares owned column) */}
+                      <div className="w-[100px] h-full shrink-0" />
+                      <div className="flex-1 min-w-px" />
+                      {/* t3 — Total Cost (120px, right-aligned) */}
+                      <div className="w-[120px] flex flex-col items-end justify-center h-full shrink-0 overflow-clip">
+                        <span className="text-[11px] text-vg-ink-muted">Total Cost</span>
+                        <span className="text-[12px] font-bold text-vg-ink whitespace-nowrap">${bannerData.totalCost.toFixed(2)}</span>
+                      </div>
+                      <div className="flex-1 min-w-px" />
+                      {/* t4 — Total estimated gain/loss (160px, right-aligned) */}
+                      <div className="w-[160px] flex flex-col items-end justify-center gap-[2px] h-full shrink-0 overflow-clip py-1">
+                        <span className="text-[11px] text-vg-ink-muted text-right">Total estimated gain/loss</span>
+                        <span className={`text-[12px] font-bold whitespace-nowrap ${(bannerData.stGainLoss + bannerData.ltGainLoss) >= 0 ? 'text-[#007a00]' : 'text-[#c8102e]'}`}>
+                          {fmtSigned(r2(bannerData.stGainLoss + bannerData.ltGainLoss))}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-px" />
+                      {/* t5 — Total estimated proceeds (150px, right-aligned) */}
+                      <div className="w-[150px] flex flex-col items-end justify-center gap-[2px] h-full shrink-0 overflow-clip py-1 whitespace-nowrap">
+                        <span className="text-[11px] text-vg-ink-muted">Total estimated proceeds</span>
+                        <span className="text-[12px] font-bold text-vg-ink">${bannerData.totalSale.toFixed(2)}</span>
+                      </div>
+                      <div className="flex-1 min-w-px" />
+                      {/* t6 — Price per share + date (120px) — aligns with Date acquired column */}
+                      <div className="w-[120px] flex flex-col items-start justify-center h-full shrink-0 overflow-clip whitespace-nowrap">
+                        <span className="text-[11px] text-vg-ink-muted">Price as of {bannerData.priceDate}</span>
+                        <span className="text-[12px] text-vg-ink">${bannerData.pricePerShare.toFixed(2)} per share</span>
+                      </div>
+                    </div>
                   </>
                 )}
               </div>

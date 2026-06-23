@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
@@ -491,6 +491,20 @@ export default function FundSelectionManual2() {
       setFundResults((autoResult as import('../types').Recommendation).fund_results)
     }
   }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
+
+  // On mount: fire engine once if amounts are already present (covers two gaps):
+  //   Gap 1 — returning from FS-MAN-LOT: fundResults local state was lost on
+  //     unmount, but appliedAmounts survived in component state. Re-running the
+  //     engine regenerates fundResults so the banner shows live figures immediately.
+  //   Gap 2 — pre-populated from Automated recommendation: inputCents===appliedCents
+  //     on mount so Apply never fires, leaving the banner at dashes. One mount-time
+  //     engine call initializes it the same way Apply would.
+  useEffect(() => {
+    const total = Object.values(appliedAmounts).reduce((s, v) => s + v, 0)
+    if (total > 0 && activeFunds.size > 0) {
+      runManualEngine(appliedAmounts, activeFunds)
+    }
+  }, []) // intentionally runs once on mount — same pattern as FS-AUTO-1
 
   // handleApplyAmount — updates local state then triggers engine
   function handleApplyAmount(ticker: string, cents: number) {
