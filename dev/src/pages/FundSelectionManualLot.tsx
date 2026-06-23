@@ -163,7 +163,7 @@ function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit }:
   const glColor = isGain ? 'text-[#007a00]' : 'text-[#c8102e]'
 
   return (
-    <div className="flex h-12 items-center overflow-clip px-3 w-[1375px] bg-[#fafafa] border-b border-[#e8e9e9] shrink-0">
+    <div className="flex h-12 items-center overflow-clip px-3 w-full bg-[#fafafa] border-b border-[#e8e9e9] shrink-0">
       {/* Shares to sell — 220px: input + All checkbox */}
       <div className="w-[220px] flex items-center gap-2 shrink-0 h-full">
         <input
@@ -229,7 +229,7 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, show
 
       <div className="flex flex-col flex-1 pb-2">
         {/* Lot data row — same columns as NormalLotRow */}
-        <div className="flex h-12 items-center overflow-clip px-2 w-[1375px]">
+        <div className="flex h-12 items-center overflow-clip px-2 w-full">
           <div className="w-[220px] flex items-center gap-2 shrink-0 h-full">
             <input
               type="text"
@@ -800,7 +800,8 @@ export default function FundSelectionManualLot() {
                   </button>
                 </div>
 
-                {/* Lot Detail Section — Lot Detail Header + section groups + lot rows */}
+                {/* Lot Detail Section — Table Section with 32px left indent (Figma: padding-left: 32) */}
+                <div className="pl-8 w-full flex flex-col">
                 <LotDetailHeader />
 
                 {ltLots.length > 0 && (
@@ -855,7 +856,7 @@ export default function FundSelectionManualLot() {
                       <span className="text-[13px] font-semibold text-vg-ink whitespace-nowrap">Total impact of selected shares to sell</span>
                     </div>
                     {/* Totals row (40px) — columns aligned to lot table */}
-                    <div className="flex h-10 items-center overflow-clip px-3 w-[1375px] bg-white border-t border-[#e8e9e9] shrink-0">
+                    <div className="flex h-10 items-center overflow-clip px-3 w-full bg-white border-t border-[#e8e9e9] shrink-0">
                       {/* t1 — Total selected shares to sell (220px) */}
                       <div className="w-[220px] flex flex-col items-start justify-center h-full shrink-0 overflow-clip">
                         <span className="text-[11px] text-vg-ink-muted">Total selected shares to sell</span>
@@ -893,6 +894,7 @@ export default function FundSelectionManualLot() {
                     </div>
                   </>
                 )}
+                </div>{/* end Table Section pl-8 wrapper */}
               </div>
 
               {/* Coach Mark — Wait & Save (overlay node 716:2921, x=286 y=590)
