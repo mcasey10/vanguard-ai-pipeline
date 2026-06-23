@@ -426,7 +426,7 @@ const COACH_MARKS = {
 
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
-  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig } = useAppStore()
+  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation } = useAppStore()
 
   // Engine output for this session — per-fund results for display
   const [fundResults, setFundResults] = useState<FundSaleResult[]>([])
@@ -439,16 +439,24 @@ export default function FundSelectionManual2() {
     setOpenMark(prev => prev === mark ? null : mark)
   }
 
-  // Active funds: which tickers are in active (sell-amount-entered) state
-  // Initial state: VTSAX + VBTLX active per Figma FS-MAN-2 (primary scenario)
-  const [activeFunds, setActiveFunds] = useState<Set<string>>(new Set(['VTSAX', 'VBTLX']))
+  // Active funds and applied amounts: seeded from store.recommendation when arriving
+  // from Automated mode, otherwise fall back to Figma primary-scenario defaults.
+  // Lazy initializers run once on mount — recommendation is already in store by then.
+  const [activeFunds, setActiveFunds] = useState<Set<string>>(() => {
+    if (recommendation?.fund_results?.length) {
+      return new Set(recommendation.fund_results.map(fr => fr.fund_id))
+    }
+    return new Set(['VTSAX', 'VBTLX'])
+  })
 
-  // Applied amounts per fund — lifted from ActiveFundRow so parent always has
-  // the current applied value for every active fund (step 1 of 3 for REQ-B3-001).
-  // Keyed by ticker. Initial values match the Figma primary-scenario amounts.
-  const [appliedAmounts, setAppliedAmounts] = useState<Record<string, number>>({
-    VTSAX: 1500000,
-    VBTLX: 1000000,
+  const [appliedAmounts, setAppliedAmounts] = useState<Record<string, number>>(() => {
+    if (recommendation?.fund_results?.length) {
+      // sell_amount is in dollars; appliedAmounts stores cents
+      return Object.fromEntries(
+        recommendation.fund_results.map(fr => [fr.fund_id, Math.round(fr.sell_amount * 100)])
+      )
+    }
+    return { VTSAX: 1500000, VBTLX: 1000000 }
   })
 
   // runManualEngine — builds ManualSelections from current activeFunds + appliedAmounts
@@ -607,15 +615,15 @@ export default function FundSelectionManual2() {
             <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">
               Sell &amp; Rebalance
             </h1>
-            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
+            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
               <button
                 onClick={handleToggleClick}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink"
+                className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink"
               >
                 <Sparkles size={16} className="text-vg-ink" />
                 Automated
               </button>
-              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-vg-teal">
+              <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
                 <PenLine size={16} className="text-white" />
                 <span className="text-[14px] font-bold text-white">Manual</span>
               </div>
@@ -731,41 +739,48 @@ export default function FundSelectionManual2() {
                 <div className="flex-1" />
               </div>
 
-              {/* Fund rows — driven by store portfolio; active or inactive per state */}
-              {(portfolio?.accounts.find(a => a.account_id === activeAccountId)?.holdings ?? []).map(holding => {
-                const fund: FundRow = {
-                  ticker: holding.fund_id,
-                  fullName: holding.fund_name,
-                  shares: new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(holding.total_shares),
-                  balance: '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(holding.current_balance),
-                  assetClass: holding.asset_class.replace('_', ' '),
-                }
-                const engineResult = fundResults.find(fr => fr.fund_id === holding.fund_id)
-                if (activeFunds.has(fund.ticker)) {
+              {/* Fund rows — active funds first (portfolio order), inactive funds below (portfolio order) */}
+              {(() => {
+                const allHoldings = portfolio?.accounts.find(a => a.account_id === activeAccountId)?.holdings ?? []
+                const ordered = [
+                  ...allHoldings.filter(h => activeFunds.has(h.fund_id)),
+                  ...allHoldings.filter(h => !activeFunds.has(h.fund_id)),
+                ]
+                return ordered.map(holding => {
+                  const fund: FundRow = {
+                    ticker: holding.fund_id,
+                    fullName: holding.fund_name,
+                    shares: new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(holding.total_shares),
+                    balance: '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(holding.current_balance),
+                    assetClass: holding.asset_class.replace('_', ' '),
+                  }
+                  const engineResult = fundResults.find(fr => fr.fund_id === holding.fund_id)
+                  if (activeFunds.has(fund.ticker)) {
+                    return (
+                      <ActiveFundRow
+                        key={fund.ticker}
+                        fund={fund}
+                        taxData={taxDataFromResult(engineResult)}
+                        appliedCents={appliedAmounts[fund.ticker] ?? 0}
+                        onApply={handleApplyAmount}
+                        onLotDetails={handleLotDetails}
+                        showAllocationHint={holding.asset_class === 'domestic_equity'}
+                        showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
+                        hintsVisible={hintsVisible}
+                        onHintClick={handleHintClick}
+                        onCancel={() => handleCancel(fund.ticker)}
+                      />
+                    )
+                  }
                   return (
-                    <ActiveFundRow
+                    <InactiveFundRow
                       key={fund.ticker}
                       fund={fund}
-                      taxData={taxDataFromResult(engineResult)}
-                      appliedCents={appliedAmounts[fund.ticker] ?? 0}
-                      onApply={handleApplyAmount}
-                      onLotDetails={handleLotDetails}
-                      showAllocationHint={holding.asset_class === 'domestic_equity'}
-                      showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
-                      hintsVisible={hintsVisible}
-                      onHintClick={handleHintClick}
-                      onCancel={() => handleCancel(fund.ticker)}
+                      onSell={() => handleSell(fund.ticker)}
                     />
                   )
-                }
-                return (
-                  <InactiveFundRow
-                    key={fund.ticker}
-                    fund={fund}
-                    onSell={() => handleSell(fund.ticker)}
-                  />
-                )
-              })}
+                })
+              })()}
 
               {/* Coach Mark — Allocation (IMPACT column, anchored near VTSAX row) */}
               {openMark === 'allocation' && (

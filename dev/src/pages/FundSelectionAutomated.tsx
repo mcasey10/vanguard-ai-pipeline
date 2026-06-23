@@ -153,12 +153,12 @@ export default function FundSelectionAutomated() {
           {/* Row 1 — Title + mode toggle */}
           <div className="flex items-center justify-between px-8 h-14">
             <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">Sell &amp; Rebalance</h1>
-            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
-              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-vg-teal">
+            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
+              <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
                 <Sparkles size={16} className="text-white" />
                 <span className="text-[14px] font-bold text-white">Automated</span>
               </div>
-              <button onClick={() => navigate('/manual')} className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink">
+              <button onClick={() => navigate('/manual-2')} className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink">
                 <PenLine size={16} className="text-vg-ink" />Manual
               </button>
             </div>

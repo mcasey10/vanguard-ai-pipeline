@@ -48,10 +48,10 @@ export default function FundSelectionEntry() {
           <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">
             Sell &amp; Rebalance
           </h1>
-          <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
+          <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
             <button
               onClick={() => handleModeChange('automated')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[14px] font-bold transition-colors ${
+              className={`self-stretch flex items-center gap-1.5 px-4 rounded-full text-[14px] font-bold transition-colors ${
                 mode === 'automated' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
               }`}
             >
@@ -60,7 +60,7 @@ export default function FundSelectionEntry() {
             </button>
             <button
               onClick={() => handleModeChange('manual')}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold transition-colors ${
+              className={`self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold transition-colors ${
                 mode === 'manual' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
               }`}
             >

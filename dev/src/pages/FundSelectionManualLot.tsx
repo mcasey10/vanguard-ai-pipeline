@@ -621,11 +621,11 @@ export default function FundSelectionManualLot() {
             <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">
               Sell &amp; Rebalance
             </h1>
-            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
-              <button onClick={handleToggleClick} className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink">
+            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
+              <button onClick={handleToggleClick} className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink">
                 <Sparkles size={16} className="text-vg-ink" />Automated
               </button>
-              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-vg-teal">
+              <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
                 <PenLine size={16} className="text-white" />
                 <span className="text-[14px] font-bold text-white">Manual</span>
               </div>
@@ -732,10 +732,12 @@ export default function FundSelectionManualLot() {
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{fund === 'VTSAX' ? '1,597' : '5,600'} shares</span>
                     <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? '$231,884.40' : '$51,408.00'}</span>
                   </div>
-                  {/* Read-only sell amount (SpecID mode: derived from lot inputs) */}
+                  {/* Read-only sell amount (SpecID mode: derived from lot inputs via bannerData) */}
                   <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? '$15,000.03' : '$10,000.00'}</span>
+                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
+                      {bannerData ? '$' + bannerData.totalSale.toFixed(2) : (fund === 'VTSAX' ? '$15,000.03' : '$10,000.00')}
+                    </span>
                   </div>
                   <div className="w-[130px] h-full flex items-center gap-2 px-2 shrink-0 overflow-hidden">
                     <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
@@ -748,18 +750,34 @@ export default function FundSelectionManualLot() {
                       <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowExpandedCBD(true)}>Edit</a>
                     </div>
                   </div>
+                  {(() => {
+                    // Per-fund gross tax = tax on this fund's own gain, before portfolio-level netting
+                    const stg = bannerData?.stGainLoss ?? 0
+                    const ltg = bannerData?.ltGainLoss ?? 0
+                    const grossTax = r2(Math.max(0, stg) * activeTaxRates.st_rate + Math.max(0, ltg) * activeTaxRates.lt_rate)
+                    const stColor = stg > 0 ? 'text-[#007a00]' : stg < 0 ? 'text-[#c8102e]' : 'text-vg-ink'
+                    const ltColor = ltg < 0 ? 'text-[#c8102e]' : ltg > 0 ? 'text-[#007a00]' : 'text-vg-ink'
+                    return (<>
                   <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                    <span className="text-[14px] font-bold text-[#007a00] whitespace-nowrap">{fund === 'VTSAX' ? '$1,515.85' : '$0.00'}</span>
+                    <span className={`text-[14px] font-bold whitespace-nowrap ${stColor}`}>
+                      {bannerData ? (stg !== 0 ? fmtSigned(stg) : '$0.00') : (fund === 'VTSAX' ? '$1,515.85' : '$0.00')}
+                    </span>
                   </div>
                   <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                    <span className={`text-[14px] font-bold whitespace-nowrap ${fund === 'VBTLX' ? 'text-[#c8102e]' : 'text-vg-ink'}`}>{fund === 'VTSAX' ? '$0.00' : '−$1,056.65'}</span>
+                    <span className={`text-[14px] font-bold whitespace-nowrap ${ltColor}`}>
+                      {bannerData ? (ltg !== 0 ? fmtSigned(ltg) : '$0.00') : (fund === 'VTSAX' ? '$0.00' : '−$1,056.65')}
+                    </span>
                   </div>
                   <div className="w-[85px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. TAX</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? '$363.80' : '$0.00'}</span>
+                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
+                      {bannerData ? '$' + grossTax.toFixed(2) : (fund === 'VTSAX' ? '$363.80' : '$0.00')}
+                    </span>
                   </div>
+                    </>)
+                  })()}
                   <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
                     <span className={`text-[12px] font-semibold whitespace-nowrap ${fund === 'VTSAX' ? 'text-[#007a00]' : 'text-[#c8102e]'}`}>{fund === 'VTSAX' ? '-0.8% Equity' : '-0.4% Bonds'}</span>

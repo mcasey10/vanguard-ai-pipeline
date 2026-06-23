@@ -56,11 +56,11 @@ export default function FundSelectionManual() {
           {/* Row 1 — Title + mode toggle */}
           <div className="flex items-center justify-between px-8 h-14">
             <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">Sell &amp; Rebalance</h1>
-            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white">
-              <button onClick={handleToggleClick} className="flex items-center gap-1.5 px-4 py-2 rounded-[4px] text-[14px] font-bold text-vg-ink">
+            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
+              <button onClick={handleToggleClick} className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink">
                 <Sparkles size={16} className="text-vg-ink" />Automated
               </button>
-              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-vg-teal">
+              <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
                 <PenLine size={16} className="text-white" />
                 <span className="text-[14px] font-bold text-white">Manual</span>
               </div>
