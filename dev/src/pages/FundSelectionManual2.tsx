@@ -198,28 +198,20 @@ function ActiveFundRow({
           <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.balance}</span>
         </div>
 
-        {/* SELL AMOUNT — 128px: input + Apply button */}
-        <div className="w-[128px] h-full flex flex-col justify-center gap-[2px] px-1 shrink-0 overflow-hidden">
+        {/* SELL AMOUNT — 128px: input only; applies on blur or Enter (no explicit button) */}
+        <div className="w-[128px] h-full flex items-center px-1 shrink-0 overflow-hidden">
           <input
             type="text"
             inputMode="numeric"
             value={inputDisplay}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
+            onBlur={handleApply}
             placeholder="$0.00"
             className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px]
               text-[14px] text-vg-ink text-right placeholder:text-vg-ink-muted
               bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
           />
-          {/* Apply button — disabled when value unchanged (REQ-B3-002) */}
-          <button
-            onClick={handleApply}
-            disabled={!hasChange}
-            className="text-[10px] text-[#1255cc] underline text-right self-end pr-0
-              disabled:opacity-0 cursor-pointer disabled:cursor-default transition-opacity"
-          >
-            Apply
-          </button>
         </div>
 
         {/* SELL ALL SHARES — 130px */}
