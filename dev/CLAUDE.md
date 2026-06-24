@@ -552,3 +552,80 @@ relative to PRD 10 Verification Tables:
 PRD 10 VT9 Scenario 1 VBTLX cost basis was also corrected in Notion
 from $12,472.77 to $11,056.65 to match VT8's internally consistent
 figure.
+
+---
+
+## Visual implementation discipline — Figma fidelity
+
+This rule applies to every screen implementation and every visual 
+correction session. Do not declare any screen or section complete 
+without completing the full comparison loop below.
+
+### The comparison loop
+
+Repeat until zero differences remain:
+
+1. **Get a Figma screenshot** of the specific section being worked 
+   on. Use a tight crop — not the whole frame. If working on the 
+   lot section headers, screenshot just those. If working on a fund 
+   row, screenshot just that row. Use get_screenshot with a specific 
+   node ID, not the whole frame node.
+
+2. **Get a browser screenshot** of the exact same section at 1440px 
+   viewport width.
+
+3. **List every visual difference** between the two screenshots 
+   before implementing anything. Do not fix anything yet. Walk the 
+   Figma layer tree recursively for the section being compared — 
+   do not stop at the top-level node. For every layer at every 
+   depth, check:
+   - Indentation and alignment relative to surrounding elements 
+     (not just absolute pixel values — a subheading may have the 
+     correct padding value but still be outdented relative to the 
+     content below it)
+   - Background colors (compare section by section — header rows, 
+     content rows, totals rows, wrapper containers)
+   - Typography (size, weight, color, letter spacing)
+   - Borders (presence, color, weight, which sides)
+   - Spacing between sections and between elements within sections
+   - Hierarchical visual relationships — does the rendered 
+     implementation show the same visual hierarchy as the Figma 
+     design? Elements that are visually subordinate in Figma should 
+     appear visually subordinate in the implementation.
+
+4. **Fix ALL differences** found in step 3 at once. Do not fix one 
+   difference and take a new screenshot — fix everything on the 
+   list, then return to step 1.
+
+5. If step 3 produced zero differences, commit and stop.
+
+### Authority hierarchy
+
+The rendered Figma frame screenshot is the authority — not the 
+property values from get_design_context.
+
+- "The CSS value matches the Figma property" is NOT sufficient. 
+  The rendered result must match the Figma visual.
+- If a spec property and the visual result appear to conflict 
+  (e.g., a padding value that produces wrong relative alignment), 
+  trust the visual result and adjust until the screenshot matches.
+- When in doubt about a layer's spec, read that specific layer's 
+  design context directly via get_design_context on that node ID — 
+  do not infer from a parent node.
+
+### When to ask vs. when to keep iterating
+
+Keep iterating autonomously when:
+- The Figma frame clearly shows how something should look and the 
+  implementation doesn't match it yet
+
+Stop and ask only when:
+- Two Figma source documents conflict with each other and you 
+  cannot determine which is authoritative
+- A Figma layer's visual appearance requires a design decision 
+  (e.g., adding something not in the Figma frame at all)
+- A technical constraint makes matching the Figma impossible and 
+  you need guidance on an acceptable alternative
+
+Do not ask about things that are directly readable from the Figma 
+frame. Read the frame, compare the screenshots, implement the fix.
