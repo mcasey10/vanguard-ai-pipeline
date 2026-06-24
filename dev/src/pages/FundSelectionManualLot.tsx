@@ -766,15 +766,20 @@ export default function FundSelectionManualLot() {
                     <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? formatCurrency(231884.40) : formatCurrency(51408.00)}</span>
                   </div>
                   {/* Read-only sell amount (SpecID mode: derived from lot inputs via bannerData) */}
-                  <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT *</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
-                      {bannerData ? formatCurrency(bannerData.totalSale) : (fund === 'VTSAX' ? formatCurrency(15000.03) : formatCurrency(10000))}
-                    </span>
+                  <div className="w-[128px] h-full flex flex-col gap-[3px] items-start overflow-hidden px-[4px] py-[8px] shrink-0">
+                    <div className="flex flex-1 flex-col gap-[4px] items-start justify-center min-h-0 w-[120px]">
+                      <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT *</span>
+                      <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
+                        {bannerData ? formatCurrency(bannerData.totalSale) : (fund === 'VTSAX' ? formatCurrency(15000.03) : formatCurrency(10000))}
+                      </span>
+                    </div>
                   </div>
-                  <div className="w-[130px] h-full flex items-center gap-2 px-2 shrink-0 overflow-hidden">
-                    <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
-                    <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
+                  <div className="w-[130px] h-full flex flex-col gap-2 items-start px-2 py-[12px] shrink-0 overflow-hidden">
+                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">&nbsp;</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
+                      <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
+                    </div>
                   </div>
                   <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>

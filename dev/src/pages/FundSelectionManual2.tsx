@@ -198,26 +198,34 @@ function ActiveFundRow({
           <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.balance}</span>
         </div>
 
-        {/* SELL AMOUNT — 128px: input only; applies on blur or Enter (no explicit button) */}
-        <div className="w-[128px] h-full flex items-center px-1 shrink-0 overflow-hidden">
-          <input
-            type="text"
-            inputMode="numeric"
-            value={inputDisplay}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            onBlur={handleApply}
-            placeholder="$0.00"
-            className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px]
-              text-[14px] text-vg-ink text-right placeholder:text-vg-ink-muted
-              bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
-          />
+        {/* SELL AMOUNT — 128px: label + input, same label/value pattern as every other column.
+            py-[8px] (vs py-[12px] elsewhere) because label+input together need ~44px of content
+            height; inner flex-1 justify-center centers the pair within the available 48px. */}
+        <div className="w-[128px] h-full flex flex-col gap-[3px] items-start overflow-hidden px-[4px] py-[8px] shrink-0">
+          <div className="flex flex-1 flex-col gap-[4px] items-start justify-center min-h-0 w-[120px]">
+            <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={inputDisplay}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              onBlur={handleApply}
+              placeholder="$0.00"
+              className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px]
+                text-[14px] text-vg-ink text-right placeholder:text-vg-ink-muted
+                bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
+            />
+          </div>
         </div>
 
-        {/* SELL ALL SHARES — 130px */}
-        <div className="w-[130px] h-full flex items-center gap-2 px-2 shrink-0 overflow-hidden">
-          <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
-          <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
+        {/* SELL ALL SHARES — 130px: blank spacer label aligns checkbox with value row of other columns */}
+        <div className="w-[130px] h-full flex flex-col gap-2 items-start px-2 py-[12px] shrink-0 overflow-hidden">
+          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">&nbsp;</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
+            <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
+          </div>
         </div>
 
         {/* COST BASIS METHOD — 160px
