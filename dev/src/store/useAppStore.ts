@@ -60,6 +60,7 @@ interface AppActions {
   setManualConfig: (config: ManualConfiguration | null) => void
 
   // Scenarios
+  setScenarios: (scenarios: SavedScenario[]) => void
   addScenario: (scenario: SavedScenario) => void
   updateScenario: (id: string, scenario: SavedScenario) => void
   deleteScenario: (id: string) => void
@@ -123,6 +124,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   setRecommendation: (rec) => set({ recommendation: rec }),
 
   setManualConfig: (config) => set({ manualConfig: config }),
+
+  setScenarios: (scenarios) => set({ scenarios }),
 
   addScenario: (scenario) =>
     set((state) => {

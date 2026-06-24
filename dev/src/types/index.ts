@@ -273,9 +273,13 @@ export interface Recommendation {
 // Entity 8 — Scenario
 export interface ScenarioFundSelection {
   fund_id: string
+  fund_name?: string               // display name — populated when scenario is saved
   sell_amount: number
   accounting_method: AccountingMethod
-  lots_selected: LotSaleDetail[]   // empty unless SpecID
+  lots_selected: LotSaleDetail[]  // empty unless SpecID
+  st_gain_loss?: number            // per-fund net ST gain (+) or loss (−); set on save
+  lt_gain_loss?: number            // per-fund net LT gain (+) or loss (−); set on save
+  est_tax_gross?: number           // per-fund gross tax (before portfolio netting); set on save
 }
 
 export interface SavedScenario {
@@ -283,8 +287,11 @@ export interface SavedScenario {
   scenario_name: string
   source_mode: 'automated' | 'manual'
   fund_selections: ScenarioFundSelection[]
-  projected_st_gains: number
-  projected_lt_gains: number
+  total_sell_amount: number        // sum of all fund sell_amounts
+  projected_st_gains: number       // net positive ST gains
+  projected_lt_gains: number       // net positive LT gains
+  losses_harvested: number         // sum of all negative gains (negative value)
+  net_taxable_gain: number         // projected_st_gains + projected_lt_gains + losses_harvested
   est_net_tax: number
   effective_rate: number
   allocation_impact: AllocationImpact
