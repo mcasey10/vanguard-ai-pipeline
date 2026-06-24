@@ -59,6 +59,21 @@ export default function FundSelectionAutomated() {
   const [inputDollars, setInputDollars] = useState(targetSaleAmount ?? 0)
   const [isDirty, setIsDirty] = useState(false)
 
+  // Sync input when targetSaleAmount is changed externally (e.g., discard from Manual, or
+  // startEditingScenario restoring a saved amount). Only fires on external changes — not while
+  // the user is actively typing (those don't write targetSaleAmount until Calculate is clicked).
+  useEffect(() => {
+    if (targetSaleAmount === null) {
+      setInputDisplay('')
+      setInputDollars(0)
+      setIsDirty(false)
+    } else {
+      setInputDisplay(formatCurrency(targetSaleAmount))
+      setInputDollars(targetSaleAmount)
+      setIsDirty(false)
+    }
+  }, [targetSaleAmount])
+
   const [hintsVisible, setHintsVisible] = useState(true)
   const [openMark, setOpenMark] = useState<'tax' | 'ytd' | null>(null)
   const [showAllocModal, setShowAllocModal] = useState(false)
@@ -109,15 +124,29 @@ export default function FundSelectionAutomated() {
   // ── Handlers ─────────────────────────────────────────────────────────────
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const digits = e.target.value.replace(/\D/g, '')
-    const dollars = parseInt(digits || '0', 10) / 100
+    // Allow digits and one decimal point with up to 2 decimal places.
+    // The user types plain dollars — no cent-based conversion.
+    const raw = e.target.value.replace(/[^0-9.]/g, '')
+    // Keep only the first decimal point, max 2 decimal places
+    const firstDot = raw.indexOf('.')
+    const normalized = firstDot === -1
+      ? raw
+      : raw.slice(0, firstDot + 1) + raw.slice(firstDot + 1).replace(/\./g, '').slice(0, 2)
+    const dollars = parseFloat(normalized) || 0
     setInputDollars(dollars)
-    setInputDisplay(digits === '' ? '' : formatCurrency(dollars))
+    setInputDisplay(normalized)
     setIsDirty(dollars !== (targetSaleAmount ?? 0))
   }
 
+  // On blur: format raw typed value to currency display without triggering engine
+  function handleBlur() {
+    if (inputDollars > 0) {
+      setInputDisplay(formatCurrency(inputDollars))
+    }
+  }
+
   function handleRecalculate() {
-    if (!isDirty || inputDollars <= 0) return
+    if (inputDollars <= 0) return
     setTargetSaleAmount(inputDollars)
     setIsDirty(false)
     runEngine(inputDollars, optimizationPriority)
@@ -190,20 +219,21 @@ export default function FundSelectionAutomated() {
               <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">Total sell amount</label>
               <input
                 type="text"
-                inputMode="numeric"
+                inputMode="decimal"
                 value={inputDisplay}
                 onChange={handleAmountChange}
                 onKeyDown={e => e.key === 'Enter' && handleRecalculate()}
-                onBlur={handleRecalculate}
+                onBlur={handleBlur}
                 className="w-[200px] h-[48px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
               />
             </div>
+            {/* Issue 3: label is "Calculate" on first entry, "Recalculate" when a recommendation exists */}
             <button
               onClick={handleRecalculate}
-              disabled={!isDirty || inputDollars <= 0}
+              disabled={inputDollars <= 0 || (!!recommendation && !isDirty)}
               className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-[14px] font-bold text-vg-ink bg-white shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Recalculate
+              {recommendation ? 'Recalculate' : 'Calculate'}
             </button>
             <div className="ml-auto flex flex-col gap-2 shrink-0">
               <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">Optimization priority</label>

@@ -515,6 +515,7 @@ export default function FundSelectionManual2() {
 
   // handleApplyAmount — updates local state then triggers engine
   function handleApplyAmount(ticker: string, cents: number) {
+    setHasUserModified(true)
     const newAmounts = { ...appliedAmounts, [ticker]: cents }
     setAppliedAmounts(newAmounts)
     runManualEngine(newAmounts, activeFunds)
@@ -532,17 +533,21 @@ export default function FundSelectionManual2() {
   const iraAcct2    = portfolio?.accounts.find(a => a.account_type === 'traditional_IRA')
   const rothAcct2   = portfolio?.accounts.find(a => a.account_type === 'roth_IRA')
 
-  // Mode toggle guard — shows save/discard dialog if any applied amount is non-zero
-  const hasAmounts = Object.values(appliedAmounts).some(v => v > 0)
+  // Track whether the user has explicitly changed something in Manual mode.
+  // Pre-populated amounts from the Automated recommendation do NOT count as user changes.
+  // The dialog only fires if the user has taken a deliberate action (Sell, Cancel, Apply).
+  const [hasUserModified, setHasUserModified] = useState(false)
   const { showDialog: showModeDialog, handleToggleClick, handleSave, handleDiscard, handleClose } =
-    useModeToggleGuard(hasAmounts)
+    useModeToggleGuard(hasUserModified)
 
   function handleSell(ticker: string) {
+    setHasUserModified(true)
     setActiveFunds(prev => new Set([...prev, ticker]))
     setAppliedAmounts(prev => ({ ...prev, [ticker]: 0 }))
   }
 
   function handleCancel(ticker: string) {
+    setHasUserModified(true)
     setActiveFunds(prev => {
       const next = new Set(prev)
       next.delete(ticker)
