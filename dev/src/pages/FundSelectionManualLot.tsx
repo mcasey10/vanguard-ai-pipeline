@@ -776,7 +776,9 @@ export default function FundSelectionManualLot() {
                   </div>
                   <div className="w-[130px] h-full flex flex-col gap-2 items-start px-2 py-[12px] shrink-0 overflow-hidden">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">&nbsp;</span>
-                    <div className="flex items-center gap-2">
+                    {/* Hidden in lot-detail view: lot-level SpecID selection replaces fund-level "sell all".
+                        invisible keeps the column space so no other content shifts. */}
+                    <div className="flex items-center gap-2 invisible">
                       <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
                       <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
                     </div>
