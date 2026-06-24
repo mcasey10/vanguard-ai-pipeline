@@ -6,6 +6,7 @@ import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
 import type { Recommendation } from '../types'
 import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent } from '../utils/format'
+import { buildScenarioFromRecommendation, isDuplicateScenario } from '../utils/scenarioBuilder'
 
 function RadioDot({ selected }: { selected: boolean }) {
   return (
@@ -48,6 +49,7 @@ export default function FundSelectionAutomated() {
   const {
     portfolio, targetSaleAmount, activeAccountId, optimizationPriority, activeTaxRates,
     recommendation, setRecommendation, setTargetSaleAmount, setOptimizationPriority,
+    scenarios, addScenario,
   } = useAppStore()
 
   // Local input state for the amount field (display only — store is source of truth)
@@ -119,6 +121,17 @@ export default function FundSelectionAutomated() {
     setTargetSaleAmount(inputDollars)
     setIsDirty(false)
     runEngine(inputDollars, optimizationPriority)
+  }
+
+  // REQ-A5-004: "Go to Scenario Analysis" → save recommendation as scenario then navigate
+  function handleGoToScenarios() {
+    if (rec && scenarios.length < 3) {
+      const scenario = buildScenarioFromRecommendation(rec, portfolio, activeTaxRates)
+      if (!isDuplicateScenario(scenario, scenarios)) {
+        addScenario(scenario)
+      }
+    }
+    navigate('/scenarios')
   }
 
   function handleOptMode(priority: 'tax-first' | 'balance-first') {
@@ -433,7 +446,7 @@ export default function FundSelectionAutomated() {
           {/* Footer */}
           <div className="flex gap-3 items-center justify-end px-8 w-full">
             <button className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap">Review order</button>
-            <button className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap">Go to Scenario Analysis</button>
+            <button onClick={handleGoToScenarios} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">Go to Scenario Analysis</button>
           </div>
 
         </div>

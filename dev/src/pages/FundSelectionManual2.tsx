@@ -8,6 +8,7 @@ import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
 import type { FundSaleResult, ManualConfiguration } from '../types'
 import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent } from '../utils/format'
+import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
 
 // ---------------------------------------------------------------------------
 // Shared sub-components
@@ -423,7 +424,7 @@ const COACH_MARKS = {
 
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
-  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation } = useAppStore()
+  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation, scenarios, addScenario } = useAppStore()
 
   // Engine output for this session — per-fund results for display
   const [fundResults, setFundResults] = useState<FundSaleResult[]>([])
@@ -566,6 +567,17 @@ export default function FundSelectionManual2() {
     setShowResetDialog(false)
     setActiveFunds(new Set())
     navigate('/automated')
+  }
+
+  // REQ-B4-001: "Go to Scenario Analysis" → save manual config as scenario then navigate
+  function handleGoToScenarios() {
+    if (fundResults.length > 0 && scenarios.length < 3) {
+      const scenario = buildScenarioFromFundResults(fundResults, portfolio, activeTaxRates, null)
+      if (scenario && !isDuplicateScenario(scenario, scenarios)) {
+        addScenario(scenario)
+      }
+    }
+    navigate('/scenarios')
   }
 
   return (
@@ -846,7 +858,7 @@ export default function FundSelectionManual2() {
             <button className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap hover:opacity-90">
               Review order
             </button>
-            <button className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90">
+            <button onClick={handleGoToScenarios} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">
               Go to Scenario Analysis
             </button>
             <button

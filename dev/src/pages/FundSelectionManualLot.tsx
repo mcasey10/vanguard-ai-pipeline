@@ -8,6 +8,7 @@ import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
 import type { Lot as CanonicalLot } from '../types'
+import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
 
 // ---------------------------------------------------------------------------
 // Coach mark bubble (same structure as FS-AUTO-1 / FS-MAN-2)
@@ -451,7 +452,7 @@ interface LotBannerData {
 export default function FundSelectionManualLot() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig } = useAppStore()
+  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, scenarios, addScenario } = useAppStore()
   const fund = (location.state as { fund?: string })?.fund ?? 'VTSAX'
   const [bannerData, setBannerData] = useState<LotBannerData | null>(null)
 
@@ -553,6 +554,31 @@ export default function FundSelectionManualLot() {
     const hasSelections = Object.values(sharesInputs).some(v => parseFloat(v) > 0)
     if (hasSelections) runLotEngine(sharesInputs)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // REQ-B4-001: "Go to Scenario Analysis" from lot detail — save scenario and navigate
+  function handleGoToScenarios() {
+    if (bannerData && scenarios.length < 3 && portfolio) {
+      // Build a synthetic FundSaleResult for the current fund from bannerData
+      const fr = {
+        fund_id: fund,
+        fund_name: holding?.fund_name ?? fund,
+        sell_amount: bannerData.totalSale,
+        accounting_method: 'specific_lot_identification' as const,
+        lots_sold: [],
+        est_st_gain_loss: bannerData.stGainLoss,
+        est_lt_gain_loss: bannerData.ltGainLoss,
+        est_tax_gross: bannerData.estNetTax,
+        impact_pct: 0,
+        impact_asset_class: 'domestic_equity',
+        rationale: '',
+      }
+      const scenario = buildScenarioFromFundResults([fr], portfolio, activeTaxRates, null)
+      if (scenario && !isDuplicateScenario(scenario, scenarios)) {
+        addScenario(scenario)
+      }
+    }
+    navigate('/scenarios')
+  }
 
   // Account expansion
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set())
@@ -982,7 +1008,7 @@ export default function FundSelectionManualLot() {
           {/* Footer — same as FS-MAN-2 */}
           <div className="flex gap-3 items-center px-8 w-full">
             <button className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap hover:opacity-90">Review order</button>
-            <button className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90">Go to Scenario Analysis</button>
+            <button onClick={handleGoToScenarios} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">Go to Scenario Analysis</button>
             <button className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80">
               ↩ Reset to system recommendation
             </button>
