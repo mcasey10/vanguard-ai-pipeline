@@ -40,6 +40,11 @@ interface AppState {
   // ── Scenarios (max 3, REQ-SC-001) ─────────────────────────────────────────
   scenarios: SavedScenario[]
 
+  // ── Scenario editing context ───────────────────────────────────────────────
+  // null  = starting a new scenario (Go to SC will addScenario)
+  // set   = editing an existing scenario (Go to SC will updateScenario in place)
+  activeScenarioId: string | null
+
   // ── Tax rate assumptions (user-adjustable per REQ-G-010) ─────────────────
   activeTaxRates: Pick<TaxAssumptionSet, 'st_rate' | 'lt_rate'>
 }
@@ -64,6 +69,13 @@ interface AppActions {
   addScenario: (scenario: SavedScenario) => void
   updateScenario: (id: string, scenario: SavedScenario) => void
   deleteScenario: (id: string) => void
+
+  // Scenario editing context
+  setActiveScenarioId: (id: string | null) => void
+  // Restore a saved scenario's session state for editing and set activeScenarioId
+  startEditingScenario: (scenario: SavedScenario) => void
+  // Clear session state and activeScenarioId for adding a brand-new scenario
+  startNewScenario: () => void
 
   // Tax rates
   setActiveTaxRates: (rates: Pick<TaxAssumptionSet, 'st_rate' | 'lt_rate'>) => void
@@ -102,6 +114,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   manualConfig: null,
 
   scenarios: [],
+  activeScenarioId: null,
 
   activeTaxRates: { ...DEFAULT_TAX_RATES },
 
@@ -146,6 +159,30 @@ export const useAppStore = create<AppStore>((set, get) => ({
       scenarios: state.scenarios.filter((s) => s.scenario_id !== id),
     })),
 
+  setActiveScenarioId: (id) => set({ activeScenarioId: id }),
+
+  // Restore session state from a saved scenario so Fund Selection shows the right context
+  startEditingScenario: (scenario) =>
+    set({
+      activeScenarioId: scenario.scenario_id,
+      targetSaleAmount: scenario.total_sell_amount,
+      mode: scenario.source_mode,
+      // Clear engine outputs — FS-AUTO-1 mount will re-run if targetSaleAmount is set
+      recommendation: null,
+      manualConfig: null,
+    }),
+
+  // Clear session for a fresh scenario without affecting existing saved scenarios
+  startNewScenario: () =>
+    set({
+      activeScenarioId: null,
+      targetSaleAmount: null,
+      mode: 'automated',
+      optimizationPriority: 'tax-first',
+      recommendation: null,
+      manualConfig: null,
+    }),
+
   setActiveTaxRates: (rates) => set({ activeTaxRates: rates }),
 
   resetSession: () =>
@@ -156,6 +193,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       optimizationPriority: 'tax-first',
       recommendation: null,
       manualConfig: null,
+      activeScenarioId: null,
       // Scenarios are NOT cleared on session reset — they persist across sessions
     }),
 }))

@@ -452,7 +452,8 @@ interface LotBannerData {
 export default function FundSelectionManualLot() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, scenarios, addScenario } = useAppStore()
+  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
+    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
   const fund = (location.state as { fund?: string })?.fund ?? 'VTSAX'
   const [bannerData, setBannerData] = useState<LotBannerData | null>(null)
 
@@ -555,10 +556,9 @@ export default function FundSelectionManualLot() {
     if (hasSelections) runLotEngine(sharesInputs)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // REQ-B4-001: "Go to Scenario Analysis" from lot detail — save scenario and navigate
+  // REQ-B4-001: "Go to Scenario Analysis" from lot detail — save/update scenario and navigate
   function handleGoToScenarios() {
-    if (bannerData && scenarios.length < 3 && portfolio) {
-      // Build a synthetic FundSaleResult for the current fund from bannerData
+    if (bannerData && portfolio) {
       const fr = {
         fund_id: fund,
         fund_name: holding?.fund_name ?? fund,
@@ -573,8 +573,13 @@ export default function FundSelectionManualLot() {
         rationale: '',
       }
       const scenario = buildScenarioFromFundResults([fr], portfolio, activeTaxRates, null)
-      if (scenario && !isDuplicateScenario(scenario, scenarios)) {
-        addScenario(scenario)
+      if (scenario) {
+        if (activeScenarioId) {
+          updateScenario(activeScenarioId, { ...scenario, scenario_id: activeScenarioId })
+          setActiveScenarioId(null)
+        } else if (scenarios.length < 3 && !isDuplicateScenario(scenario, scenarios)) {
+          addScenario(scenario)
+        }
       }
     }
     navigate('/scenarios')

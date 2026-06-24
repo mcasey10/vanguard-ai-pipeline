@@ -456,11 +456,13 @@ function TaxRow({ label, value, displayText, signed, isGain, bold, labelBold, va
 
 export default function ScenarioAnalysis() {
   const navigate = useNavigate()
-  const { scenarios, portfolio, activeTaxRates, setScenarios, addScenario, deleteScenario } = useAppStore()
+  const { scenarios, portfolio, activeTaxRates, setScenarios, addScenario, deleteScenario,
+    startEditingScenario, startNewScenario, activeScenarioId } = useAppStore()
 
-  // Seed canonical scenarios on mount if store is empty (prototype scaffolding)
+  // Seed canonical scenarios on mount when store is empty AND we're not mid-edit.
+  // The activeScenarioId check ensures a returning edit session isn't overwritten.
   useEffect(() => {
-    if (scenarios.length === 0) {
+    if (scenarios.length === 0 && activeScenarioId === null) {
       setScenarios(seedCanonicalScenarios())
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -532,7 +534,7 @@ export default function ScenarioAnalysis() {
               <div className="flex flex-col items-center justify-center flex-1 py-[64px] gap-4 text-center">
                 <p className="text-[16px] font-semibold text-vg-ink">No scenarios to compare</p>
                 <p className="text-[14px] text-[#717777]">Return to Fund Selection to save a scenario.</p>
-                <button onClick={() => navigate('/')} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink hover:opacity-90 transition-opacity">
+                <button onClick={() => { startNewScenario(); navigate('/') }} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink hover:opacity-90 transition-opacity">
                   Return to Fund Selection
                 </button>
               </div>
@@ -545,7 +547,10 @@ export default function ScenarioAnalysis() {
                     index={i}
                     portfolio={portfolio}
                     activeTaxRates={activeTaxRates}
-                    onEdit={() => navigate(scenario.source_mode === 'automated' ? '/automated' : '/manual-2')}
+                    onEdit={() => {
+                      startEditingScenario(scenario)
+                      navigate(scenario.source_mode === 'automated' ? '/automated' : '/manual-2')
+                    }}
                     onReviewOrder={() => navigate('/confirm')}
                     onDuplicate={() => handleDuplicate(scenario)}
                     onDelete={() => setDeleteTarget(scenario.scenario_id)}
@@ -555,7 +560,7 @@ export default function ScenarioAnalysis() {
                 {/* Add Scenario placeholder (hidden when 3 scenarios) */}
                 {showAdd && (
                   <div
-                    onClick={() => navigate('/')}
+                    onClick={() => { startNewScenario(); navigate('/') }}
                     className="bg-white border border-dashed border-[#b8c0c0] rounded-[8px] flex flex-col items-center justify-center gap-[8px] px-[12px] py-[24px] text-[#717777] cursor-pointer hover:bg-[#f8f8f8] transition-colors w-[160px] shrink-0 self-stretch"
                   >
                     <span className="text-[24px]">+</span>

@@ -424,7 +424,8 @@ const COACH_MARKS = {
 
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
-  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation, scenarios, addScenario } = useAppStore()
+  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation,
+    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
 
   // Engine output for this session — per-fund results for display
   const [fundResults, setFundResults] = useState<FundSaleResult[]>([])
@@ -569,12 +570,18 @@ export default function FundSelectionManual2() {
     navigate('/automated')
   }
 
-  // REQ-B4-001: "Go to Scenario Analysis" → save manual config as scenario then navigate
+  // REQ-B4-001: "Go to Scenario Analysis" → save/update scenario then navigate
   function handleGoToScenarios() {
-    if (fundResults.length > 0 && scenarios.length < 3) {
+    if (fundResults.length > 0) {
       const scenario = buildScenarioFromFundResults(fundResults, portfolio, activeTaxRates, null)
-      if (scenario && !isDuplicateScenario(scenario, scenarios)) {
-        addScenario(scenario)
+      if (scenario) {
+        if (activeScenarioId) {
+          // Editing → update in place
+          updateScenario(activeScenarioId, { ...scenario, scenario_id: activeScenarioId })
+          setActiveScenarioId(null)
+        } else if (scenarios.length < 3 && !isDuplicateScenario(scenario, scenarios)) {
+          addScenario(scenario)
+        }
       }
     }
     navigate('/scenarios')

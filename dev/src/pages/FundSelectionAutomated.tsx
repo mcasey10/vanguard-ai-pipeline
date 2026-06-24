@@ -49,7 +49,7 @@ export default function FundSelectionAutomated() {
   const {
     portfolio, targetSaleAmount, activeAccountId, optimizationPriority, activeTaxRates,
     recommendation, setRecommendation, setTargetSaleAmount, setOptimizationPriority,
-    scenarios, addScenario,
+    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId,
   } = useAppStore()
 
   // Local input state for the amount field (display only — store is source of truth)
@@ -123,11 +123,16 @@ export default function FundSelectionAutomated() {
     runEngine(inputDollars, optimizationPriority)
   }
 
-  // REQ-A5-004: "Go to Scenario Analysis" → save recommendation as scenario then navigate
+  // REQ-A5-004: "Go to Scenario Analysis" → save/update scenario then navigate
   function handleGoToScenarios() {
-    if (rec && scenarios.length < 3) {
+    if (rec) {
       const scenario = buildScenarioFromRecommendation(rec, portfolio, activeTaxRates)
-      if (!isDuplicateScenario(scenario, scenarios)) {
+      if (activeScenarioId) {
+        // Editing an existing scenario → update it in place (Fix 2)
+        updateScenario(activeScenarioId, { ...scenario, scenario_id: activeScenarioId })
+        setActiveScenarioId(null)
+      } else if (scenarios.length < 3 && !isDuplicateScenario(scenario, scenarios)) {
+        // New scenario → add it
         addScenario(scenario)
       }
     }
