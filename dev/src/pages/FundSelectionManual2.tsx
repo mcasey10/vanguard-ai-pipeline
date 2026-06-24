@@ -7,6 +7,7 @@ import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
 import type { FundSaleResult, ManualConfiguration } from '../types'
+import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent } from '../utils/format'
 
 // ---------------------------------------------------------------------------
 // Shared sub-components
@@ -154,7 +155,7 @@ function ActiveFundRow({
   onLotDetails: (ticker: string) => void
 }) {
   const [inputCents, setInputCents]     = useState(appliedCents)
-  const [inputDisplay, setInputDisplay] = useState(formatDollar(appliedCents))
+  const [inputDisplay, setInputDisplay] = useState(formatCurrency(appliedCents / 100))
 
   // Local method display — updated by CostBasisDialog "Continue" for this row only.
   // NOT lifted to parent; the TODO in this file's COST BASIS METHOD comment still applies.
@@ -167,7 +168,7 @@ function ActiveFundRow({
     const digits = e.target.value.replace(/\D/g, '')
     const cents  = parseInt(digits || '0', 10)
     setInputCents(cents)
-    setInputDisplay(digits === '' ? '' : formatDollar(cents))
+    setInputDisplay(digits === '' ? '' : formatCurrency(cents / 100))
   }
 
   function handleApply() {
@@ -377,18 +378,14 @@ function ReadOnlyFundRow({ fund }: { fund: FundRow }) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatDollar(cents: number): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 })
-    .format(cents / 100)
-}
-
 // ---------------------------------------------------------------------------
 // Helper: map FundSaleResult → TaxData for ActiveFundRow display
 // ---------------------------------------------------------------------------
 
 function r2(n: number) { return Math.round(n * 100) / 100 }
-function fmtAbs(n: number) { return '$' + Math.abs(n).toFixed(2) }
-function fmtSigned(n: number) { return (n >= 0 ? '+' : '−') + fmtAbs(n) }
+function fmtSigned(n: number) { return (n >= 0 ? '+' : '−') + formatCurrency(Math.abs(n)) }
+// 2-decimal rate display for effective rate (Intl, no toFixed)
+function fmtRate2(n: number) { return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n) }
 
 function taxDataFromResult(fr: FundSaleResult | undefined): TaxData {
   if (!fr) return {
@@ -398,12 +395,12 @@ function taxDataFromResult(fr: FundSaleResult | undefined): TaxData {
   }
   const stg = fr.est_st_gain_loss, ltg = fr.est_lt_gain_loss
   return {
-    estSTGains: stg !== 0 ? fmtSigned(stg) : '$0.00',
+    estSTGains: stg !== 0 ? fmtSigned(stg) : formatCurrency(0),
     estSTColor: stg > 0 ? 'text-[#007a00]' : stg < 0 ? 'text-[#c8102e]' : 'text-vg-ink',
-    estLTGains: ltg !== 0 ? fmtSigned(ltg) : '$0.00',
+    estLTGains: ltg !== 0 ? fmtSigned(ltg) : formatCurrency(0),
     estLTColor: ltg > 0 ? 'text-[#007a00]' : ltg < 0 ? 'text-[#c8102e]' : 'text-vg-ink',
-    estTax: fmtAbs(fr.est_tax_gross),
-    impact: `${fr.impact_pct <= 0 ? '−' : '+'}${Math.abs(fr.impact_pct).toFixed(1)}% ${fr.impact_asset_class.replace('_', ' ')}`,
+    estTax: formatCurrency(fr.est_tax_gross),
+    impact: `${fr.impact_pct <= 0 ? '−' : '+'}${new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.abs(fr.impact_pct))}% ${fr.impact_asset_class.replace('_', ' ')}`,
     impactColor: fr.impact_pct <= 0 ? 'text-[#007a00]' : 'text-[#c8102e]',
     rationale: fr.rationale,
     waitAndSave: undefined,
@@ -648,8 +645,8 @@ export default function FundSelectionManual2() {
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
-                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{ai ? '$' + ai.totalSale.toFixed(0) : '—'}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{ai ? ai.salePct.toFixed(1) + '% of portfolio' : '0.0% of portfolio'}</span>
+                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{ai ? formatCurrencyCompact(ai.totalSale) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{ai ? formatPercent(ai.salePct, true) + ' of portfolio' : '0.0% of portfolio'}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
@@ -662,8 +659,8 @@ export default function FundSelectionManual2() {
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
                 {portfolio?.ytd_gains_record ? (
                   <>
-                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST ${portfolio.ytd_gains_record.st_gains_realized_ytd.toFixed(2)}</span>
-                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT ${portfolio.ytd_gains_record.lt_gains_realized_ytd.toFixed(2)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST {formatCurrency(portfolio.ytd_gains_record.st_gains_realized_ytd)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT {formatCurrency(portfolio.ytd_gains_record.lt_gains_realized_ytd)}</span>
                   </>
                 ) : <span className="text-[12px] text-vg-ink-muted">—</span>}
               </div>
@@ -687,8 +684,8 @@ export default function FundSelectionManual2() {
                   <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. NET TAX</span>
                   {hintsVisible && <HintBadge onClick={() => handleHintClick('tax')} />}
                 </div>
-                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{ai ? '$' + ai.estNetTax.toFixed(2) : '—'}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{ai ? ai.effRate.toFixed(2) + '% effective rate' : ''}</span>
+                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{ai ? formatCurrency(ai.estNetTax) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{ai ? fmtRate2(ai.effRate) + '% effective rate' : ''}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
@@ -723,7 +720,7 @@ export default function FundSelectionManual2() {
                   62% Equity / 28% Bonds / 10% Other
                 </span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$507,194.40</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? formatCurrency(taxableAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 <ChevronDown size={24} className="text-vg-ink shrink-0" />
               </div>
@@ -744,8 +741,8 @@ export default function FundSelectionManual2() {
                 const fund: FundRow = {
                   ticker: holding.fund_id,
                   fullName: holding.fund_name,
-                  shares: new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(holding.total_shares),
-                  balance: '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(holding.current_balance),
+                  shares: formatShares(holding.total_shares),
+                  balance: formatCurrency(holding.current_balance),
                   assetClass: holding.asset_class.replace('_', ' '),
                 }
                 const engineResult = fundResults.find(fr => fr.fund_id === holding.fund_id)
@@ -802,19 +799,19 @@ export default function FundSelectionManual2() {
                   <div className="w-2 shrink-0" />
                   <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
                     <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">
-                      Remaining 2026 RMD: $3,668
+                      Remaining 2026 RMD: {iraAcct2?.rmd_record ? formatCurrency(Math.round(iraAcct2.rmd_record.rmd_remaining)) : '$3,668'}
                     </span>
                   </div>
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Equity / 78% Bonds / 0% Other</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$211,065.00</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct2 ? formatCurrency(iraAcct2.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 {iraExpanded ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>
               {iraExpanded && (portfolio?.accounts.find(a => a.account_type === 'traditional_IRA')?.holdings ?? []).map(h => (
-                <ReadOnlyFundRow key={h.fund_id + '-ira'} fund={{ ticker: h.fund_id, fullName: h.fund_name, shares: h.total_shares.toLocaleString(), balance: '$' + h.current_balance.toFixed(2), assetClass: h.asset_class.replace('_', ' ') }} />
+                <ReadOnlyFundRow key={h.fund_id + '-ira'} fund={{ ticker: h.fund_id, fullName: h.fund_name, shares: formatShares(h.total_shares), balance: formatCurrency(h.current_balance), assetClass: h.asset_class.replace('_', ' ') }} />
               ))}
 
               {/* Roth IRA — collapsed, expandable */}
@@ -831,12 +828,12 @@ export default function FundSelectionManual2() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$131,592.00</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct2 ? formatCurrency(rothAcct2.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 {rothExpanded ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>
               {rothExpanded && (portfolio?.accounts.find(a => a.account_type === 'roth_IRA')?.holdings ?? []).map(h => (
-                <ReadOnlyFundRow key={h.fund_id + '-roth'} fund={{ ticker: h.fund_id, fullName: h.fund_name, shares: h.total_shares.toLocaleString(), balance: '$' + h.current_balance.toFixed(2), assetClass: h.asset_class.replace('_', ' ') }} />
+                <ReadOnlyFundRow key={h.fund_id + '-roth'} fund={{ ticker: h.fund_id, fullName: h.fund_name, shares: formatShares(h.total_shares), balance: formatCurrency(h.current_balance), assetClass: h.asset_class.replace('_', ' ') }} />
               ))}
 
             </div>

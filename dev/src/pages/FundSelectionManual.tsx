@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
+import { formatCurrency, formatShares } from '../utils/format'
 
 function RadioDot({ selected }: { selected: boolean }) {
   return (
@@ -12,10 +13,6 @@ function RadioDot({ selected }: { selected: boolean }) {
   )
 }
 
-function fmt(n: number, d = 2) {
-  return new Intl.NumberFormat('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n)
-}
-function fmtDollar(n: number) { return '$' + fmt(n) }
 
 export default function FundSelectionManual() {
   const navigate = useNavigate()
@@ -86,8 +83,8 @@ export default function FundSelectionManual() {
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
                 {portfolio?.ytd_gains_record ? (
                   <>
-                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST {fmtDollar(portfolio.ytd_gains_record.st_gains_realized_ytd)}</span>
-                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT {fmtDollar(portfolio.ytd_gains_record.lt_gains_realized_ytd)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST {formatCurrency(portfolio.ytd_gains_record.st_gains_realized_ytd)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT {formatCurrency(portfolio.ytd_gains_record.lt_gains_realized_ytd)}</span>
                   </>
                 ) : <span className="text-[12px] text-vg-ink-muted">—</span>}
               </div>
@@ -132,7 +129,7 @@ export default function FundSelectionManual() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Equity / 28% Bonds / 10% Other</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? fmtDollar(taxableAcct.account_balance) : '—'}</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? formatCurrency(taxableAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 <ChevronDown size={24} className="text-vg-ink shrink-0" />
               </div>
@@ -152,8 +149,8 @@ export default function FundSelectionManual() {
                     <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">{h.fund_id}</a>
                   </div>
                   <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{fmt(h.total_shares, 0)} shares</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fmtDollar(h.current_balance)}</span>
+                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{formatShares(h.total_shares)} shares</span>
+                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{formatCurrency(h.current_balance)}</span>
                   </div>
                   <div className="w-[128px] h-full shrink-0" /><div className="w-[130px] h-full shrink-0" />
                   <div className="w-[160px] h-full shrink-0" /><div className="w-[95px] h-full shrink-0" />
@@ -180,7 +177,7 @@ export default function FundSelectionManual() {
                       <div className="w-2 shrink-0" />
                       <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
                         <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">
-                          Remaining 2026 RMD: {fmtDollar(Math.round(iraAcct.rmd_record.rmd_remaining))}
+                          Remaining 2026 RMD: {formatCurrency(Math.round(iraAcct.rmd_record.rmd_remaining))}
                         </span>
                       </div>
                     </>
@@ -189,7 +186,7 @@ export default function FundSelectionManual() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Equity / 78% Bonds / 0% Other</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct ? fmtDollar(iraAcct.account_balance) : '—'}</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct ? formatCurrency(iraAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 {expandedAccounts.has('ira') ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>
@@ -201,7 +198,7 @@ export default function FundSelectionManual() {
                   </div>
                   <div className="flex-1" />
                   <span className="text-[12px] text-vg-ink-muted mr-4">{h.asset_class.replace('_', ' ')}</span>
-                  <span className="text-[13px] font-bold text-vg-ink">{fmtDollar(h.current_balance)}</span>
+                  <span className="text-[13px] font-bold text-vg-ink">{formatCurrency(h.current_balance)}</span>
                 </div>
               ))}
 
@@ -216,7 +213,7 @@ export default function FundSelectionManual() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct ? fmtDollar(rothAcct.account_balance) : '—'}</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct ? formatCurrency(rothAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 {expandedAccounts.has('roth') ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>
@@ -228,7 +225,7 @@ export default function FundSelectionManual() {
                   </div>
                   <div className="flex-1" />
                   <span className="text-[12px] text-vg-ink-muted mr-4">{h.asset_class.replace('_', ' ')}</span>
-                  <span className="text-[13px] font-bold text-vg-ink">{fmtDollar(h.current_balance)}</span>
+                  <span className="text-[13px] font-bold text-vg-ink">{formatCurrency(h.current_balance)}</span>
                 </div>
               ))}
 

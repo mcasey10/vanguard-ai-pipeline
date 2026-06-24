@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
+import { formatCurrency } from '../utils/format'
 
 export default function FundSelectionEntry() {
   const navigate = useNavigate()
@@ -13,11 +14,7 @@ export default function FundSelectionEntry() {
   function formatDollar(value: string): string {
     const digits = value.replace(/\D/g, '')
     if (!digits) return ''
-    const cents = parseInt(digits, 10)
-    return (cents / 100).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
+    return formatCurrency(parseInt(digits, 10) / 100)
   }
 
   function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -36,7 +33,7 @@ export default function FundSelectionEntry() {
     navigate(mode === 'automated' ? '/automated' : '/manual')
   }
 
-  const displayAmount = rawAmount ? '$' + formatDollar(rawAmount) : ''
+  const displayAmount = rawAmount ? formatDollar(rawAmount) : ''
   const hasAmount = rawAmount.length > 0 && parseInt(rawAmount, 10) > 0
 
   return (

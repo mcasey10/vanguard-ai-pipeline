@@ -5,6 +5,7 @@ import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
 import type { Recommendation } from '../types'
+import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent } from '../utils/format'
 
 function RadioDot({ selected }: { selected: boolean }) {
   return (
@@ -30,14 +31,15 @@ function CoachMarkBubble({ text, onDismiss }: { text: string; onDismiss: () => v
   )
 }
 
-function fmt(n: number, decimals = 2): string {
-  return new Intl.NumberFormat('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(n)
+// For values not covered by format.ts (integer % rates, 2-decimal %, 1-decimal impact %)
+function fmtPct1(n: number): string {
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n)
 }
-function fmtDollar(n: number): string {
-  return '$' + fmt(Math.abs(n))
+function fmtPct2(n: number): string {
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 }
 function fmtSigned(n: number): string {
-  return (n >= 0 ? '+' : '−') + fmtDollar(n)
+  return (n >= 0 ? '+' : '−') + formatCurrency(Math.abs(n))
 }
 
 export default function FundSelectionAutomated() {
@@ -50,7 +52,7 @@ export default function FundSelectionAutomated() {
 
   // Local input state for the amount field (display only — store is source of truth)
   const [inputDisplay, setInputDisplay] = useState(
-    targetSaleAmount ? fmtDollar(targetSaleAmount) : ''
+    targetSaleAmount ? formatCurrency(targetSaleAmount) : ''
   )
   const [inputDollars, setInputDollars] = useState(targetSaleAmount ?? 0)
   const [isDirty, setIsDirty] = useState(false)
@@ -108,7 +110,7 @@ export default function FundSelectionAutomated() {
     const digits = e.target.value.replace(/\D/g, '')
     const dollars = parseInt(digits || '0', 10) / 100
     setInputDollars(dollars)
-    setInputDisplay(digits === '' ? '' : fmtDollar(dollars))
+    setInputDisplay(digits === '' ? '' : formatCurrency(dollars))
     setIsDirty(dollars !== (targetSaleAmount ?? 0))
   }
 
@@ -205,8 +207,8 @@ export default function FundSelectionAutomated() {
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
-                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">${fmt(totalSale, 0)}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{fmt(salePct, 1)}% of portfolio</span>
+                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{formatCurrencyCompact(totalSale)}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{formatPercent(salePct, true)} of portfolio</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 
@@ -219,7 +221,7 @@ export default function FundSelectionAutomated() {
                     </button>
                   )}
                 </div>
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fmt(taxRates.st_rate * 100, 0)}% ST / {fmt(taxRates.lt_rate * 100, 0)}% LT</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{Math.round(taxRates.st_rate * 100)}% ST / {Math.round(taxRates.lt_rate * 100)}% LT</span>
                 <a className="text-[12px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Change</a>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
@@ -235,8 +237,8 @@ export default function FundSelectionAutomated() {
                 </div>
                 {ytd ? (
                   <>
-                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST {fmtDollar(ytd.st_gains_realized_ytd)}</span>
-                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT {fmtDollar(ytd.lt_gains_realized_ytd)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">ST {formatCurrency(ytd.st_gains_realized_ytd)}</span>
+                    <span className="text-[12px] text-vg-ink whitespace-nowrap">LT {formatCurrency(ytd.lt_gains_realized_ytd)}</span>
                   </>
                 ) : <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">—</span>}
               </div>
@@ -260,9 +262,9 @@ export default function FundSelectionAutomated() {
 
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. NET TAX</span>
-                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{estNetTax !== null ? fmtDollar(estNetTax) : '—'}</span>
+                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{estNetTax !== null ? formatCurrency(estNetTax) : '—'}</span>
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">
-                  {effectiveRate !== null ? `${fmt(effectiveRate * 100, 2)}% effective rate` : ''}
+                  {effectiveRate !== null ? `${fmtPct2(effectiveRate * 100)}% effective rate` : ''}
                 </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
@@ -272,13 +274,13 @@ export default function FundSelectionAutomated() {
                 {equityDelta !== null && (
                   <div className="flex gap-1.5 items-center">
                     <span className="text-[12px] text-vg-ink">Equity</span>
-                    <span className={`text-[12px] ${equityDelta <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>{equityDelta <= 0 ? '−' : '+'}{fmt(Math.abs(equityDelta), 1)}%</span>
+                    <span className={`text-[12px] ${equityDelta <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>{equityDelta <= 0 ? '−' : '+'}{fmtPct1(Math.abs(equityDelta))}%</span>
                   </div>
                 )}
                 {bondsDelta !== null && (
                   <div className="flex gap-1.5 items-center">
                     <span className="text-[12px] text-vg-ink">Bonds</span>
-                    <span className={`text-[12px] ${bondsDelta >= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>{bondsDelta >= 0 ? '+' : '−'}{fmt(Math.abs(bondsDelta), 1)}%</span>
+                    <span className={`text-[12px] ${bondsDelta >= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>{bondsDelta >= 0 ? '+' : '−'}{fmtPct1(Math.abs(bondsDelta))}%</span>
                   </div>
                 )}
                 <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>
@@ -315,7 +317,7 @@ export default function FundSelectionAutomated() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Equity / 28% Bonds / 10% Other</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? fmtDollar(taxableAcct.account_balance) : '—'}</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? formatCurrency(taxableAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
               </div>
 
@@ -339,12 +341,12 @@ export default function FundSelectionAutomated() {
                         <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">{fr.fund_id}</a>
                       </div>
                       <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                        <span className="text-[11px] text-vg-ink-muted whitespace-nowrap">{holding ? fmt(holding.total_shares, 0) : '—'} shares</span>
-                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{holding ? fmtDollar(holding.current_balance) : '—'}</span>
+                        <span className="text-[11px] text-vg-ink-muted whitespace-nowrap">{holding ? formatShares(holding.total_shares) : '—'} shares</span>
+                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{holding ? formatCurrency(holding.current_balance) : '—'}</span>
                       </div>
                       <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
                         <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
-                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fmtDollar(fr.sell_amount)}</span>
+                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{formatCurrency(fr.sell_amount)}</span>
                       </div>
                       <div className="w-[130px] h-full shrink-0" />
                       <div className="w-[160px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden text-vg-ink-muted">
@@ -353,20 +355,20 @@ export default function FundSelectionAutomated() {
                       </div>
                       <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
                         <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                        <span className={`text-[14px] font-bold whitespace-nowrap ${stGain > 0 ? 'text-[#007a00]' : stGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>{stGain !== 0 ? fmtSigned(stGain) : '$0.00'}</span>
+                        <span className={`text-[14px] font-bold whitespace-nowrap ${stGain > 0 ? 'text-[#007a00]' : stGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>{stGain !== 0 ? fmtSigned(stGain) : formatCurrency(0)}</span>
                       </div>
                       <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
                         <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                        <span className={`text-[14px] font-bold whitespace-nowrap ${ltGain > 0 ? 'text-[#007a00]' : ltGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>{ltGain !== 0 ? fmtSigned(ltGain) : '$0.00'}</span>
+                        <span className={`text-[14px] font-bold whitespace-nowrap ${ltGain > 0 ? 'text-[#007a00]' : ltGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>{ltGain !== 0 ? fmtSigned(ltGain) : formatCurrency(0)}</span>
                       </div>
                       <div className="w-[85px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
                         <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. TAX</span>
-                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fmtDollar(fr.est_tax_gross)}</span>
+                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{formatCurrency(fr.est_tax_gross)}</span>
                       </div>
                       <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
                         <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
                         <span className={`text-[12px] font-semibold whitespace-nowrap ${fr.impact_pct <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
-                          {fr.impact_pct <= 0 ? '−' : '+'}{fmt(Math.abs(fr.impact_pct), 1)}% {fr.impact_asset_class.replace('_', ' ')}
+                          {fr.impact_pct <= 0 ? '−' : '+'}{fmtPct1(Math.abs(fr.impact_pct))}% {fr.impact_asset_class.replace('_', ' ')}
                         </span>
                       </div>
                       <div className="flex-1 h-full" />
@@ -397,7 +399,7 @@ export default function FundSelectionAutomated() {
                       <div className="w-2 shrink-0" />
                       <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
                         <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">
-                          Remaining 2026 RMD: {fmtDollar(Math.round(iraAcct.rmd_record.rmd_remaining))}
+                          Remaining 2026 RMD: {formatCurrency(Math.round(iraAcct.rmd_record.rmd_remaining))}
                         </span>
                       </div>
                     </>
@@ -406,7 +408,7 @@ export default function FundSelectionAutomated() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Equity / 78% Bonds / 0% Other</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct ? fmtDollar(iraAcct.account_balance) : '—'}</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct ? formatCurrency(iraAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
               </div>
 
@@ -421,7 +423,7 @@ export default function FundSelectionAutomated() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct ? fmtDollar(rothAcct.account_balance) : '—'}</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct ? formatCurrency(rothAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
               </div>
 
