@@ -147,9 +147,9 @@ function LotDetailHeader() {
 
 function LotSectionHeader({ label, showViewDefs }: { label: string; showViewDefs: boolean }) {
   return (
-    <div className="flex h-9 items-center justify-between overflow-clip px-4 w-full shrink-0 whitespace-nowrap">
+    <div className="flex h-9 items-center justify-between overflow-clip w-full shrink-0 whitespace-nowrap">
       <span className="text-[13px] font-semibold text-vg-ink">{label}</span>
-      <a className={`text-[12px] underline cursor-pointer ${showViewDefs ? 'text-[#1255cc]' : 'text-transparent'}`}>View definitions</a>
+      <a className={`text-[12px] underline cursor-pointer pr-3 ${showViewDefs ? 'text-[#1255cc]' : 'text-transparent'}`}>View definitions</a>
     </div>
   )
 }
@@ -868,8 +868,8 @@ export default function FundSelectionManualLot() {
                     36px section header + 40px totals row, shown once engine has fired */}
                 {bannerData && (
                   <>
-                    {/* Section header: "Total impact of selected shares to sell" — px-4 aligns with LT/ST headers */}
-                    <div className="flex h-9 items-center justify-between overflow-clip px-4 w-full shrink-0">
+                    {/* Section header: "Total impact of selected shares to sell" — flush with Table Section left edge */}
+                    <div className="flex h-9 items-center justify-between overflow-clip w-full shrink-0">
                       <span className="text-[13px] font-semibold text-vg-ink whitespace-nowrap">Total impact of selected shares to sell</span>
                     </div>
                     {/* Totals row (40px) — inherits Table Section bg (#f8f8f7), columns aligned to lot table */}
