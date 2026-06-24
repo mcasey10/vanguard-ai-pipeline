@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils/format'
 
 export default function FundSelectionEntry() {
   const navigate = useNavigate()
-  const { mode: storeMode, setTargetSaleAmount, setMode } = useAppStore()
+  const { mode: storeMode, setTargetSaleAmount, setMode, startNewScenario } = useAppStore()
 
   const [rawAmount, setRawAmount] = useState('')
   const [mode, setLocalMode] = useState<'automated' | 'manual'>(storeMode)
@@ -23,6 +23,14 @@ export default function FundSelectionEntry() {
   }
 
   function handleModeChange(m: 'automated' | 'manual') {
+    if (m === 'manual') {
+      // Manual mode doesn't need a total sell amount — go straight to the fund table.
+      // Clear any stale session state so FS-MAN-2 starts with all funds inactive.
+      startNewScenario()
+      setMode('manual')
+      navigate('/manual-2')
+      return
+    }
     setLocalMode(m)
   }
 
@@ -30,7 +38,7 @@ export default function FundSelectionEntry() {
     const dollars = parseInt(rawAmount, 10) / 100
     setTargetSaleAmount(dollars)
     setMode(mode)
-    navigate(mode === 'automated' ? '/automated' : '/manual')
+    navigate('/automated')
   }
 
   const displayAmount = rawAmount ? formatDollar(rawAmount) : ''

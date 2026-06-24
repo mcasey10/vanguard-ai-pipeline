@@ -439,13 +439,13 @@ export default function FundSelectionManual2() {
   }
 
   // Active funds and applied amounts: seeded from store.recommendation when arriving
-  // from Automated mode, otherwise fall back to Figma primary-scenario defaults.
+  // from Automated mode; empty when entering Manual directly (no prior recommendation).
   // Lazy initializers run once on mount — recommendation is already in store by then.
   const [activeFunds, setActiveFunds] = useState<Set<string>>(() => {
     if (recommendation?.fund_results?.length) {
       return new Set(recommendation.fund_results.map(fr => fr.fund_id))
     }
-    return new Set(['VTSAX', 'VBTLX'])
+    return new Set()  // empty — user activates funds via Sell button (REQ-B1-004)
   })
 
   const [appliedAmounts, setAppliedAmounts] = useState<Record<string, number>>(() => {
@@ -455,7 +455,7 @@ export default function FundSelectionManual2() {
         recommendation.fund_results.map(fr => [fr.fund_id, Math.round(fr.sell_amount * 100)])
       )
     }
-    return { VTSAX: 1500000, VBTLX: 1000000 }
+    return {}  // empty — no amounts until user enters them
   })
 
   // runManualEngine — builds ManualSelections from current activeFunds + appliedAmounts
