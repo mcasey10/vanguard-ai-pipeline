@@ -154,7 +154,7 @@ function BarRow({ label, stocks, bonds, reserves, faded, dashed }: BarRowProps) 
   const rPct = r2(reserves)
   return (
     <div className="flex gap-[8px] items-center w-full">
-      <span className="text-[12px] text-[#717777] text-right w-[52px] shrink-0">{label}</span>
+      <span className="text-[12px] text-[#717777] text-right w-[64px] shrink-0 whitespace-nowrap">{label}</span>
       <div className={`flex flex-1 h-[24px] rounded-[4px] overflow-clip ${dashed ? 'border border-dashed border-[#ccc]' : ''}`}>
         <div style={{ width: `${sPct}%`, background: c('stocks')   }} className="h-full flex items-center justify-center px-[4px]">
           {sPct >= 8 && <span className="text-[11px] text-white whitespace-nowrap">{Math.round(sPct)}%</span>}
