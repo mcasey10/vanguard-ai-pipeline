@@ -760,8 +760,16 @@ export default function FundSelectionManual2() {
                 <div className="flex-1" />
               </div>
 
-              {/* Fund rows — always in portfolio order; active/inactive state shown by row variant */}
-              {(portfolio?.accounts.find(a => a.account_id === activeAccountId)?.holdings ?? []).map(holding => {
+              {/* Fund rows — active funds first (portfolio order within group), then inactive funds.
+                  This keeps pre-populated funds (from Automated recommendation) adjacent and stable;
+                  activating/deactivating a fund moves it between groups but never splits active rows. */}
+              {(() => {
+                const allHoldings = portfolio?.accounts.find(a => a.account_id === activeAccountId)?.holdings ?? []
+                return [
+                  ...allHoldings.filter(h => activeFunds.has(h.fund_id)),
+                  ...allHoldings.filter(h => !activeFunds.has(h.fund_id)),
+                ]
+              })().map(holding => {
                 const fund: FundRow = {
                   ticker: holding.fund_id,
                   fullName: holding.fund_name,
