@@ -97,6 +97,13 @@ function fmtGain(n: number): string {
   return (n > 0 ? '+' : '−') + formatCurrency(Math.abs(n))
 }
 
+// Compact signed currency for fund table G/L and tax cells — no cents, no wrapping
+// e.g. 1515.85 → "+$1,516"  |  -1056.65 → "−$1,057"
+function fmtGainCompact(n: number): string {
+  if (n === 0) return formatCurrencyCompact(0)
+  return (n > 0 ? '+' : '−') + formatCurrencyCompact(Math.abs(n))
+}
+
 // Accounting method display
 function fmtMethod(m: string): string {
   if (m === 'specific_lot_identification') return 'Spec ID'
@@ -290,14 +297,14 @@ function ScenarioColumn({ scenario, index, portfolio, activeTaxRates, onEdit, on
 
       {/* SecB — fund table */}
       <div className="bg-white border-b border-[#e8e9e9] flex flex-col px-[16px] py-[12px] shrink-0">
-        {/* Column headers */}
+        {/* Column headers — G/L and Tax wider to fit compact integer values without wrapping */}
         <div className="flex items-start border-b border-[#e8e9e9] pb-[8px] w-full">
           <span className="text-[10px] font-semibold text-[#717777] flex-1 min-w-0">FUND</span>
-          <span className="text-[10px] font-semibold text-[#717777] text-right w-[80px] shrink-0">AMOUNT</span>
-          <span className="text-[10px] font-semibold text-[#717777] text-right w-[56px] shrink-0">BASIS</span>
-          <span className="text-[10px] font-semibold text-[#717777] text-right w-[60px] shrink-0">ST G/L</span>
-          <span className="text-[10px] font-semibold text-[#717777] text-right w-[60px] shrink-0">LT G/L</span>
-          <span className="text-[10px] font-semibold text-[#717777] text-right w-[56px] shrink-0">EST. TAX</span>
+          <span className="text-[10px] font-semibold text-[#717777] text-right w-[80px] shrink-0 whitespace-nowrap">AMOUNT</span>
+          <span className="text-[10px] font-semibold text-[#717777] text-right w-[52px] shrink-0 whitespace-nowrap">BASIS</span>
+          <span className="text-[10px] font-semibold text-[#717777] text-right w-[68px] shrink-0 whitespace-nowrap">ST G/L</span>
+          <span className="text-[10px] font-semibold text-[#717777] text-right w-[68px] shrink-0 whitespace-nowrap">LT G/L</span>
+          <span className="text-[10px] font-semibold text-[#717777] text-right w-[64px] shrink-0 whitespace-nowrap">EST. TAX</span>
         </div>
         {/* Fund rows */}
         {scenario.fund_selections.map((fs, i) => {
@@ -312,16 +319,16 @@ function ScenarioColumn({ scenario, index, portfolio, activeTaxRates, onEdit, on
                 <span className="text-[13px] font-bold text-[#1255cc] underline">{fs.fund_id}</span>
                 <span className="text-[10px] text-[#717777] truncate">{fs.fund_name ?? fs.fund_id}</span>
               </div>
-              <span className="text-[12px] font-bold text-[#040505] text-right w-[80px] shrink-0">{formatCurrency(fs.sell_amount)}</span>
-              <span className="text-[11px] text-[#717777] text-right w-[56px] shrink-0">{fmtMethod(fs.accounting_method)}</span>
-              <span className={`text-[12px] font-bold text-right w-[60px] shrink-0 ${stColor}`}>
-                {stg !== 0 ? fmtGain(stg) : <span className="text-[#717777] font-normal">{formatCurrency(0)}</span>}
+              <span className="text-[12px] font-bold text-[#040505] text-right w-[80px] shrink-0 whitespace-nowrap">{formatCurrency(fs.sell_amount)}</span>
+              <span className="text-[11px] text-[#717777] text-right w-[52px] shrink-0 whitespace-nowrap">{fmtMethod(fs.accounting_method)}</span>
+              <span className={`text-[12px] font-bold text-right w-[68px] shrink-0 whitespace-nowrap ${stColor}`}>
+                {stg !== 0 ? fmtGainCompact(stg) : <span className="text-[#717777] font-normal">{formatCurrencyCompact(0)}</span>}
               </span>
-              <span className={`text-[12px] font-bold text-right w-[60px] shrink-0 ${ltColor}`}>
-                {ltg !== 0 ? fmtGain(ltg) : <span className="text-[#717777] font-normal">{formatCurrency(0)}</span>}
+              <span className={`text-[12px] font-bold text-right w-[68px] shrink-0 whitespace-nowrap ${ltColor}`}>
+                {ltg !== 0 ? fmtGainCompact(ltg) : <span className="text-[#717777] font-normal">{formatCurrencyCompact(0)}</span>}
               </span>
-              <span className={`text-[12px] text-right w-[56px] shrink-0 ${etx > 0 ? 'font-bold text-[#040505]' : 'text-[#717777]'}`}>
-                {etx > 0 ? formatCurrency(etx) : formatCurrency(0)}
+              <span className={`text-[12px] text-right w-[64px] shrink-0 whitespace-nowrap ${etx > 0 ? 'font-bold text-[#040505]' : 'text-[#717777]'}`}>
+                {etx > 0 ? formatCurrencyCompact(etx) : formatCurrencyCompact(0)}
               </span>
             </div>
           )
