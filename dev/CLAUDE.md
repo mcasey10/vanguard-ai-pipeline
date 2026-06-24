@@ -557,75 +557,150 @@ figure.
 
 ## Visual implementation discipline — Figma fidelity
 
-This rule applies to every screen implementation and every visual 
-correction session. Do not declare any screen or section complete 
+This rule applies to every screen implementation and every visual
+correction session. Do not declare any screen or section complete
 without completing the full comparison loop below.
 
 ### The comparison loop
 
 Repeat until zero differences remain:
 
-1. **Get a Figma screenshot** of the specific section being worked 
-   on. Use a tight crop — not the whole frame. If working on the 
-   lot section headers, screenshot just those. If working on a fund 
-   row, screenshot just that row. Use get_screenshot with a specific 
+1. **Get a Figma screenshot** of the specific section being worked
+   on. Use a tight crop — not the whole frame. If working on the
+   lot section headers, screenshot just those. If working on a fund
+   row, screenshot just that row. Use get_screenshot with a specific
    node ID, not the whole frame node.
 
-2. **Get a browser screenshot** of the exact same section at 1440px 
+2. **Get a browser screenshot** of the exact same section at 1440px
    viewport width.
 
-3. **List every visual difference** between the two screenshots 
-   before implementing anything. Do not fix anything yet. Walk the 
-   Figma layer tree recursively for the section being compared — 
-   do not stop at the top-level node. For every layer at every 
+3. **List every visual difference** between the two screenshots
+   before implementing anything. Do not fix anything yet. Walk the
+   Figma layer tree recursively for the section being compared —
+   do not stop at the top-level node. For every layer at every
    depth, check:
-   - Indentation and alignment relative to surrounding elements 
-     (not just absolute pixel values — a subheading may have the 
-     correct padding value but still be outdented relative to the 
+   - Indentation and alignment relative to surrounding elements
+     (not just absolute pixel values — a subheading may have the
+     correct padding value but still be outdented relative to the
      content below it)
-   - Background colors (compare section by section — header rows, 
+   - Background colors (compare section by section — header rows,
      content rows, totals rows, wrapper containers)
    - Typography (size, weight, color, letter spacing)
    - Borders (presence, color, weight, which sides)
    - Spacing between sections and between elements within sections
-   - Hierarchical visual relationships — does the rendered 
-     implementation show the same visual hierarchy as the Figma 
-     design? Elements that are visually subordinate in Figma should 
+   - Hierarchical visual relationships — does the rendered
+     implementation show the same visual hierarchy as the Figma
+     design? Elements that are visually subordinate in Figma should
      appear visually subordinate in the implementation.
 
-4. **Fix ALL differences** found in step 3 at once. Do not fix one 
-   difference and take a new screenshot — fix everything on the 
+4. **Fix ALL differences** found in step 3 at once. Do not fix one
+   difference and take a new screenshot — fix everything on the
    list, then return to step 1.
 
 5. If step 3 produced zero differences, commit and stop.
 
 ### Authority hierarchy
 
-The rendered Figma frame screenshot is the authority — not the 
+The rendered Figma frame screenshot is the authority — not the
 property values from get_design_context.
 
-- "The CSS value matches the Figma property" is NOT sufficient. 
+- "The CSS value matches the Figma property" is NOT sufficient.
   The rendered result must match the Figma visual.
-- If a spec property and the visual result appear to conflict 
-  (e.g., a padding value that produces wrong relative alignment), 
+- If a spec property and the visual result appear to conflict
+  (e.g., a padding value that produces wrong relative alignment),
   trust the visual result and adjust until the screenshot matches.
-- When in doubt about a layer's spec, read that specific layer's 
-  design context directly via get_design_context on that node ID — 
+- When in doubt about a layer's spec, read that specific layer's
+  design context directly via get_design_context on that node ID —
   do not infer from a parent node.
 
 ### When to ask vs. when to keep iterating
 
 Keep iterating autonomously when:
-- The Figma frame clearly shows how something should look and the 
+
+- The Figma frame clearly shows how something should look and the
   implementation doesn't match it yet
 
 Stop and ask only when:
-- Two Figma source documents conflict with each other and you 
+
+- Two Figma source documents conflict with each other and you
   cannot determine which is authoritative
-- A Figma layer's visual appearance requires a design decision 
+- A Figma layer's visual appearance requires a design decision
   (e.g., adding something not in the Figma frame at all)
-- A technical constraint makes matching the Figma impossible and 
+- A technical constraint makes matching the Figma impossible and
   you need guidance on an acceptable alternative
 
-Do not ask about things that are directly readable from the Figma 
+Do not ask about things that are directly readable from the Figma
 frame. Read the frame, compare the screenshots, implement the fix.
+
+---
+
+## Number formatting — currency and quantities
+
+All currency and quantity values displayed in the application must
+use consistent formatting. Never use raw number output directly in
+JSX — always format through a utility function.
+
+### Required utility functions
+
+These functions must be used everywhere a formatted value appears
+in the UI. If they don't exist yet, create them in
+dev/src/utils/format.ts before using them:
+
+```typescript
+// Currency — always shows $ sign, comma separators, 2 decimal places
+// e.g. 25000.03 → "$25,000.03"
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+// Currency compact — no cents for round display values (Summary Banner SALE TOTAL)
+// e.g. 25000 → "$25,000"
+export function formatCurrencyCompact(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+// Shares — up to 3 decimal places, comma separators, no trailing zeros
+// e.g. 1597 → "1,597" | 103.306 → "103.306" | 200.0 → "200"
+export function formatShares(shares: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 3,
+  }).format(shares);
+}
+
+// Percentage — always shows 1 decimal place with % sign
+// e.g. 0.0044 → "0.4%" | 2.77 → "2.8%"
+export function formatPercent(value: number, alreadyPercent = false): string {
+  const pct = alreadyPercent ? value : value * 100;
+  return (
+    new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(pct) + "%"
+  );
+}
+```
+
+### Rules
+
+- Never use `.toFixed()` directly in JSX — it does not add comma
+  separators. Always use the utility functions above.
+- Never hardcode formatted strings like `"$25,000.03"` — always
+  derive from the actual data value via the utility function.
+- Signed values (gains/losses): prefix with `+` for positive values
+  when shown in the context of gains/losses (e.g., "+$1,515.50").
+  Use the sign naturally for negative values (e.g., "−$1,056.65").
+  The Summary Banner EST. NET TAX is unsigned (never shows + sign).
+- The parenthetical per-share gain format (e.g., `($115.20)`) does
+  not show a sign prefix — the parentheses imply a loss context.
+  Use `formatCurrency(Math.abs(value))` wrapped in parentheses.
