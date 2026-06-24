@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
+import { Sparkles, PenLine, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
@@ -198,7 +198,7 @@ function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit }:
           <span className={`text-[12px] font-bold ${glColor}`}>{isGain ? '↑' : '↓'}</span>
           <span className={`text-[12px] font-bold ${glColor} whitespace-nowrap`}>{fmtDollar(Math.abs(lot.gainLoss))}</span>
         </div>
-        <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">({isGain ? '+' : '−'}${Math.abs(lot.gainLossPerShare).toFixed(2)})</span>
+        <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">({fmtDollar(Math.abs(lot.gainLossPerShare))})</span>
       </div>
       <div className="flex-1 min-w-px" />
       {/* Est. available proceeds — 150px */}
@@ -260,7 +260,7 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, show
               <span className="text-[12px] font-bold text-[#007a00]">↑</span>
               <span className="text-[12px] font-bold text-[#007a00] whitespace-nowrap">{fmtDollar(lot.gainLoss)}</span>
             </div>
-            <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">(+${lot.gainLossPerShare.toFixed(2)})</span>
+            <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">({fmtDollar(Math.abs(lot.gainLossPerShare))})</span>
           </div>
           <div className="flex-1 min-w-px" />
           <div className="w-[150px] flex items-center justify-end shrink-0 h-full">
@@ -322,9 +322,10 @@ function CollapsedActiveFundRow({ fund, onLotDetails, displayMethod, onEditClick
           <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{fund.shares} shares</span>
           <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.balance}</span>
         </div>
-        <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
-          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
-          <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.sellAmount}</span>
+        <div className="w-[128px] h-full flex flex-col justify-center gap-[2px] px-1 shrink-0 overflow-hidden">
+          <div className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] bg-white flex items-center">
+            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund.sellAmount}</span>
+          </div>
         </div>
         <div className="w-[130px] h-full flex items-center gap-2 px-2 shrink-0 overflow-hidden">
           <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
@@ -735,7 +736,7 @@ export default function FundSelectionManualLot() {
                   </div>
                   {/* Read-only sell amount (SpecID mode: derived from lot inputs via bannerData) */}
                   <div className="w-[128px] h-full flex flex-col justify-center gap-[3px] px-1 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT</span>
+                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT *</span>
                     <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
                       {bannerData ? '$' + bannerData.totalSale.toFixed(2) : (fund === 'VTSAX' ? '$15,000.03' : '$10,000.00')}
                     </span>
@@ -790,12 +791,25 @@ export default function FundSelectionManualLot() {
 
                 {/* Details Row — collapse trigger (chevron UP = currently expanded) */}
                 <div className="flex h-8 items-center justify-between px-4 w-full bg-white border-b border-[#e8e9e9]">
-                  <p className="text-[13px] italic text-vg-ink-muted">
-                    {fund === 'VTSAX'
-                      ? 'Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.'
-                      : 'Harvesting a $1,057 long-term bond loss nets against equity gains; combined taxable gain is $459 and estimated net tax is $110.'}
-                  </p>
-                  <button onClick={() => navigate('/manual-2')} className="flex items-center gap-1 cursor-pointer shrink-0 hover:opacity-70">
+                  <div className="flex items-center gap-[5px] shrink overflow-hidden">
+                    <p className="text-[13px] italic text-vg-ink-muted whitespace-nowrap">
+                      {fund === 'VTSAX'
+                        ? 'Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.'
+                        : 'Harvesting a $1,057 long-term bond loss nets against equity gains; combined taxable gain is $459 and estimated net tax is $110.'}
+                    </p>
+                    {(() => {
+                      const wsLot = stLots.find(l => l.waitAndSave)
+                      return wsLot ? (
+                        <span className="flex items-center gap-[4px] h-[15px] px-[8px] py-[2px] rounded-[100px] bg-[#e07000] shrink-0">
+                          <Clock size={10} className="text-white shrink-0" />
+                          <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">
+                            WAIT &amp; SAVE {wsLot.waitAndSave!.savingsAmount}
+                          </span>
+                        </span>
+                      ) : null
+                    })()}
+                  </div>
+                  <button onClick={() => navigate('/manual-2')} className="flex items-center gap-1 cursor-pointer shrink-0 hover:opacity-70 ml-2">
                     <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">Lot details</span>
                     <span className="text-vg-ink-muted text-base leading-none">▴</span>
                   </button>
@@ -933,7 +947,8 @@ export default function FundSelectionManualLot() {
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Traditional IRA</span>
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct?.masked_number ?? '...2973'}</span>
                   <div className="w-2 shrink-0" />
-                  <div className="flex items-center gap-1 px-2 py-[2px] rounded-full bg-[#e07000]">
+                  <div className="flex items-center gap-[4px] px-2 py-[2px] rounded-full bg-[#e07000]">
+                    <Clock size={12} className="text-white shrink-0" />
                     <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">Remaining 2026 RMD: $3,668</span>
                   </div>
                 </div>
