@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { formatCurrency, formatShares, formatPercent } from '../utils/format'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp, Clock } from 'lucide-react'
@@ -130,42 +130,51 @@ function LotSectionHeader({ label, showViewDefs }: { label: string; showViewDefs
 // Normal Lot Row (bg-[#fafafa], 48px)
 // ---------------------------------------------------------------------------
 
-function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit }:
-  { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void; onSharesCommit: (v: string) => void }) {
+function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, readOnly, readOnlyShares }:
+  { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void; onSharesCommit: (v: string) => void
+    readOnly?: boolean; readOnlyShares?: string }) {
   const isGain = lot.gainLoss >= 0
   const glColor = isGain ? 'text-[#007a00]' : 'text-[#c8102e]'
 
   return (
     <div className="flex h-12 items-center overflow-clip px-3 w-full bg-[#fafafa] border-b border-[#e8e9e9] shrink-0">
-      {/* Shares to sell — 220px: input + All checkbox */}
-      <div className="w-[220px] flex items-center gap-2 shrink-0 h-full">
-        <input
-          type="text"
-          inputMode="numeric"
-          value={sharesInput}
-          onChange={e => onSharesChange(e.target.value.replace(/[^\d.]/g, ''))}
-          onBlur={e => onSharesCommit(e.target.value.replace(/[^\d.]/g, ''))}
-          onKeyDown={e => e.key === 'Enter' && onSharesCommit((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))}
-          className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
-        />
-        <label
-          className="flex items-center gap-1.5 cursor-pointer select-none"
-          onClick={() => {
-            const isAll = parseFloat(sharesInput) >= lot.shares - 0.001
-            onSharesCommit(isAll ? '0' : String(lot.shares))
-          }}
-        >
-          <div className={`w-[13px] h-[13px] border rounded-[2px] shrink-0 flex items-center justify-center
-            ${parseFloat(sharesInput) >= lot.shares - 0.001
-              ? 'bg-vg-ink border-vg-ink'
-              : 'bg-white border-vg-ink'}`}
-          >
-            {parseFloat(sharesInput) >= lot.shares - 0.001 && (
-              <span className="text-white text-[9px] leading-none font-bold">✓</span>
-            )}
-          </div>
-          <span className="text-[12px] text-vg-ink whitespace-nowrap">All</span>
-        </label>
+      {/* Shares to sell — 220px: input+All (interactive) or bold text (read-only) */}
+      <div className="w-[220px] flex items-center shrink-0 h-full">
+        {readOnly ? (
+          <span className="w-[120px] px-3 text-[14px] font-bold text-[#040505] whitespace-nowrap">
+            {readOnlyShares ?? '0.000'}
+          </span>
+        ) : (
+          <>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={sharesInput}
+              onChange={e => onSharesChange(e.target.value.replace(/[^\d.]/g, ''))}
+              onBlur={e => onSharesCommit(e.target.value.replace(/[^\d.]/g, ''))}
+              onKeyDown={e => e.key === 'Enter' && onSharesCommit((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))}
+              className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
+            />
+            <label
+              className="flex items-center gap-1.5 cursor-pointer select-none ml-2"
+              onClick={() => {
+                const isAll = parseFloat(sharesInput) >= lot.shares - 0.001
+                onSharesCommit(isAll ? '0' : String(lot.shares))
+              }}
+            >
+              <div className={`w-[13px] h-[13px] border rounded-[2px] shrink-0 flex items-center justify-center
+                ${parseFloat(sharesInput) >= lot.shares - 0.001
+                  ? 'bg-vg-ink border-vg-ink'
+                  : 'bg-white border-vg-ink'}`}
+              >
+                {parseFloat(sharesInput) >= lot.shares - 0.001 && (
+                  <span className="text-white text-[9px] leading-none font-bold">✓</span>
+                )}
+              </div>
+              <span className="text-[12px] text-vg-ink whitespace-nowrap">All</span>
+            </label>
+          </>
+        )}
       </div>
       <div className="flex-1 min-w-px" />
       {/* Shares owned — 100px */}
@@ -204,9 +213,9 @@ function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit }:
 // Wait & Save Lot Row (bg-[#fff8e8], amber left accent, inline notice)
 // ---------------------------------------------------------------------------
 
-function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, showHint }:
+function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, showHint, readOnly, readOnlyShares }:
   { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void; onSharesCommit: (v: string) => void
-    showHint: boolean }) {
+    showHint: boolean; readOnly?: boolean; readOnlyShares?: string }) {
   const ws = lot.waitAndSave!
 
   return (
@@ -217,20 +226,28 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, show
       <div className="flex flex-col flex-1 pb-2">
         {/* Lot data row — same columns as NormalLotRow */}
         <div className="flex h-12 items-center overflow-clip px-2 w-full">
-          <div className="w-[220px] flex items-center gap-2 shrink-0 h-full">
-            <input
-              type="text"
-              inputMode="numeric"
-              value={sharesInput}
-              onChange={e => onSharesChange(e.target.value.replace(/[^\d.]/g, ''))}
-              onBlur={e => onSharesCommit(e.target.value.replace(/[^\d.]/g, ''))}
-              onKeyDown={e => e.key === 'Enter' && onSharesCommit((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))}
-              className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
-            />
-            <label className="flex items-center gap-1.5 cursor-pointer">
-              <div className="w-[13px] h-[13px] border border-vg-ink rounded-[2px] bg-white shrink-0" />
-              <span className="text-[12px] text-vg-ink whitespace-nowrap">All</span>
-            </label>
+          <div className="w-[220px] flex items-center shrink-0 h-full">
+            {readOnly ? (
+              <span className="w-[120px] px-3 text-[14px] font-bold text-[#040505] whitespace-nowrap">
+                {readOnlyShares ?? '0.000'}
+              </span>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={sharesInput}
+                  onChange={e => onSharesChange(e.target.value.replace(/[^\d.]/g, ''))}
+                  onBlur={e => onSharesCommit(e.target.value.replace(/[^\d.]/g, ''))}
+                  onKeyDown={e => e.key === 'Enter' && onSharesCommit((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))}
+                  className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
+                />
+                <label className="flex items-center gap-1.5 cursor-pointer ml-2">
+                  <div className="w-[13px] h-[13px] border border-vg-ink rounded-[2px] bg-white shrink-0" />
+                  <span className="text-[12px] text-vg-ink whitespace-nowrap">All</span>
+                </label>
+              </>
+            )}
           </div>
           <div className="flex-1 min-w-px" />
           <div className="w-[100px] flex items-center justify-end shrink-0 h-full">
@@ -438,9 +455,25 @@ export default function FundSelectionManualLot() {
   const navigate = useNavigate()
   const location = useLocation()
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
+    manualConfig,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
-  const fund = (location.state as { fund?: string })?.fund ?? 'VTSAX'
+  const locationState = location.state as { fund?: string; readOnly?: boolean } | null
+  const fund       = locationState?.fund ?? 'VTSAX'
+  const isReadOnly = locationState?.readOnly ?? false
   const [bannerData, setBannerData] = useState<LotBannerData | null>(null)
+
+  // Always show 3 decimal places in read-only share cells (matches Figma "0.000" / "103.306")
+  function fmtLotShares(n: number): string {
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n)
+  }
+
+  // Build lot→shares map from engine output (used in read-only view)
+  const lotSharesMap = useMemo<Map<string, number>>(() => {
+    if (!isReadOnly || !manualConfig) return new Map()
+    const fr = manualConfig.fund_results.find(r => r.fund_id === fund)
+    if (!fr) return new Map()
+    return new Map(fr.lots_sold.map(ls => [ls.lot_id, ls.shares_to_sell]))
+  }, [isReadOnly, manualConfig, fund])
 
   // Derive lots from store portfolio (single source of truth — no hardcoded arrays)
   const taxableAcct = portfolio?.accounts.find(a => a.account_id === activeAccountId)
@@ -532,9 +565,10 @@ export default function FundSelectionManualLot() {
     runLotEngine(newInputs)
   }
 
-  // Auto-fire engine on mount when inputs are already pre-populated
-  // (mirrors FS-MAN-2 mount-time call so banner shows live figures on arrival)
+  // Auto-fire engine on mount when inputs are pre-populated (SpecID interactive only).
+  // Skip in read-only mode — manualConfig is already correct from the non-SpecID engine run.
   useEffect(() => {
+    if (isReadOnly) return
     const hasSelections = Object.values(sharesInputs).some(v => parseFloat(v) > 0)
     if (hasSelections) runLotEngine(sharesInputs)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -799,6 +833,11 @@ export default function FundSelectionManualLot() {
                 {/* Details Row — collapse trigger (chevron UP = currently expanded) */}
                 <div className="flex h-8 items-center justify-between px-4 w-full bg-white border-b border-[#e8e9e9]">
                   <div className="flex items-center gap-[5px] shrink overflow-hidden">
+                    {isReadOnly && (
+                      <span className="text-[11px] font-semibold text-[#717777] whitespace-nowrap italic mr-1">
+                        Engine selection — read-only
+                      </span>
+                    )}
                     <p className="text-[13px] italic text-vg-ink-muted whitespace-nowrap">
                       {fund === 'VTSAX'
                         ? 'Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.'
@@ -828,7 +867,7 @@ export default function FundSelectionManualLot() {
 
                 {ltLots.length > 0 && (
                   <>
-                    <LotSectionHeader label="Long-term holdings" showViewDefs={true} />
+                    <LotSectionHeader label="Long-term holdings" showViewDefs={!isReadOnly} />
                     <LotDetailHeader />
                     {ltLots.map(lot => (
                       <NormalLotRow
@@ -837,6 +876,8 @@ export default function FundSelectionManualLot() {
                         sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
                         onSharesChange={v => handleSharesChange(lot.lotId, v)}
                         onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
+                        readOnly={isReadOnly}
+                        readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
                       />
                     ))}
                   </>
@@ -854,7 +895,9 @@ export default function FundSelectionManualLot() {
                           sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
                           onSharesChange={v => handleSharesChange(lot.lotId, v)}
                           onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
-                          showHint={true}
+                          showHint={!isReadOnly}
+                          readOnly={isReadOnly}
+                          readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
                         />
                       ) : (
                         <NormalLotRow
@@ -863,6 +906,8 @@ export default function FundSelectionManualLot() {
                           sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
                           onSharesChange={v => handleSharesChange(lot.lotId, v)}
                           onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
+                          readOnly={isReadOnly}
+                          readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
                         />
                       )
                     )}

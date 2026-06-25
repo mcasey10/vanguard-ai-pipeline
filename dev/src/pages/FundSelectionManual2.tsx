@@ -127,7 +127,7 @@ function ActiveFundRow({
   showAllocationHint: boolean
   showHarvestableHint: boolean
   onCancel: () => void
-  onLotDetails: (ticker: string) => void
+  onLotDetails: (ticker: string, readOnly: boolean) => void
 }) {
   const [inputCents, setInputCents]     = useState(appliedCents)
   const [inputDisplay, setInputDisplay] = useState(formatCurrency(appliedCents / 100))
@@ -137,8 +137,10 @@ function ActiveFundRow({
   // "Sell all shares" is checked when the input amount equals the fund's full balance
   const balanceCents = fund.balanceCents ?? 0
   const isAllShares = balanceCents > 0 && inputCents >= balanceCents
-  // Lot details only accessible when SpecID is chosen (Issues 3 + CLAUDE.md constraint 4)
-  const canViewLots = currentMethod === 'SpecID'
+  // Lot details: SpecID always enabled (amount derived from lot selections);
+  // other methods enabled once an amount has been applied (engine must have run)
+  const isSpecID = currentMethod === 'SpecID'
+  const canViewLots = isSpecID || appliedCents > 0
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, '')
@@ -297,9 +299,9 @@ function ActiveFundRow({
           )}
         </div>
         <button
-          onClick={() => canViewLots && onLotDetails(fund.ticker)}
+          onClick={() => canViewLots && onLotDetails(fund.ticker, !isSpecID)}
           disabled={!canViewLots}
-          title={canViewLots ? undefined : 'Select Spec ID to view and edit lot-level details'}
+          title={canViewLots ? (isSpecID ? undefined : 'View lots selected by the engine (read-only)') : 'Enter a sell amount first'}
           className={`flex items-center gap-1 shrink-0 ${canViewLots ? 'cursor-pointer hover:opacity-70' : 'opacity-30 cursor-not-allowed'}`}
         >
           <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">Lot details</span>
@@ -492,8 +494,8 @@ export default function FundSelectionManual2() {
     runManualEngine(newAmounts, activeFunds, costBasisMethods)
   }
 
-  function handleLotDetails(ticker: string) {
-    navigate('/manual-lot', { state: { fund: ticker } })
+  function handleLotDetails(ticker: string, readOnly: boolean) {
+    navigate('/manual-lot', { state: { fund: ticker, readOnly } })
   }
 
   // Target Allocation Modal
@@ -773,7 +775,7 @@ export default function FundSelectionManual2() {
                       currentMethod={costBasisMethods[fund.ticker] ?? 'MinTax'}
                       onApply={handleApplyAmount}
                       onMethodChange={handleMethodChange}
-                      onLotDetails={handleLotDetails}
+                      onLotDetails={(ticker, ro) => handleLotDetails(ticker, ro)}
                       showAllocationHint={holding.asset_class === 'domestic_equity'}
                       showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
                       onCancel={() => handleCancel(fund.ticker)}
