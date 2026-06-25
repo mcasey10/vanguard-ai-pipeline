@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
-import { runOptimization } from '../engine/index'
+import { runOptimization, shortAssetClass } from '../engine/index'
 import type { Recommendation } from '../types'
 import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent } from '../utils/format'
 import { buildScenarioFromRecommendation, isDuplicateScenario } from '../utils/scenarioBuilder'
@@ -447,7 +447,7 @@ export default function FundSelectionAutomated() {
                       <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
                         <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
                         <span className={`text-[12px] font-semibold whitespace-nowrap ${fr.impact_pct <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
-                          {fr.impact_pct <= 0 ? '−' : '+'}{fmtPct1(Math.abs(fr.impact_pct))}% {fr.impact_asset_class.replace('_', ' ')}
+                          {fr.impact_pct <= 0 ? '−' : '+'}{fmtPct1(Math.abs(fr.impact_pct))}% {shortAssetClass(fr.impact_asset_class)}
                         </span>
                       </div>
                       <div className="flex-1 h-full" />

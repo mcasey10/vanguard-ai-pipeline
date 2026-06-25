@@ -306,6 +306,7 @@ export interface ManualConfiguration {
   mode: 'manual'
   active_fund_ids: string[]
   fund_selections: ScenarioFundSelection[]
+  fund_results: FundSaleResult[]           // per-fund engine output for display (gains, tax, impact)
   applied_amounts: Record<string, number>  // ticker → cents (lifted state from ActiveFundRow)
   total_sell_amount: number
 }

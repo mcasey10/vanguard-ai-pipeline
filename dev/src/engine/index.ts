@@ -95,6 +95,18 @@ export const KNOWN_ROUNDING_ARTIFACTS = {
 /** Round to 2 decimal places — standard financial rounding */
 function r2(n: number): number { return Math.round(n * 100) / 100 }
 
+/**
+ * Short display label for an asset class used in the IMPACT column.
+ * Both domestic_equity and international_equity display as "Equity"
+ * (per Verification Table 4's "Stocks" grouping and Figma FS-MAN-2/FS-AUTO-1).
+ */
+export function shortAssetClass(assetClass: string): string {
+  if (assetClass === 'domestic_equity' || assetClass === 'international_equity') return 'Equity'
+  if (assetClass === 'domestic_bonds') return 'Bonds'
+  if (assetClass === 'short_term_reserves') return 'Reserves'
+  return assetClass
+}
+
 /** Compute partial-sale cost basis via proportional split (REQ-OE-001 standard) */
 function partialCost(sharesSold: number, totalShares: number, totalCostBasis: number): number {
   return (sharesSold / totalShares) * totalCostBasis
@@ -622,6 +634,7 @@ export function runOptimization(params: OptimizationParams): OptimizationResult 
         mode: 'manual',
         active_fund_ids: [],
         fund_selections: [],
+        fund_results: [],
         applied_amounts: {},
         total_sell_amount: 0,
       }
@@ -670,6 +683,7 @@ export function runOptimization(params: OptimizationParams): OptimizationResult 
         accounting_method: fr.accounting_method,
         lots_selected: fr.lots_sold,
       })),
+      fund_results: fundResults,
       applied_amounts: Object.fromEntries(fundResults.map(fr => [fr.fund_id, fr.sell_amount])),
       total_sell_amount: totalSaleAmount,
     }

@@ -13,7 +13,7 @@ function toAccountingMethod(m: CostBasisMethod): AccountingMethod {
 }
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
-import { runOptimization } from '../engine/index'
+import { runOptimization, shortAssetClass } from '../engine/index'
 import type { FundSaleResult, ManualConfiguration } from '../types'
 import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent } from '../utils/format'
 import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
@@ -429,7 +429,7 @@ function taxDataFromResult(fr: FundSaleResult | undefined): TaxData {
     estLTGains: ltg !== 0 ? fmtSigned(ltg) : formatCurrency(0),
     estLTColor: ltg > 0 ? 'text-[#007a00]' : ltg < 0 ? 'text-[#c8102e]' : 'text-vg-ink',
     estTax: formatCurrency(fr.est_tax_gross),
-    impact: `${fr.impact_pct <= 0 ? '−' : '+'}${new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.abs(fr.impact_pct))}% ${fr.impact_asset_class.replace('_', ' ')}`,
+    impact: `${fr.impact_pct <= 0 ? '−' : '+'}${new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.abs(fr.impact_pct))}% ${shortAssetClass(fr.impact_asset_class)}`,
     impactColor: fr.impact_pct <= 0 ? 'text-[#007a00]' : 'text-[#c8102e]',
     rationale: fr.rationale,
     waitAndSave: undefined,
@@ -515,24 +515,9 @@ export default function FundSelectionManual2() {
       activeTaxRates,
       manualSelections: { fund_selections: fundSelectionsForEngine },
     })
-    // Extract fundResults from the engine's internal computation via cast
-    // ManualConfiguration doesn't expose fund_results directly; we cast to access them
-    // This is a known limitation — Step 4 partial: banner updates, per-fund display updates
     const config = result as ManualConfiguration
     setManualConfig(config)
-    // For per-fund display, re-run in automated-like mode to get FundSaleResult[]
-    // using the same amounts and funds — this gives us the tax figures for display
-    const autoResult = runOptimization({
-      portfolio,
-      targetSaleAmount: totalDollars,
-      activeAccountId,
-      mode: 'automated',
-      optimizationPriority,
-      activeTaxRates,
-    })
-    if (autoResult.mode === 'automated') {
-      setFundResults((autoResult as import('../types').Recommendation).fund_results)
-    }
+    setFundResults(config.fund_results)
   }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
 
   // handleMethodChange — updates per-fund method and re-runs engine
