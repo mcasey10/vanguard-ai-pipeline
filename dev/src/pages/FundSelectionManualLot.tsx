@@ -923,54 +923,114 @@ export default function FundSelectionManualLot() {
                 </div>
 
                 {/* Lot Detail Section — Figma: bg-[#f8f8f7], border-l #e8e9e9, pl-32, overflow-clip */}
-                {/* Each group (LT/ST) has: section header → column header → lot rows */}
                 <div className="pl-8 w-full flex flex-col bg-[#f8f8f7] border-l border-[#e8e9e9] overflow-clip">
 
-                {ltLots.length > 0 && (
+                {/* AvgCost — single blended summary row; no individual lot groups (no lot-level data) */}
+                {expandedMethod === 'AvgCost' ? (() => {
+                  const fr = manualConfig?.fund_results.find(r => r.fund_id === fund)
+                  const syntheticLot = fr?.lots_sold[0]
+                  const sharesToSell   = syntheticLot?.shares_to_sell ?? 0
+                  const totalShares    = holding?.total_shares ?? 0
+                  const totalCostBasis = holding?.total_cost_basis ?? 0
+                  const avgCostPerShare = totalShares > 0 ? totalCostBasis / totalShares : 0
+                  const costOfSold     = r2(sharesToSell * avgCostPerShare)
+                  const navPerShare    = holding?.lots[0]?.current_nav ?? 0
+                  const proceeds       = r2(sharesToSell * navPerShare)
+                  const gainLoss       = r2(proceeds - costOfSold)
+                  const gainPerShare   = sharesToSell > 0 ? r2(gainLoss / sharesToSell) : 0
+                  const isGain         = gainLoss >= 0
+                  const glColor        = isGain ? 'text-[#007a00]' : 'text-[#c8102e]'
+                  return (
+                    <>
+                      <LotDetailHeader />
+                      <div className="flex h-12 items-center overflow-clip px-3 w-full bg-[#fafafa] border-b border-[#e8e9e9] shrink-0">
+                        {/* Shares to sell — 220px: bold text (no input, no All checkbox) */}
+                        <div className="w-[220px] flex items-center shrink-0 h-full">
+                          <span className="w-[120px] px-3 text-[14px] font-bold text-[#040505] whitespace-nowrap">
+                            {fmtLotShares(sharesToSell)}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-px" />
+                        {/* Shares owned */}
+                        <div className="w-[100px] flex items-center justify-end shrink-0 h-full">
+                          <span className="text-[12px] text-vg-ink whitespace-nowrap">{formatShares(totalShares)}</span>
+                        </div>
+                        <div className="flex-1 min-w-px" />
+                        {/* Total cost */}
+                        <div className="w-[120px] flex items-center justify-end shrink-0 h-full">
+                          <span className="text-[12px] text-vg-ink whitespace-nowrap">{formatCurrency(costOfSold)}</span>
+                        </div>
+                        <div className="flex-1 min-w-px" />
+                        {/* Est. gain/loss */}
+                        <div className="w-[160px] flex flex-col items-end justify-center gap-[3px] shrink-0 h-full py-1.5">
+                          <div className="flex items-center gap-1">
+                            <span className={`text-[12px] font-bold ${glColor}`}>{isGain ? '↑' : '↓'}</span>
+                            <span className={`text-[12px] font-bold whitespace-nowrap ${glColor}`}>{formatCurrency(Math.abs(gainLoss))}</span>
+                          </div>
+                          <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">({formatCurrency(Math.abs(gainPerShare))})</span>
+                        </div>
+                        <div className="flex-1 min-w-px" />
+                        {/* Est. available proceeds */}
+                        <div className="w-[150px] flex items-center justify-end shrink-0 h-full">
+                          <span className="text-[12px] text-vg-ink whitespace-nowrap">{formatCurrency(proceeds)}</span>
+                        </div>
+                        <div className="flex-1 min-w-px" />
+                        {/* Date acquired — not applicable for AvgCost */}
+                        <div className="w-[120px] flex items-center shrink-0 h-full">
+                          <span className="text-[11px] text-vg-ink-muted italic whitespace-nowrap">Average cost basis</span>
+                        </div>
+                      </div>
+                    </>
+                  )
+                })() : (
                   <>
-                    <LotSectionHeader label="Long-term holdings" showViewDefs={!isReadOnly} />
-                    <LotDetailHeader />
-                    {ltLots.map(lot => (
-                      <NormalLotRow
-                        key={lot.lotId}
-                        lot={lot}
-                        sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
-                        onSharesChange={v => handleSharesChange(lot.lotId, v)}
-                        onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
-                        readOnly={isReadOnly}
-                        readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
-                      />
-                    ))}
-                  </>
-                )}
+                    {ltLots.length > 0 && (
+                      <>
+                        <LotSectionHeader label="Long-term holdings" showViewDefs={!isReadOnly} />
+                        <LotDetailHeader />
+                        {ltLots.map(lot => (
+                          <NormalLotRow
+                            key={lot.lotId}
+                            lot={lot}
+                            sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
+                            onSharesChange={v => handleSharesChange(lot.lotId, v)}
+                            onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
+                            readOnly={isReadOnly}
+                            readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
+                          />
+                        ))}
+                      </>
+                    )}
 
-                {stLots.length > 0 && (
-                  <>
-                    <LotSectionHeader label="Short-term holdings" showViewDefs={false} />
-                    <LotDetailHeader />
-                    {stLots.map(lot =>
-                      lot.waitAndSave ? (
-                        <WaitSaveLotRow
-                          key={lot.lotId}
-                          lot={lot}
-                          sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
-                          onSharesChange={v => handleSharesChange(lot.lotId, v)}
-                          onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
-                          showHint={!isReadOnly}
-                          readOnly={isReadOnly}
-                          readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
-                        />
-                      ) : (
-                        <NormalLotRow
-                          key={lot.lotId}
-                          lot={lot}
-                          sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
-                          onSharesChange={v => handleSharesChange(lot.lotId, v)}
-                          onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
-                          readOnly={isReadOnly}
-                          readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
-                        />
-                      )
+                    {stLots.length > 0 && (
+                      <>
+                        <LotSectionHeader label="Short-term holdings" showViewDefs={false} />
+                        <LotDetailHeader />
+                        {stLots.map(lot =>
+                          lot.waitAndSave ? (
+                            <WaitSaveLotRow
+                              key={lot.lotId}
+                              lot={lot}
+                              sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
+                              onSharesChange={v => handleSharesChange(lot.lotId, v)}
+                              onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
+                              showHint={!isReadOnly}
+                              readOnly={isReadOnly}
+                              readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
+                            />
+                          ) : (
+                            <NormalLotRow
+                              key={lot.lotId}
+                              lot={lot}
+                              sharesInput={sharesInputs[lot.lotId] ?? '0.000'}
+                              onSharesChange={v => handleSharesChange(lot.lotId, v)}
+                              onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
+                              readOnly={isReadOnly}
+                              readOnlyShares={isReadOnly ? fmtLotShares(lotSharesMap.get(lot.lotId) ?? 0) : undefined}
+                            />
+                          )
+                        )}
+                      </>
                     )}
                   </>
                 )}
