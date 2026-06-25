@@ -455,11 +455,10 @@ export default function FundSelectionManualLot() {
   const navigate = useNavigate()
   const location = useLocation()
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
-    manualConfig,
+    manualConfig, manualAppliedAmountsCents, setManualCostBasisMethod,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
-  const locationState = location.state as { fund?: string; readOnly?: boolean; costBasisMethod?: string } | null
+  const locationState   = location.state as { fund?: string; costBasisMethod?: string } | null
   const fund            = locationState?.fund ?? 'VTSAX'
-  const isReadOnly      = locationState?.readOnly ?? false
   const costBasisMethod = (locationState?.costBasisMethod ?? 'MinTax') as CostBasisMethod
   const [bannerData, setBannerData] = useState<LotBannerData | null>(null)
 
@@ -467,6 +466,13 @@ export default function FundSelectionManualLot() {
   function fmtLotShares(n: number): string {
     return new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n)
   }
+
+  // Cost basis for expanded fund row — initialized from navigation state, updated on user change
+  const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(costBasisMethod)
+  const [showExpandedCBD, setShowExpandedCBD] = useState(false)
+
+  // isReadOnly derived from CURRENT method — updates live when user changes method
+  const isReadOnly = expandedMethod !== 'SpecID'
 
   // Build lot→shares map from engine output (used in read-only view)
   const lotSharesMap = useMemo<Map<string, number>>(() => {
@@ -483,19 +489,73 @@ export default function FundSelectionManualLot() {
   const holding = taxableAcct?.holdings.find(h => h.fund_id === fund)
   const lots: Lot[] = (holding?.lots ?? []).map(toDisplayLot)
 
+  // Map UI method label → engine AccountingMethod (mirrors FS-MAN-2)
+  function toAccountingMethod(m: CostBasisMethod): import('../types').AccountingMethod {
+    if (m === 'SpecID')  return 'specific_lot_identification'
+    if (m === 'AvgCost') return 'average_cost'
+    return m as import('../types').AccountingMethod
+  }
+
+  // Handle method change in lot view: persist to store, re-run engine, update display
+  function handleExpandedMethodChange(newMethod: CostBasisMethod) {
+    setExpandedMethod(newMethod)
+    setShowExpandedCBD(false)
+    setManualCostBasisMethod(fund, newMethod)
+
+    if (newMethod !== 'SpecID') {
+      const sellAmountCents = manualAppliedAmountsCents[fund] ?? 0
+      if (sellAmountCents > 0 && portfolio) {
+        const sellDollars = Math.round(sellAmountCents) / 100
+        const result = runOptimization({
+          portfolio,
+          targetSaleAmount: sellDollars,
+          activeAccountId,
+          mode: 'manual',
+          optimizationPriority,
+          activeTaxRates,
+          manualSelections: {
+            fund_selections: [{ fund_id: fund, accounting_method: toAccountingMethod(newMethod) }],
+          },
+        })
+        const config = result as import('../types').ManualConfiguration
+        setManualConfig(config)
+
+        // Derive bannerData from engine result so fund row tax figures update immediately
+        const fr = config.fund_results.find(r => r.fund_id === fund)
+        if (fr) {
+          const stg = fr.est_st_gain_loss, ltg = fr.est_lt_gain_loss
+          const netGain = Math.max(0, r2(stg + ltg))
+          const taxST   = Math.min(netGain, Math.max(0, stg)) * activeTaxRates.st_rate
+          const taxLT   = Math.max(0, netGain - Math.min(netGain, Math.max(0, stg))) * activeTaxRates.lt_rate
+          const estNetTax = r2(taxST + taxLT)
+          const totalSale = fr.sell_amount
+          setBannerData({
+            totalSale,
+            salePct:       r2((totalSale / portfolio.total_investable_balance) * 100),
+            stGainLoss:    stg,
+            ltGainLoss:    ltg,
+            estNetTax,
+            effRate:       totalSale > 0 ? r2((estNetTax / totalSale) * 100) : 0,
+            totalShares:   fr.lots_sold.reduce((s, l) => s + l.shares_to_sell, 0),
+            totalCost:     fr.lots_sold.reduce((s, l) => s + l.cost_basis, 0),
+            pricePerShare: holding?.lots[0]?.current_nav ?? 0,
+            priceDate:     '05/27/2026',
+          })
+        }
+      }
+    } else {
+      // SpecID: clear bannerData so it recomputes from lot inputs
+      setBannerData(null)
+    }
+  }
+
   // Mode toggle guard — hasAmounts always true on this screen (only reachable from FS-MAN-2
   // which requires active fund rows with applied amounts)
   const { showDialog: showModeDialog, handleToggleClick, handleSave, handleDiscard, handleClose } =
     useModeToggleGuard(true)
 
-  // Coach mark — Wait & Save (single mark on this screen)
-  // Sequential hint-indicator pattern per dev/CLAUDE.md
-
   // Modal state
   const [showAllocModal,  setShowAllocModal]  = useState(false)
-  // Cost basis for expanded fund row (local display only — same scope as ActiveFundRow in FS-MAN-2)
-  const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(costBasisMethod)
-  const [showExpandedCBD, setShowExpandedCBD] = useState(false)
   // Cost basis for the collapsed other-fund row
   const [collapsedMethod, setCollapsedMethod] = useState<CostBasisMethod>(fund === 'VTSAX' ? 'MinTax' : 'SpecID')
   const [showCollapsedCBD, setShowCollapsedCBD] = useState(false)
@@ -627,7 +687,7 @@ export default function FundSelectionManualLot() {
       {showExpandedCBD && (
         <CostBasisDialog
           currentMethod={expandedMethod}
-          onConfirm={m => { setExpandedMethod(m); setShowExpandedCBD(false) }}
+          onConfirm={handleExpandedMethodChange}
           onClose={() => setShowExpandedCBD(false)}
         />
       )}
