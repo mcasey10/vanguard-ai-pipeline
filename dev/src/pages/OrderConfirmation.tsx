@@ -229,25 +229,37 @@ export default function OrderConfirmation() {
   }
 
   function handleSubmit() {
+    const d = data!
+    // Resolve allocation impact from scenario or recommendation for ES-1 display
+    const ai = scenario?.allocation_impact ?? (rec as Recommendation | null)?.allocation_impact
     const record: TransactionRecord = {
       transaction_id: `txn-${Date.now()}`,
       committed_timestamp: new Date().toISOString(),
-      target_sale_amount: data!.totalSaleAmount,
-      actual_sale_proceeds: data!.estNetProceeds,
-      funds_sold: data!.funds.map((f): TransactionFundRecord => ({
+      target_sale_amount: d.totalSaleAmount,
+      actual_sale_proceeds: d.estNetProceeds,
+      funds_sold: d.funds.map((f): TransactionFundRecord => ({
         fund_id: f.id,
         sell_amount: f.sellAmount,
-        accounting_method: data!.accountingMethod,
+        accounting_method: d.accountingMethod,
         lots_sold: [],
       })),
-      realized_st_gains: data!.stCapitalGains,
-      realized_lt_gains: data!.ltCapitalGains,
-      est_tax_at_active_rate: data!.estNetTax,
-      cumulative_ytd_st_gains: r2((portfolio.ytd_gains_record?.st_gains_realized_ytd ?? 0) + data!.stCapitalGains),
-      cumulative_ytd_lt_gains: r2((portfolio.ytd_gains_record?.lt_gains_realized_ytd ?? 0) + data!.ltCapitalGains),
-      optimization_mode: data!.optimizationMode,
-      accounting_method: data!.accountingMethod,
+      realized_st_gains: d.stCapitalGains,
+      realized_lt_gains: d.ltCapitalGains,
+      losses_harvested: d.lossesHarvested,
+      net_taxable_gain: d.netTaxableGain,
+      est_tax_at_active_rate: d.estNetTax,
+      effective_rate: d.totalSaleAmount > 0 ? r2((d.estNetTax / d.totalSaleAmount) * 100) : 0,
+      cumulative_ytd_st_gains: r2((portfolio.ytd_gains_record?.st_gains_realized_ytd ?? 0) + d.stCapitalGains),
+      cumulative_ytd_lt_gains: r2((portfolio.ytd_gains_record?.lt_gains_realized_ytd ?? 0) + d.ltCapitalGains + d.lossesHarvested),
+      optimization_mode: d.optimizationMode,
+      accounting_method: d.accountingMethod,
       resulting_portfolio_state_version: 1,
+      stocks_before_pct: ai ? r2(ai.domestic_equity_before + ai.international_equity_before) : r2(portfolio.current_allocation.domestic_equity_pct + portfolio.current_allocation.international_equity_pct),
+      bonds_before_pct:  ai ? r2(ai.domestic_bonds_before)  : r2(portfolio.current_allocation.domestic_bonds_pct),
+      reserves_before_pct: ai ? r2(ai.short_term_reserves_before) : r2(portfolio.current_allocation.short_term_reserves_pct),
+      stocks_after_pct:  ai ? r2(ai.domestic_equity_after  + ai.international_equity_after)  : r2(portfolio.current_allocation.domestic_equity_pct + portfolio.current_allocation.international_equity_pct),
+      bonds_after_pct:   ai ? r2(ai.domestic_bonds_after)   : r2(portfolio.current_allocation.domestic_bonds_pct),
+      reserves_after_pct: ai ? r2(ai.short_term_reserves_after)  : r2(portfolio.current_allocation.short_term_reserves_pct),
     }
     appendTransaction(portfolio, record)
     navigate('/summary')

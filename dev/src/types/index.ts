@@ -339,14 +339,24 @@ export interface TransactionRecord {
   target_sale_amount: number
   actual_sale_proceeds: number
   funds_sold: TransactionFundRecord[]
-  realized_st_gains: number
-  realized_lt_gains: number
+  realized_st_gains: number    // positive ST gains only
+  realized_lt_gains: number    // positive LT gains only
+  losses_harvested: number     // negative value — sum of negative gains (losses realized)
+  net_taxable_gain: number     // realized_st_gains + realized_lt_gains + losses_harvested
   est_tax_at_active_rate: number
+  effective_rate: number       // est_tax / target_sale_amount
   cumulative_ytd_st_gains: number
   cumulative_ytd_lt_gains: number
   optimization_mode: 'tax-first' | 'balance-first'
   accounting_method: AccountingMethod
   resulting_portfolio_state_version: number
+  // Allocation impact snapshot — for ES-1 portfolio rebalancing display
+  stocks_before_pct: number
+  bonds_before_pct: number
+  reserves_before_pct: number
+  stocks_after_pct: number
+  bonds_after_pct: number
+  reserves_after_pct: number
 }
 
 // ---------------------------------------------------------------------------
