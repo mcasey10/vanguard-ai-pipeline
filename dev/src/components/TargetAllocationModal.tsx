@@ -14,22 +14,6 @@
 import { useState } from 'react'
 
 // ---------------------------------------------------------------------------
-// Seam for engine-dependent persistence (REQ-OE-001 et al.)
-// ---------------------------------------------------------------------------
-
-/**
- * TODO: When the optimization engine is built, replace with real persistence:
- *   - Write new target allocation to shared app state / localStorage
- *   - Trigger engine recalculation for current sell configuration
- *   - Update Summary Banner impact figures and all allocation displays
- * For now this is a clearly-named no-op so the seam is obvious.
- */
-export function saveTargetAllocationPlaceholder(stocks: number, bonds: number, reserves: number) {
-  // no-op until engine is built
-  void stocks; void bonds; void reserves
-}
-
-// ---------------------------------------------------------------------------
 // Color tokens matching Figma chart segments
 // ---------------------------------------------------------------------------
 const COLORS = {
@@ -42,11 +26,22 @@ const COLORS = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function TargetAllocationModal({ onClose }: { onClose: () => void }) {
-  // Pre-filled with canonical target allocation (55/35/10 from sample dataset)
-  const [stocks,   setStocks]   = useState(55)
-  const [bonds,    setBonds]    = useState(35)
-  const [reserves, setReserves] = useState(10)
+export function TargetAllocationModal({
+  onClose,
+  onSave,
+  initialStocks = 55,
+  initialBonds = 35,
+  initialReserves = 10,
+}: {
+  onClose: () => void
+  onSave?: (stocks: number, bonds: number, reserves: number) => void
+  initialStocks?: number
+  initialBonds?: number
+  initialReserves?: number
+}) {
+  const [stocks,   setStocks]   = useState(Math.round(initialStocks))
+  const [bonds,    setBonds]    = useState(Math.round(initialBonds))
+  const [reserves, setReserves] = useState(Math.round(initialReserves))
 
   const total = stocks + bonds + reserves
   const valid = total === 100 && stocks >= 0 && bonds >= 0 && reserves >= 0
@@ -59,7 +54,7 @@ export function TargetAllocationModal({ onClose }: { onClose: () => void }) {
 
   function handleSave() {
     if (!valid) return
-    saveTargetAllocationPlaceholder(stocks, bonds, reserves)
+    onSave?.(stocks, bonds, reserves)
     onClose()
   }
 

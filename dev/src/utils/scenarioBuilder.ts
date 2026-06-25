@@ -148,6 +148,7 @@ export function buildScenarioFromRecommendation(
     scenario_id: `sc-auto-${Date.now()}`,
     scenario_name: 'Scenario',
     source_mode: 'automated',
+    optimization_priority: rec.optimization_priority,
     fund_selections: fundSelections,
     total_sell_amount,
     projected_st_gains,

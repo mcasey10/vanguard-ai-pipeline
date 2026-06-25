@@ -177,8 +177,22 @@ function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit }:
           onKeyDown={e => e.key === 'Enter' && onSharesCommit((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))}
           className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
         />
-        <label className="flex items-center gap-1.5 cursor-pointer">
-          <div className="w-[13px] h-[13px] border border-vg-ink rounded-[2px] bg-white shrink-0" />
+        <label
+          className="flex items-center gap-1.5 cursor-pointer select-none"
+          onClick={() => {
+            const isAll = parseFloat(sharesInput) >= lot.shares - 0.001
+            onSharesCommit(isAll ? '0' : String(lot.shares))
+          }}
+        >
+          <div className={`w-[13px] h-[13px] border rounded-[2px] shrink-0 flex items-center justify-center
+            ${parseFloat(sharesInput) >= lot.shares - 0.001
+              ? 'bg-vg-ink border-vg-ink'
+              : 'bg-white border-vg-ink'}`}
+          >
+            {parseFloat(sharesInput) >= lot.shares - 0.001 && (
+              <span className="text-white text-[9px] leading-none font-bold">✓</span>
+            )}
+          </div>
           <span className="text-[12px] text-vg-ink whitespace-nowrap">All</span>
         </label>
       </div>

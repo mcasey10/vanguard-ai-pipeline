@@ -49,7 +49,7 @@ export default function FundSelectionAutomated() {
   const {
     portfolio, targetSaleAmount, activeAccountId, optimizationPriority, activeTaxRates,
     recommendation, setRecommendation, setTargetSaleAmount, setOptimizationPriority,
-    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId,
+    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio,
   } = useAppStore()
 
   // Local input state for the amount field (display only — store is source of truth)
@@ -194,7 +194,38 @@ export default function FundSelectionAutomated() {
         </span>
       </button>
 
-      {showAllocModal && <TargetAllocationModal onClose={() => setShowAllocModal(false)} />}
+      {showAllocModal && (
+        <TargetAllocationModal
+          onClose={() => setShowAllocModal(false)}
+          initialStocks={(portfolio?.target_allocation?.domestic_equity_pct ?? 0) + (portfolio?.target_allocation?.international_equity_pct ?? 0)}
+          initialBonds={portfolio?.target_allocation?.domestic_bonds_pct ?? 35}
+          initialReserves={portfolio?.target_allocation?.short_term_reserves_pct ?? 10}
+          onSave={(stocks, bonds, reserves) => {
+            if (!portfolio) return
+            const oldTa = portfolio.target_allocation
+            const oldStocks = (oldTa?.domestic_equity_pct ?? 40) + (oldTa?.international_equity_pct ?? 15)
+            const ratio = oldStocks > 0 ? (oldTa?.domestic_equity_pct ?? 40) / oldStocks : 0.727
+            const newDomestic = Math.round(stocks * ratio * 10) / 10
+            const newIntl     = Math.round((stocks - newDomestic) * 10) / 10
+            const updated = {
+              ...portfolio,
+              target_allocation: {
+                allocation_id: oldTa?.allocation_id ?? 'user-set',
+                portfolio_id: portfolio.portfolio_id,
+                domestic_equity_pct: newDomestic,
+                international_equity_pct: newIntl,
+                domestic_bonds_pct: bonds,
+                short_term_reserves_pct: reserves,
+                fund_level_targets: oldTa?.fund_level_targets ?? null,
+                source: 'user_set' as const,
+                as_of_date: new Date().toISOString().slice(0, 10),
+              },
+            }
+            setPortfolio(updated)
+            runEngine(targetSaleAmount ?? 0, optimizationPriority)
+          }}
+        />
+      )}
 
       <div className="flex flex-col items-start w-full">
         <div className="flex flex-col gap-6 py-10 w-full">

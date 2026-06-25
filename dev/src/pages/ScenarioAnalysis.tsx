@@ -26,6 +26,7 @@ function seedCanonicalScenarios(): SavedScenario[] {
       scenario_id: 'sc-1',
       scenario_name: 'Scenario 1',
       source_mode: 'automated',
+      optimization_priority: 'tax-first',
       fund_selections: [
         { fund_id: 'VTSAX', fund_name: 'Total Stock Market', sell_amount: 15000, accounting_method: 'MinTax', lots_selected: [], st_gain_loss: 1515.85, lt_gain_loss: 0, est_tax_gross: 363.80 },
         { fund_id: 'VBTLX', fund_name: 'Total Bond Market',  sell_amount: 10000, accounting_method: 'MinTax', lots_selected: [], st_gain_loss: 0,       lt_gain_loss: -1056.65, est_tax_gross: 0 },
@@ -282,7 +283,7 @@ function ScenarioColumn({ scenario, index, portfolio, activeTaxRates, onEdit, on
           {isSystemRec && (
             <div className="bg-[#e1f5ee] px-[10px] py-[4px] rounded-[100px]">
               <span className="text-[11px] font-semibold text-[#085041] whitespace-nowrap">
-                System recommendation — Tax-first optimized
+                System recommendation — {scenario.optimization_priority === 'balance-first' ? 'Balance-first' : 'Tax-first'} optimized
               </span>
             </div>
           )}

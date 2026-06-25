@@ -3,6 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
+import type { AccountingMethod } from '../types'
+
+// Map UI method label → engine AccountingMethod
+function toAccountingMethod(m: CostBasisMethod): AccountingMethod {
+  if (m === 'SpecID')   return 'specific_lot_identification'
+  if (m === 'AvgCost')  return 'average_cost'
+  return m as AccountingMethod  // MinTax | HIFO | FIFO pass through unchanged
+}
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
@@ -113,6 +121,7 @@ type FundRow = {
   shares: string
   balance: string
   assetClass: string
+  balanceCents?: number // raw balance for "Sell all shares" (undefined on read-only rows)
 }
 
 type TaxData = {
@@ -136,7 +145,9 @@ function ActiveFundRow({
   fund,
   taxData,
   appliedCents,
+  currentMethod,
   onApply,
+  onMethodChange,
   showAllocationHint,
   showHarvestableHint,
   hintsVisible,
@@ -146,8 +157,10 @@ function ActiveFundRow({
 }: {
   fund: FundRow
   taxData: TaxData
-  appliedCents: number           // lifted to parent — parent is source of truth
+  appliedCents: number
+  currentMethod: CostBasisMethod      // lifted — parent is source of truth
   onApply: (ticker: string, cents: number) => void
+  onMethodChange: (ticker: string, method: CostBasisMethod) => void
   showAllocationHint: boolean
   showHarvestableHint: boolean
   hintsVisible: boolean
@@ -157,13 +170,14 @@ function ActiveFundRow({
 }) {
   const [inputCents, setInputCents]     = useState(appliedCents)
   const [inputDisplay, setInputDisplay] = useState(formatCurrency(appliedCents / 100))
-
-  // Local method display — updated by CostBasisDialog "Continue" for this row only.
-  // NOT lifted to parent; the TODO in this file's COST BASIS METHOD comment still applies.
-  const [displayMethod, setDisplayMethod] = useState<CostBasisMethod>('MinTax')
   const [showMethodDialog, setShowMethodDialog] = useState(false)
 
   const hasChange = inputCents !== appliedCents
+  // "Sell all shares" is checked when the input amount equals the fund's full balance
+  const balanceCents = fund.balanceCents ?? 0
+  const isAllShares = balanceCents > 0 && inputCents >= balanceCents
+  // Lot details only accessible when SpecID is chosen (Issues 3 + CLAUDE.md constraint 4)
+  const canViewLots = currentMethod === 'SpecID'
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, '')
@@ -179,6 +193,18 @@ function ActiveFundRow({
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') handleApply()
+  }
+
+  function handleSellAll(checked: boolean) {
+    if (checked) {
+      setInputCents(balanceCents)
+      setInputDisplay(formatCurrency(balanceCents / 100))
+      onApply(fund.ticker, balanceCents)
+    } else {
+      setInputCents(0)
+      setInputDisplay('')
+      onApply(fund.ticker, 0)
+    }
   }
 
   return (
@@ -219,26 +245,26 @@ function ActiveFundRow({
           </div>
         </div>
 
-        {/* SELL ALL SHARES — 130px: blank spacer label aligns checkbox with value row of other columns */}
+        {/* SELL ALL SHARES — 130px */}
         <div className="w-[130px] h-full flex flex-col gap-2 items-start px-2 py-[12px] shrink-0 overflow-hidden">
           <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">&nbsp;</span>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-[1.5px] border-[#767676] rounded-[2px] shrink-0 bg-white" />
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <div
+              onClick={() => handleSellAll(!isAllShares)}
+              className={`w-4 h-4 border-[1.5px] rounded-[2px] shrink-0 flex items-center justify-center cursor-pointer
+                ${isAllShares ? 'bg-vg-ink border-vg-ink' : 'bg-white border-[#767676]'}`}
+            >
+              {isAllShares && <span className="text-white text-[10px] leading-none font-bold">✓</span>}
+            </div>
             <span className="text-[12px] text-vg-ink whitespace-nowrap">Sell all shares</span>
-          </div>
+          </label>
         </div>
 
-        {/* COST BASIS METHOD — 160px
-            TODO (REQ-B3-003): "MinTax" here and in FundSelectionManualLot.tsx are three
-            independent hardcoded literals for the canonical scenario — no shared state.
-            When implementing the user-selectable cost basis method selector, introduce
-            costBasisMethod per fund in FundSelectionManual2's state (same pattern as
-            appliedAmounts) and pass it to CollapsedActiveFundRow and to /manual-lot via
-            location.state so all three displays read from one source. */}
+        {/* COST BASIS METHOD — 160px — lifted to parent for engine re-run on change */}
         <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
           <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{displayMethod}</span>
+            <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{currentMethod}</span>
             <a
               className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap"
               onClick={() => setShowMethodDialog(true)}
@@ -246,8 +272,8 @@ function ActiveFundRow({
           </div>
           {showMethodDialog && (
             <CostBasisDialog
-              currentMethod={displayMethod}
-              onConfirm={method => { setDisplayMethod(method); setShowMethodDialog(false) }}
+              currentMethod={currentMethod}
+              onConfirm={method => { onMethodChange(fund.ticker, method); setShowMethodDialog(false) }}
               onClose={() => setShowMethodDialog(false)}
             />
           )}
@@ -311,8 +337,10 @@ function ActiveFundRow({
           )}
         </div>
         <button
-          onClick={() => onLotDetails(fund.ticker)}
-          className="flex items-center gap-1 cursor-pointer shrink-0 hover:opacity-70"
+          onClick={() => canViewLots && onLotDetails(fund.ticker)}
+          disabled={!canViewLots}
+          title={canViewLots ? undefined : 'Select Spec ID to view and edit lot-level details'}
+          className={`flex items-center gap-1 shrink-0 ${canViewLots ? 'cursor-pointer hover:opacity-70' : 'opacity-30 cursor-not-allowed'}`}
         >
           <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">Lot details</span>
           <span className="text-vg-ink-muted text-base leading-none">▾</span>
@@ -425,10 +453,13 @@ const COACH_MARKS = {
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation,
-    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
+    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio } = useAppStore()
 
   // Engine output for this session — per-fund results for display
   const [fundResults, setFundResults] = useState<FundSaleResult[]>([])
+
+  // Cost basis methods — lifted from ActiveFundRow so runManualEngine can use them
+  const [costBasisMethods, setCostBasisMethods] = useState<Record<string, CostBasisMethod>>({})
 
   // Coach marks — sequential hint-indicator pattern (per FS-AUTO-1 / FS-MAN-1 precedent)
   const [hintsVisible, setHintsVisible] = useState(true)
@@ -460,15 +491,20 @@ export default function FundSelectionManual2() {
 
   // runManualEngine — builds ManualSelections from current activeFunds + appliedAmounts
   // and calls runOptimization() in manual mode. Called on Apply/blur/Enter.
-  const runManualEngine = useCallback((newAmounts: Record<string, number>, newActiveFunds: Set<string>) => {
+  const runManualEngine = useCallback((
+    newAmounts: Record<string, number>,
+    newActiveFunds: Set<string>,
+    newMethods: Record<string, CostBasisMethod> = {}
+  ) => {
     if (!portfolio) return
-    // appliedAmounts stores values in cents (same unit as ActiveFundRow inputCents).
-    // Divide by 100 to convert to dollars before passing to runOptimization.
     const totalDollars = r2(Object.values(newAmounts).reduce((s, v) => s + v, 0) / 100)
     if (totalDollars <= 0 || newActiveFunds.size === 0) { setFundResults([]); return }
     const fundSelectionsForEngine = Array.from(newActiveFunds)
       .filter(ticker => (newAmounts[ticker] ?? 0) > 0)
-      .map(ticker => ({ fund_id: ticker, accounting_method: 'MinTax' as const }))
+      .map(ticker => ({
+        fund_id: ticker,
+        accounting_method: toAccountingMethod(newMethods[ticker] ?? 'MinTax'),
+      }))
     if (fundSelectionsForEngine.length === 0) { setFundResults([]); return }
     const result = runOptimization({
       portfolio,
@@ -499,6 +535,14 @@ export default function FundSelectionManual2() {
     }
   }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
 
+  // handleMethodChange — updates per-fund method and re-runs engine
+  function handleMethodChange(ticker: string, method: CostBasisMethod) {
+    setHasUserModified(true)
+    const newMethods = { ...costBasisMethods, [ticker]: method }
+    setCostBasisMethods(newMethods)
+    runManualEngine(appliedAmounts, activeFunds, newMethods)
+  }
+
   // On mount: fire engine once if amounts are already present (covers two gaps):
   //   Gap 1 — returning from FS-MAN-LOT: fundResults local state was lost on
   //     unmount, but appliedAmounts survived in component state. Re-running the
@@ -509,7 +553,7 @@ export default function FundSelectionManual2() {
   useEffect(() => {
     const total = Object.values(appliedAmounts).reduce((s, v) => s + v, 0)
     if (total > 0 && activeFunds.size > 0) {
-      runManualEngine(appliedAmounts, activeFunds)
+      runManualEngine(appliedAmounts, activeFunds, costBasisMethods)
     }
   }, []) // intentionally runs once on mount — same pattern as FS-AUTO-1
 
@@ -518,7 +562,7 @@ export default function FundSelectionManual2() {
     setHasUserModified(true)
     const newAmounts = { ...appliedAmounts, [ticker]: cents }
     setAppliedAmounts(newAmounts)
-    runManualEngine(newAmounts, activeFunds)
+    runManualEngine(newAmounts, activeFunds, costBasisMethods)
   }
 
   function handleLotDetails(ticker: string) {
@@ -609,7 +653,39 @@ export default function FundSelectionManual2() {
       </button>
 
       {/* Target Allocation Modal */}
-      {showAllocModal && <TargetAllocationModal onClose={() => setShowAllocModal(false)} />}
+      {showAllocModal && (
+        <TargetAllocationModal
+          onClose={() => setShowAllocModal(false)}
+          initialStocks={(portfolio?.target_allocation?.domestic_equity_pct ?? 0) + (portfolio?.target_allocation?.international_equity_pct ?? 0)}
+          initialBonds={portfolio?.target_allocation?.domestic_bonds_pct ?? 35}
+          initialReserves={portfolio?.target_allocation?.short_term_reserves_pct ?? 10}
+          onSave={(stocks, bonds, reserves) => {
+            if (!portfolio) return
+            const oldTa = portfolio.target_allocation
+            // Preserve domestic/international ratio within the new stocks total
+            const oldStocks = (oldTa?.domestic_equity_pct ?? 40) + (oldTa?.international_equity_pct ?? 15)
+            const ratio = oldStocks > 0 ? (oldTa?.domestic_equity_pct ?? 40) / oldStocks : 0.727
+            const newDomestic = Math.round(stocks * ratio * 10) / 10
+            const newIntl     = Math.round((stocks - newDomestic) * 10) / 10
+            const updated = {
+              ...portfolio,
+              target_allocation: {
+                allocation_id:           oldTa?.allocation_id ?? 'user-set',
+                portfolio_id:            portfolio.portfolio_id,
+                domestic_equity_pct:     newDomestic,
+                international_equity_pct: newIntl,
+                domestic_bonds_pct:      bonds,
+                short_term_reserves_pct: reserves,
+                fund_level_targets:      oldTa?.fund_level_targets ?? null,
+                source:                  'user_set' as const,
+                as_of_date:              new Date().toISOString().slice(0, 10),
+              },
+            }
+            setPortfolio(updated)
+            runManualEngine(appliedAmounts, activeFunds, costBasisMethods)
+          }}
+        />
+      )}
 
       {/* FS-INT-SAVEDISCARD — Mode switch save/discard dialog */}
       {showModeDialog && (
@@ -776,6 +852,7 @@ export default function FundSelectionManual2() {
                   shares: formatShares(holding.total_shares),
                   balance: formatCurrency(holding.current_balance),
                   assetClass: holding.asset_class.replace('_', ' '),
+                  balanceCents: Math.round(holding.current_balance * 100),
                 }
                 const engineResult = fundResults.find(fr => fr.fund_id === holding.fund_id)
                 if (activeFunds.has(fund.ticker)) {
@@ -785,7 +862,9 @@ export default function FundSelectionManual2() {
                       fund={fund}
                       taxData={taxDataFromResult(engineResult)}
                       appliedCents={appliedAmounts[fund.ticker] ?? 0}
+                      currentMethod={costBasisMethods[fund.ticker] ?? 'MinTax'}
                       onApply={handleApplyAmount}
+                      onMethodChange={handleMethodChange}
                       onLotDetails={handleLotDetails}
                       showAllocationHint={holding.asset_class === 'domestic_equity'}
                       showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}

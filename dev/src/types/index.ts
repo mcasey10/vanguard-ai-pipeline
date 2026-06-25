@@ -286,6 +286,7 @@ export interface SavedScenario {
   scenario_id: string
   scenario_name: string
   source_mode: 'automated' | 'manual'
+  optimization_priority?: 'tax-first' | 'balance-first'  // only set for automated scenarios
   fund_selections: ScenarioFundSelection[]
   total_sell_amount: number        // sum of all fund sell_amounts
   projected_st_gains: number       // net positive ST gains
