@@ -332,6 +332,8 @@ export interface TransactionFundRecord {
   lots_sold: LotSaleDetail[]
   accounting_method: AccountingMethod
   sell_amount: number
+  st_gain_loss: number   // net ST gain (positive) or loss (negative) for this fund
+  lt_gain_loss: number   // net LT gain (positive) or loss (negative) for this fund
 }
 
 export interface TransactionRecord {

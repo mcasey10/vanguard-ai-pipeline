@@ -242,6 +242,8 @@ export default function OrderConfirmation() {
         sell_amount: f.sellAmount,
         accounting_method: d.accountingMethod,
         lots_sold: [],
+        st_gain_loss: f.gainLossPeriod === 'ST' ? f.gainLoss : 0,
+        lt_gain_loss: f.gainLossPeriod === 'LT' ? f.gainLoss : 0,
       })),
       realized_st_gains: d.stCapitalGains,
       realized_lt_gains: d.ltCapitalGains,

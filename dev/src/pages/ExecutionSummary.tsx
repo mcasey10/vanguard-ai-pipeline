@@ -319,7 +319,7 @@ export default function ExecutionSummary() {
             <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80">
               View order in Activity →
             </a>
-            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80">
+            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80" onClick={() => navigate('/history')}>
               View transaction history →
             </a>
           </div>
