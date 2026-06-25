@@ -634,6 +634,34 @@ export default function FundSelectionManualLot() {
     if (hasSelections) runLotEngine(sharesInputs)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Populate bannerData on mount for non-SpecID (read-only) views.
+  // handleExpandedMethodChange sets bannerData when the user changes method, but on a
+  // fresh mount (or re-open after navigation) bannerData starts null. Derive it from
+  // the already-computed manualConfig so "Total impact" is always visible.
+  useEffect(() => {
+    if (!isReadOnly || !manualConfig || !portfolio) return
+    const fr = manualConfig.fund_results.find(r => r.fund_id === fund)
+    if (!fr) return
+    const stg = fr.est_st_gain_loss, ltg = fr.est_lt_gain_loss
+    const netGain   = Math.max(0, r2(stg + ltg))
+    const taxST     = Math.min(netGain, Math.max(0, stg)) * activeTaxRates.st_rate
+    const taxLT     = Math.max(0, netGain - Math.min(netGain, Math.max(0, stg))) * activeTaxRates.lt_rate
+    const estNetTax = r2(taxST + taxLT)
+    const totalSale = fr.sell_amount
+    setBannerData({
+      totalSale,
+      salePct:       r2((totalSale / portfolio.total_investable_balance) * 100),
+      stGainLoss:    stg,
+      ltGainLoss:    ltg,
+      estNetTax,
+      effRate:       totalSale > 0 ? r2((estNetTax / totalSale) * 100) : 0,
+      totalShares:   fr.lots_sold.reduce((s, l) => s + l.shares_to_sell, 0),
+      totalCost:     fr.lots_sold.reduce((s, l) => s + l.cost_basis, 0),
+      pricePerShare: holding?.lots[0]?.current_nav ?? 0,
+      priceDate:     '05/27/2026',
+    })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // REQ-B4-001: "Go to Scenario Analysis" from lot detail — save/update scenario and navigate
   function handleGoToScenarios() {
     if (bannerData && portfolio) {
@@ -929,17 +957,15 @@ export default function FundSelectionManualLot() {
                 {expandedMethod === 'AvgCost' ? (() => {
                   const fr = manualConfig?.fund_results.find(r => r.fund_id === fund)
                   const syntheticLot = fr?.lots_sold[0]
-                  const sharesToSell   = syntheticLot?.shares_to_sell ?? 0
-                  const totalShares    = holding?.total_shares ?? 0
-                  const totalCostBasis = holding?.total_cost_basis ?? 0
-                  const avgCostPerShare = totalShares > 0 ? totalCostBasis / totalShares : 0
-                  const costOfSold     = r2(sharesToSell * avgCostPerShare)
-                  const navPerShare    = holding?.lots[0]?.current_nav ?? 0
-                  const proceeds       = r2(sharesToSell * navPerShare)
-                  const gainLoss       = r2(proceeds - costOfSold)
-                  const gainPerShare   = sharesToSell > 0 ? r2(gainLoss / sharesToSell) : 0
-                  const isGain         = gainLoss >= 0
-                  const glColor        = isGain ? 'text-[#007a00]' : 'text-[#c8102e]'
+                  // Use engine-computed values directly — avoids rounding divergence vs totals row
+                  const sharesToSell = syntheticLot?.shares_to_sell ?? 0
+                  const costOfSold   = syntheticLot?.cost_basis ?? 0
+                  const proceeds     = syntheticLot?.proceeds ?? 0
+                  const gainLoss     = syntheticLot?.realized_gain_loss ?? 0
+                  const totalShares  = holding?.total_shares ?? 0
+                  const gainPerShare = sharesToSell > 0 ? r2(gainLoss / sharesToSell) : 0
+                  const isGain       = gainLoss >= 0
+                  const glColor      = isGain ? 'text-[#007a00]' : 'text-[#c8102e]'
                   return (
                     <>
                       <LotDetailHeader />
