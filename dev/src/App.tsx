@@ -6,6 +6,7 @@ import FundSelectionManual from './pages/FundSelectionManual'
 import FundSelectionManual2 from './pages/FundSelectionManual2'
 import FundSelectionManualLot from './pages/FundSelectionManualLot'
 import ScenarioAnalysis from './pages/ScenarioAnalysis'
+import OrderConfirmation from './pages/OrderConfirmation'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/manual-2" element={<FundSelectionManual2 />} />
         <Route path="/manual-lot" element={<FundSelectionManualLot />} />
         <Route path="/scenarios" element={<ScenarioAnalysis />} />
+        <Route path="/confirm" element={<OrderConfirmation />} />
       </Route>
     </Routes>
   )

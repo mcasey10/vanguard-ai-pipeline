@@ -511,7 +511,7 @@ export default function FundSelectionAutomated() {
 
           {/* Footer */}
           <div className="flex gap-3 items-center justify-end px-8 w-full">
-            <button className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap">Review order</button>
+            <button onClick={() => navigate('/confirm')} className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">Review order</button>
             <button onClick={handleGoToScenarios} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">Go to Scenario Analysis</button>
           </div>
 
