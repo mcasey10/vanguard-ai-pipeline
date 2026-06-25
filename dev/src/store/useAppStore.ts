@@ -37,6 +37,12 @@ interface AppState {
   recommendation: Recommendation | null
   manualConfig: ManualConfiguration | null
 
+  // ── Manual session state — lifted from FundSelectionManual2 so it survives
+  //    navigation to /manual-lot and back (local React state resets on unmount)
+  manualActiveFundIds: string[]
+  manualAppliedAmountsCents: Record<string, number>   // ticker → cents
+  manualCostBasisMethods: Record<string, string>       // ticker → CostBasisMethod label
+
   // ── Scenarios (max 3, REQ-SC-001) ─────────────────────────────────────────
   scenarios: SavedScenario[]
 
@@ -63,6 +69,13 @@ interface AppActions {
   // Engine outputs
   setRecommendation: (rec: Recommendation | null) => void
   setManualConfig: (config: ManualConfiguration | null) => void
+
+  // Manual session state
+  setManualActiveFunds: (ids: string[]) => void
+  setManualAppliedAmount: (ticker: string, cents: number) => void
+  clearManualAppliedAmount: (ticker: string) => void
+  setManualCostBasisMethod: (ticker: string, method: string) => void
+  clearManualSession: () => void
 
   // Scenarios
   setScenarios: (scenarios: SavedScenario[]) => void
@@ -113,6 +126,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   recommendation: null,
   manualConfig: null,
 
+  manualActiveFundIds: [],
+  manualAppliedAmountsCents: {},
+  manualCostBasisMethods: {},
+
   scenarios: [],
   activeScenarioId: null,
 
@@ -137,6 +154,33 @@ export const useAppStore = create<AppStore>((set, get) => ({
   setRecommendation: (rec) => set({ recommendation: rec }),
 
   setManualConfig: (config) => set({ manualConfig: config }),
+
+  setManualActiveFunds: (ids) => set({ manualActiveFundIds: ids }),
+
+  setManualAppliedAmount: (ticker, cents) =>
+    set((state) => ({
+      manualAppliedAmountsCents: { ...state.manualAppliedAmountsCents, [ticker]: cents },
+    })),
+
+  clearManualAppliedAmount: (ticker) =>
+    set((state) => {
+      const next = { ...state.manualAppliedAmountsCents }
+      delete next[ticker]
+      return { manualAppliedAmountsCents: next }
+    }),
+
+  setManualCostBasisMethod: (ticker, method) =>
+    set((state) => ({
+      manualCostBasisMethods: { ...state.manualCostBasisMethods, [ticker]: method },
+    })),
+
+  clearManualSession: () =>
+    set({
+      manualActiveFundIds: [],
+      manualAppliedAmountsCents: {},
+      manualCostBasisMethods: {},
+      manualConfig: null,
+    }),
 
   setScenarios: (scenarios) => set({ scenarios }),
 
@@ -167,12 +211,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
       activeScenarioId: scenario.scenario_id,
       targetSaleAmount: scenario.total_sell_amount,
       mode: scenario.source_mode,
-      // Clear engine outputs — FS-AUTO-1 mount will re-run if targetSaleAmount is set
       recommendation: null,
       manualConfig: null,
+      manualActiveFundIds: [],
+      manualAppliedAmountsCents: {},
+      manualCostBasisMethods: {},
     }),
 
-  // Clear session for a fresh scenario without affecting existing saved scenarios
   startNewScenario: () =>
     set({
       activeScenarioId: null,
@@ -181,6 +226,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       optimizationPriority: 'tax-first',
       recommendation: null,
       manualConfig: null,
+      manualActiveFundIds: [],
+      manualAppliedAmountsCents: {},
+      manualCostBasisMethods: {},
     }),
 
   setActiveTaxRates: (rates) => set({ activeTaxRates: rates }),
@@ -194,6 +242,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       recommendation: null,
       manualConfig: null,
       activeScenarioId: null,
+      manualActiveFundIds: [],
+      manualAppliedAmountsCents: {},
+      manualCostBasisMethods: {},
       // Scenarios are NOT cleared on session reset — they persist across sessions
     }),
 }))

@@ -457,9 +457,10 @@ export default function FundSelectionManualLot() {
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
     manualConfig,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
-  const locationState = location.state as { fund?: string; readOnly?: boolean } | null
-  const fund       = locationState?.fund ?? 'VTSAX'
-  const isReadOnly = locationState?.readOnly ?? false
+  const locationState = location.state as { fund?: string; readOnly?: boolean; costBasisMethod?: string } | null
+  const fund            = locationState?.fund ?? 'VTSAX'
+  const isReadOnly      = locationState?.readOnly ?? false
+  const costBasisMethod = (locationState?.costBasisMethod ?? 'MinTax') as CostBasisMethod
   const [bannerData, setBannerData] = useState<LotBannerData | null>(null)
 
   // Always show 3 decimal places in read-only share cells (matches Figma "0.000" / "103.306")
@@ -493,7 +494,7 @@ export default function FundSelectionManualLot() {
   // Modal state
   const [showAllocModal,  setShowAllocModal]  = useState(false)
   // Cost basis for expanded fund row (local display only — same scope as ActiveFundRow in FS-MAN-2)
-  const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(fund === 'VTSAX' ? 'SpecID' : 'MinTax')
+  const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(costBasisMethod)
   const [showExpandedCBD, setShowExpandedCBD] = useState(false)
   // Cost basis for the collapsed other-fund row
   const [collapsedMethod, setCollapsedMethod] = useState<CostBasisMethod>(fund === 'VTSAX' ? 'MinTax' : 'SpecID')

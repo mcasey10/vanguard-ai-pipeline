@@ -404,34 +404,33 @@ function taxDataFromResult(fr: FundSaleResult | undefined): TaxData {
 
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
-  const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation,
-    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio } = useAppStore()
+  const {
+    portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation,
+    scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio,
+    manualActiveFundIds, manualAppliedAmountsCents, manualCostBasisMethods,
+    setManualActiveFunds, setManualAppliedAmount, clearManualAppliedAmount, setManualCostBasisMethod,
+  } = useAppStore()
 
   // Engine output for this session — per-fund results for display
   const [fundResults, setFundResults] = useState<FundSaleResult[]>([])
 
-  // Cost basis methods — lifted from ActiveFundRow so runManualEngine can use them
-  const [costBasisMethods, setCostBasisMethods] = useState<Record<string, CostBasisMethod>>({})
+  // Derive local conveniences from store (store is the source of truth — survives navigation)
+  // On first mount from Automated mode: seed from recommendation if store is empty
+  const activeFunds = new Set(manualActiveFundIds)
+  const appliedAmounts = manualAppliedAmountsCents
+  const costBasisMethods = manualCostBasisMethods as Record<string, CostBasisMethod>
 
-  // Active funds and applied amounts: seeded from store.recommendation when arriving
-  // from Automated mode; empty when entering Manual directly (no prior recommendation).
-  // Lazy initializers run once on mount — recommendation is already in store by then.
-  const [activeFunds, setActiveFunds] = useState<Set<string>>(() => {
-    if (recommendation?.fund_results?.length) {
-      return new Set(recommendation.fund_results.map(fr => fr.fund_id))
+  // Seed store from recommendation when arriving from Automated mode (store not yet populated)
+  useEffect(() => {
+    if (manualActiveFundIds.length === 0 && recommendation?.fund_results?.length) {
+      const ids = recommendation.fund_results.map(fr => fr.fund_id)
+      setManualActiveFunds(ids)
+      for (const fr of recommendation.fund_results) {
+        setManualAppliedAmount(fr.fund_id, Math.round(fr.sell_amount * 100))
+      }
     }
-    return new Set()  // empty — user activates funds via Sell button (REQ-B1-004)
-  })
-
-  const [appliedAmounts, setAppliedAmounts] = useState<Record<string, number>>(() => {
-    if (recommendation?.fund_results?.length) {
-      // sell_amount is in dollars; appliedAmounts stores cents
-      return Object.fromEntries(
-        recommendation.fund_results.map(fr => [fr.fund_id, Math.round(fr.sell_amount * 100)])
-      )
-    }
-    return {}  // empty — no amounts until user enters them
-  })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // runManualEngine — builds ManualSelections from current activeFunds + appliedAmounts
   // and calls runOptimization() in manual mode. Called on Apply/blur/Enter.
@@ -464,38 +463,38 @@ export default function FundSelectionManual2() {
     setFundResults(config.fund_results)
   }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
 
-  // handleMethodChange — updates per-fund method and re-runs engine
+  // handleMethodChange — updates per-fund method in store and re-runs engine
   function handleMethodChange(ticker: string, method: CostBasisMethod) {
     setHasUserModified(true)
+    setManualCostBasisMethod(ticker, method)
     const newMethods = { ...costBasisMethods, [ticker]: method }
-    setCostBasisMethods(newMethods)
     runManualEngine(appliedAmounts, activeFunds, newMethods)
   }
 
-  // On mount: fire engine once if amounts are already present (covers two gaps):
-  //   Gap 1 — returning from FS-MAN-LOT: fundResults local state was lost on
-  //     unmount, but appliedAmounts survived in component state. Re-running the
-  //     engine regenerates fundResults so the banner shows live figures immediately.
-  //   Gap 2 — pre-populated from Automated recommendation: inputCents===appliedCents
-  //     on mount so Apply never fires, leaving the banner at dashes. One mount-time
-  //     engine call initializes it the same way Apply would.
+  // On mount: re-run engine if store has amounts (covers two cases):
+  //   1 — returning from FS-MAN-LOT: fundResults (local) was lost on unmount;
+  //       store still has appliedAmounts + activeFunds, so engine regenerates fundResults.
+  //   2 — arriving from Automated recommendation: store was seeded above, one engine
+  //       call initializes the banner immediately.
   useEffect(() => {
     const total = Object.values(appliedAmounts).reduce((s, v) => s + v, 0)
     if (total > 0 && activeFunds.size > 0) {
       runManualEngine(appliedAmounts, activeFunds, costBasisMethods)
     }
-  }, []) // intentionally runs once on mount — same pattern as FS-AUTO-1
+  }, []) // intentionally runs once on mount
 
-  // handleApplyAmount — updates local state then triggers engine
+  // handleApplyAmount — updates store then triggers engine
   function handleApplyAmount(ticker: string, cents: number) {
     setHasUserModified(true)
+    setManualAppliedAmount(ticker, cents)
     const newAmounts = { ...appliedAmounts, [ticker]: cents }
-    setAppliedAmounts(newAmounts)
     runManualEngine(newAmounts, activeFunds, costBasisMethods)
   }
 
   function handleLotDetails(ticker: string, readOnly: boolean) {
-    navigate('/manual-lot', { state: { fund: ticker, readOnly } })
+    navigate('/manual-lot', {
+      state: { fund: ticker, readOnly, costBasisMethod: costBasisMethods[ticker] ?? 'MinTax' },
+    })
   }
 
   // Target Allocation Modal
@@ -515,18 +514,24 @@ export default function FundSelectionManual2() {
 
   function handleSell(ticker: string) {
     setHasUserModified(true)
-    setActiveFunds(prev => new Set([...prev, ticker]))
-    setAppliedAmounts(prev => ({ ...prev, [ticker]: 0 }))
+    setManualActiveFunds([...manualActiveFundIds, ticker])
+    setManualAppliedAmount(ticker, 0)
   }
 
   function handleCancel(ticker: string) {
     setHasUserModified(true)
-    setActiveFunds(prev => {
-      const next = new Set(prev)
-      next.delete(ticker)
-      return next
-    })
-    setAppliedAmounts(prev => { const next = { ...prev }; delete next[ticker]; return next })
+    setManualActiveFunds(manualActiveFundIds.filter(id => id !== ticker))
+    clearManualAppliedAmount(ticker)
+    const newAmounts = { ...appliedAmounts }
+    delete newAmounts[ticker]
+    const newFunds = new Set(activeFunds)
+    newFunds.delete(ticker)
+    // Re-run engine to clear this fund from results
+    if (newFunds.size > 0 && Object.values(newAmounts).some(v => v > 0)) {
+      runManualEngine(newAmounts, newFunds, costBasisMethods)
+    } else {
+      setFundResults([])
+    }
   }
 
   // Inactive account expansion
@@ -544,7 +549,7 @@ export default function FundSelectionManual2() {
 
   function handleConfirmReset() {
     setShowResetDialog(false)
-    setActiveFunds(new Set())
+    setManualActiveFunds([])
     navigate('/automated')
   }
 
