@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
+import { CoachMark } from '../components/CoachMark'
 import type { AccountingMethod } from '../types'
 
 // Map UI method label → engine AccountingMethod
@@ -31,42 +32,6 @@ function RadioDot({ selected }: { selected: boolean }) {
     >
       {selected && <div className="w-2 h-2 rounded-full bg-vg-ink" />}
     </div>
-  )
-}
-
-function CoachMarkBubble({ text, onDismiss }: { text: string; onDismiss: () => void }) {
-  return (
-    <div className="relative" style={{ filter: 'drop-shadow(0px 4px 8px rgba(4,5,5,0.2))' }}>
-      {/* Upward-pointing triangle arrow — CSS border trick (equiv. to Figma SVG asset) */}
-      <div
-        className="absolute"
-        style={{ left: 133, top: -8, width: 0, height: 0,
-          borderLeft: '7px solid transparent', borderRight: '7px solid transparent',
-          borderBottom: '8px solid white' }}
-      />
-      <div className="bg-white rounded-[4px] w-[280px]">
-        <div className="flex items-center justify-end pt-[10px] pb-[4px] px-[12px]">
-          <button onClick={onDismiss} className="text-[14px] text-vg-ink-muted cursor-pointer leading-none" aria-label="Dismiss tip">
-            ×
-          </button>
-        </div>
-        <div className="px-[12px] pb-[12px]">
-          <p className="text-[13px] text-vg-ink leading-normal">{text}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function HintBadge({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer"
-      aria-label="Learn more"
-    >
-      <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
-    </button>
   )
 }
 
@@ -150,8 +115,6 @@ function ActiveFundRow({
   onMethodChange,
   showAllocationHint,
   showHarvestableHint,
-  hintsVisible,
-  onHintClick,
   onCancel,
   onLotDetails,
 }: {
@@ -163,8 +126,6 @@ function ActiveFundRow({
   onMethodChange: (ticker: string, method: CostBasisMethod) => void
   showAllocationHint: boolean
   showHarvestableHint: boolean
-  hintsVisible: boolean
-  onHintClick: (mark: 'tax' | 'allocation' | 'harvestable') => void
   onCancel: () => void
   onLotDetails: (ticker: string) => void
 }) {
@@ -297,12 +258,12 @@ function ActiveFundRow({
           <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxData.estTax}</span>
         </div>
 
-        {/* IMPACT — 110px; hint indicator for Allocation coach mark */}
+        {/* IMPACT — 110px; allocation beacon */}
         <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
           <div className="flex items-center gap-1">
             <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-            {showAllocationHint && hintsVisible && (
-              <HintBadge onClick={() => onHintClick('allocation')} />
+            {showAllocationHint && (
+              <CoachMark id="allocation" text="This fund makes up more of your portfolio than your target. Selling from it would bring your allocation closer to balance." />
             )}
           </div>
           <span className={`text-[12px] font-semibold whitespace-nowrap ${taxData.impactColor}`}>{taxData.impact}</span>
@@ -331,9 +292,8 @@ function ActiveFundRow({
               </span>
             </span>
           )}
-          {/* Harvestable loss hint indicator — anchors to VBTLX's Details Row */}
-          {showHarvestableHint && hintsVisible && (
-            <HintBadge onClick={() => onHintClick('harvestable')} />
+          {showHarvestableHint && (
+            <CoachMark id="harvestable" text="This lot is worth less than you paid for it. Selling it realizes a loss that can offset gains elsewhere in your portfolio, potentially reducing your tax bill." />
           )}
         </div>
         <button
@@ -437,16 +397,6 @@ function taxDataFromResult(fr: FundSaleResult | undefined): TaxData {
 }
 
 // ---------------------------------------------------------------------------
-// Coach mark text (from FS-MAN-1 overlay reads + FS-MAN-2 overlay)
-// ---------------------------------------------------------------------------
-
-const COACH_MARKS = {
-  tax: 'This figure updates as you adjust your sell amounts. It reflects your estimated capital gains tax on the shares you\'ve selected, at your current rate assumption.',
-  allocation: 'This fund makes up more of your portfolio than your target. Selling from it would bring your allocation closer to balance.',
-  harvestable: 'This lot is worth less than you paid for it. Selling it realizes a loss that can offset gains elsewhere in your portfolio, potentially reducing your tax bill.',
-}
-
-// ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
 
@@ -460,14 +410,6 @@ export default function FundSelectionManual2() {
 
   // Cost basis methods — lifted from ActiveFundRow so runManualEngine can use them
   const [costBasisMethods, setCostBasisMethods] = useState<Record<string, CostBasisMethod>>({})
-
-  // Coach marks — sequential hint-indicator pattern (per FS-AUTO-1 / FS-MAN-1 precedent)
-  const [hintsVisible, setHintsVisible] = useState(true)
-  const [openMark, setOpenMark] = useState<'tax' | 'allocation' | 'harvestable' | null>(null)
-
-  function handleHintClick(mark: 'tax' | 'allocation' | 'harvestable') {
-    setOpenMark(prev => prev === mark ? null : mark)
-  }
 
   // Active funds and applied amounts: seeded from store.recommendation when arriving
   // from Automated mode; empty when entering Manual directly (no prior recommendation).
@@ -623,20 +565,6 @@ export default function FundSelectionManual2() {
 
   return (
     <>
-      {/* Show Tips / Hide Tips toggle — Figma: Controls/Show Tips [FS-MAN-2] (716:2906), x=978 y=20 */}
-      <button
-        onClick={() => { setHintsVisible(v => !v); setOpenMark(null) }}
-        className="fixed z-50 flex items-center gap-[5px] cursor-pointer"
-        style={{ top: 20, left: 978 }}
-      >
-        <div className="w-[14px] h-[14px] border border-vg-ink rounded-[7px] flex items-center justify-center shrink-0">
-          <span className="text-[9px] text-vg-ink leading-none">?</span>
-        </div>
-        <span className="text-[13px] text-vg-ink underline whitespace-nowrap">
-          {hintsVisible ? 'Hide tips' : 'Show tips'}
-        </span>
-      </button>
-
       {/* Target Allocation Modal */}
       {showAllocModal && (
         <TargetAllocationModal
@@ -767,7 +695,7 @@ export default function FundSelectionManual2() {
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. NET TAX</span>
-                  {hintsVisible && <HintBadge onClick={() => handleHintClick('tax')} />}
+                  <CoachMark id="tax" text="This figure updates as you adjust your sell amounts. It reflects your estimated capital gains tax on the shares you've selected, at your current rate assumption." />
                 </div>
                 <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{ai ? formatCurrency(ai.estNetTax) : '—'}</span>
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{ai ? fmtRate2(ai.effRate) + '% effective rate' : ''}</span>
@@ -780,11 +708,6 @@ export default function FundSelectionManual2() {
                 <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
               </div>
             </div>
-            {openMark === 'tax' && (
-              <div className="absolute z-40" style={{ left: 959, top: 84 }}>
-                <CoachMarkBubble text={COACH_MARKS.tax} onDismiss={() => setOpenMark(null)} />
-              </div>
-            )}
           </div>
           )})()}
 
@@ -853,8 +776,6 @@ export default function FundSelectionManual2() {
                       onLotDetails={handleLotDetails}
                       showAllocationHint={holding.asset_class === 'domestic_equity'}
                       showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
-                      hintsVisible={hintsVisible}
-                      onHintClick={handleHintClick}
                       onCancel={() => handleCancel(fund.ticker)}
                     />
                   )
@@ -867,20 +788,6 @@ export default function FundSelectionManual2() {
                   />
                 )
               })}
-
-              {/* Coach Mark — Allocation (IMPACT column, anchored near VTSAX row) */}
-              {openMark === 'allocation' && (
-                <div className="absolute z-40" style={{ left: 1145, top: 100 }}>
-                  <CoachMarkBubble text={COACH_MARKS.allocation} onDismiss={() => setOpenMark(null)} />
-                </div>
-              )}
-
-              {/* Coach Mark — Harvestable Loss (VBTLX Details Row rationale area) */}
-              {openMark === 'harvestable' && (
-                <div className="absolute z-40" style={{ left: 769, top: 196 }}>
-                  <CoachMarkBubble text={COACH_MARKS.harvestable} onDismiss={() => setOpenMark(null)} />
-                </div>
-              )}
 
               {/* Traditional IRA — collapsed, expandable */}
               <div

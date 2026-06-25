@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
+import { CoachMark } from '../components/CoachMark'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization, shortAssetClass } from '../engine/index'
 import type { Recommendation } from '../types'
@@ -12,22 +13,6 @@ function RadioDot({ selected }: { selected: boolean }) {
   return (
     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${selected ? 'border-vg-ink' : 'border-vg-ink-muted'}`}>
       {selected && <div className="w-2 h-2 rounded-full bg-vg-ink" />}
-    </div>
-  )
-}
-
-function CoachMarkBubble({ text, onDismiss }: { text: string; onDismiss: () => void }) {
-  return (
-    <div className="relative" style={{ filter: 'drop-shadow(0px 4px 8px rgba(4,5,5,0.2))' }}>
-      <div className="absolute" style={{ left: 133, top: -8, width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderBottom: '8px solid white' }} />
-      <div className="bg-white rounded-[4px] w-[280px]">
-        <div className="flex items-center justify-end pt-[10px] pb-[4px] px-[12px]">
-          <button onClick={onDismiss} className="text-[14px] text-vg-ink-muted cursor-pointer leading-none" aria-label="Dismiss tip">×</button>
-        </div>
-        <div className="px-[12px] pb-[12px]">
-          <p className="text-[13px] text-vg-ink leading-normal">{text}</p>
-        </div>
-      </div>
     </div>
   )
 }
@@ -74,8 +59,6 @@ export default function FundSelectionAutomated() {
     }
   }, [targetSaleAmount])
 
-  const [hintsVisible, setHintsVisible] = useState(true)
-  const [openMark, setOpenMark] = useState<'tax' | 'ytd' | null>(null)
   const [showAllocModal, setShowAllocModal] = useState(false)
 
   // ── Engine call ──────────────────────────────────────────────────────────
@@ -181,19 +164,6 @@ export default function FundSelectionAutomated() {
 
   return (
     <>
-      <button
-        onClick={() => { setHintsVisible(v => !v); setOpenMark(null) }}
-        className="fixed z-50 flex items-center gap-[5px] cursor-pointer"
-        style={{ top: 20, left: 978 }}
-      >
-        <div className="w-[14px] h-[14px] border border-vg-ink rounded-[7px] flex items-center justify-center shrink-0">
-          <span className="text-[9px] text-vg-ink leading-none">?</span>
-        </div>
-        <span className="text-[13px] text-vg-ink underline whitespace-nowrap">
-          {hintsVisible ? 'Hide tips' : 'Show tips'}
-        </span>
-      </button>
-
       {showAllocModal && (
         <TargetAllocationModal
           onClose={() => setShowAllocModal(false)}
@@ -294,11 +264,7 @@ export default function FundSelectionAutomated() {
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">TAX BRACKET</span>
-                  {hintsVisible && (
-                    <button onClick={() => setOpenMark(prev => prev === 'tax' ? null : 'tax')} className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer" aria-label="Learn about tax bracket">
-                      <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
-                    </button>
-                  )}
+                  <CoachMark id="tax" text="We're using a mid-range tax rate as a starting point. If you know your bracket, you can select it below for a more accurate estimate." />
                 </div>
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{Math.round(taxRates.st_rate * 100)}% ST / {Math.round(taxRates.lt_rate * 100)}% LT</span>
                 <a className="text-[12px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Change</a>
@@ -308,11 +274,7 @@ export default function FundSelectionAutomated() {
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">YTD REALIZED</span>
-                  {hintsVisible && (
-                    <button onClick={() => setOpenMark(prev => prev === 'ytd' ? null : 'ytd')} className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer" aria-label="Learn about YTD realized gains">
-                      <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
-                    </button>
-                  )}
+                  <CoachMark id="ytd" text="This shows capital gains you've already realized this year. Selling more shares adds to this total." />
                 </div>
                 {ytd ? (
                   <>
@@ -369,16 +331,6 @@ export default function FundSelectionAutomated() {
 
             </div>
 
-            {openMark === 'tax' && (
-              <div className="absolute z-40" style={{ left: 200, top: 84 }}>
-                <CoachMarkBubble text="We're using a mid-range tax rate as a starting point. If you know your bracket, you can select it below for a more accurate estimate." onDismiss={() => setOpenMark(null)} />
-              </div>
-            )}
-            {openMark === 'ytd' && (
-              <div className="absolute z-40" style={{ left: 390, top: 92 }}>
-                <CoachMarkBubble text="This shows capital gains you've already realized this year. Selling more shares adds to this total." onDismiss={() => setOpenMark(null)} />
-              </div>
-            )}
           </div>
 
           {/* Fund Table */}

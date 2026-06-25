@@ -4,41 +4,12 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
+import { CoachMark } from '../components/CoachMark'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
 import type { Lot as CanonicalLot } from '../types'
 import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
-
-// ---------------------------------------------------------------------------
-// Coach mark bubble (same structure as FS-AUTO-1 / FS-MAN-2)
-// ---------------------------------------------------------------------------
-
-function CoachMarkBubble({ text, onDismiss }: { text: string; onDismiss: () => void }) {
-  return (
-    <div className="relative" style={{ filter: 'drop-shadow(0px 4px 8px rgba(4,5,5,0.2))' }}>
-      <div className="absolute" style={{ left: 133, top: -8, width: 0, height: 0,
-        borderLeft: '7px solid transparent', borderRight: '7px solid transparent',
-        borderBottom: '8px solid white' }} />
-      <div className="bg-white rounded-[4px] w-[280px]">
-        <div className="flex items-center justify-end pt-[10px] pb-[4px] px-[12px]">
-          <button onClick={onDismiss} className="text-[14px] text-vg-ink-muted cursor-pointer leading-none" aria-label="Dismiss tip">×</button>
-        </div>
-        <div className="px-[12px] pb-[12px]">
-          <p className="text-[13px] text-vg-ink leading-normal">{text}</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function HintBadge({ onClick }: { onClick: () => void }) {
-  return (
-    <button onClick={onClick} className="w-[14px] h-[14px] border border-vg-ink-muted rounded-full flex items-center justify-center shrink-0 cursor-pointer" aria-label="Learn about Wait & Save">
-      <span className="text-[9px] text-vg-ink-muted leading-none">?</span>
-    </button>
-  )
-}
 
 function RadioDot({ selected }: { selected: boolean }) {
   return (
@@ -233,9 +204,9 @@ function NormalLotRow({ lot, sharesInput, onSharesChange, onSharesCommit }:
 // Wait & Save Lot Row (bg-[#fff8e8], amber left accent, inline notice)
 // ---------------------------------------------------------------------------
 
-function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, showHint, hintsVisible, onHintClick }:
+function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, showHint }:
   { lot: Lot; sharesInput: string; onSharesChange: (v: string) => void; onSharesCommit: (v: string) => void
-    showHint: boolean; hintsVisible: boolean; onHintClick: () => void }) {
+    showHint: boolean }) {
   const ws = lot.waitAndSave!
 
   return (
@@ -292,8 +263,8 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, show
           <span className="text-[14px] font-bold text-[#ffad00] shrink-0">⚠</span>
           <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Wait &amp; Save opportunity</span>
           <p className="text-[12px] text-vg-ink flex-1">{ws.noticeText}</p>
-          {showHint && hintsVisible && (
-            <HintBadge onClick={onHintClick} />
+          {showHint && (
+            <CoachMark id="ws" text="This lot will qualify for the lower long-term capital gains rate in 166 days. Selling it now costs more in estimated tax than waiting." />
           )}
         </div>
       </div>
@@ -485,8 +456,6 @@ export default function FundSelectionManualLot() {
 
   // Coach mark — Wait & Save (single mark on this screen)
   // Sequential hint-indicator pattern per dev/CLAUDE.md
-  const [hintsVisible, setHintsVisible]   = useState(true)
-  const [openMark, setOpenMark]           = useState<'ws' | null>(null)
 
   // Modal state
   const [showAllocModal,  setShowAllocModal]  = useState(false)
@@ -616,20 +585,6 @@ export default function FundSelectionManualLot() {
 
   return (
     <>
-      {/* Show Tips / Hide Tips — Figma: Controls/Show Tips [FS-MAN-LOT] (716:2917), x=978 y=20 */}
-      <button
-        onClick={() => { setHintsVisible(v => !v); setOpenMark(null) }}
-        className="fixed z-50 flex items-center gap-[5px] cursor-pointer"
-        style={{ top: 20, left: 978 }}
-      >
-        <div className="w-[14px] h-[14px] border border-vg-ink rounded-[7px] flex items-center justify-center shrink-0">
-          <span className="text-[9px] text-vg-ink leading-none">?</span>
-        </div>
-        <span className="text-[13px] text-vg-ink underline whitespace-nowrap">
-          {hintsVisible ? 'Hide tips' : 'Show tips'}
-        </span>
-      </button>
-
       {/* Target Allocation Modal */}
       {showAllocModal && <TargetAllocationModal onClose={() => setShowAllocModal(false)} />}
 
@@ -900,8 +855,6 @@ export default function FundSelectionManualLot() {
                           onSharesChange={v => handleSharesChange(lot.lotId, v)}
                           onSharesCommit={v => handleSharesCommit(lot.lotId, v)}
                           showHint={true}
-                          hintsVisible={hintsVisible}
-                          onHintClick={() => setOpenMark(prev => prev === 'ws' ? null : 'ws')}
                         />
                       ) : (
                         <NormalLotRow
@@ -965,17 +918,6 @@ export default function FundSelectionManualLot() {
                 )}
                 </div>{/* end Table Section pl-8 wrapper */}
               </div>
-
-              {/* Coach Mark — Wait & Save (overlay node 716:2921, x=286 y=590)
-                  Positioned in the lot table area, arrow pointing up toward W&S row */}
-              {openMark === 'ws' && (
-                <div className="absolute z-40" style={{ left: 286, top: 560 }}>
-                  <CoachMarkBubble
-                    text="This lot will qualify for the lower long-term capital gains rate in 166 days. Selling it now costs more in estimated tax than waiting."
-                    onDismiss={() => setOpenMark(null)}
-                  />
-                </div>
-              )}
 
               {/* Other active fund — collapsed (Figma: 388:2534, y=777, 96px) */}
               {COLLAPSED_FUND_DATA[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'] && (

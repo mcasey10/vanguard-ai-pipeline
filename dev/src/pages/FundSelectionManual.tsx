@@ -34,17 +34,6 @@ export default function FundSelectionManual() {
 
   return (
     <>
-      <button
-        onClick={() => { /* Hide tips — FS-MAN-1 has no coach marks wired yet */ }}
-        className="fixed z-50 flex items-center gap-[5px] cursor-pointer"
-        style={{ top: 20, left: 978 }}
-      >
-        <div className="w-[14px] h-[14px] border border-vg-ink rounded-[7px] flex items-center justify-center shrink-0">
-          <span className="text-[9px] text-vg-ink leading-none">?</span>
-        </div>
-        <span className="text-[13px] text-vg-ink underline whitespace-nowrap">Hide tips</span>
-      </button>
-
       {showModeDialog && <SaveDiscardDialog onSave={handleSave} onDiscard={handleDiscard} onClose={handleClose} />}
 
       <div className="flex flex-col items-start w-full">
