@@ -420,18 +420,6 @@ export default function FundSelectionManual2() {
   const appliedAmounts = manualAppliedAmountsCents
   const costBasisMethods = manualCostBasisMethods as Record<string, CostBasisMethod>
 
-  // Seed store from recommendation when arriving from Automated mode (store not yet populated)
-  useEffect(() => {
-    if (manualActiveFundIds.length === 0 && recommendation?.fund_results?.length) {
-      const ids = recommendation.fund_results.map(fr => fr.fund_id)
-      setManualActiveFunds(ids)
-      for (const fr of recommendation.fund_results) {
-        setManualAppliedAmount(fr.fund_id, Math.round(fr.sell_amount * 100))
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // runManualEngine — builds ManualSelections from current activeFunds + appliedAmounts
   // and calls runOptimization() in manual mode. Called on Apply/blur/Enter.
   const runManualEngine = useCallback((
@@ -471,17 +459,38 @@ export default function FundSelectionManual2() {
     runManualEngine(appliedAmounts, activeFunds, newMethods)
   }
 
-  // On mount: re-run engine if store has amounts (covers two cases):
-  //   1 — returning from FS-MAN-LOT: fundResults (local) was lost on unmount;
-  //       store still has appliedAmounts + activeFunds, so engine regenerates fundResults.
-  //   2 — arriving from Automated recommendation: store was seeded above, one engine
-  //       call initializes the banner immediately.
+  // Single mount effect covering two cases:
+  //
+  // Case 1 — First arrival from Automated: store is empty (manualActiveFundIds=[]).
+  //   Seed store from recommendation AND immediately run engine with fresh amounts.
+  //   We CANNOT read appliedAmounts from the closure here — it captured {} at render
+  //   time before the store was seeded (Zustand set() is synchronous but the closure
+  //   is already bound). We pass the amounts directly to runManualEngine to bypass
+  //   the stale closure and populate the banner on first render.
+  //
+  // Case 2 — Return from FS-MAN-LOT: store already has amounts; fundResults (local
+  //   state) was lost on unmount. Re-run engine from closure values, which are now
+  //   valid because the store was populated on a prior mount.
   useEffect(() => {
+    if (manualActiveFundIds.length === 0 && recommendation?.fund_results?.length) {
+      // Case 1: seed store then run engine with fresh data (not the stale closure)
+      const ids = recommendation.fund_results.map(fr => fr.fund_id)
+      const freshAmounts: Record<string, number> = {}
+      setManualActiveFunds(ids)
+      for (const fr of recommendation.fund_results) {
+        const cents = Math.round(fr.sell_amount * 100)
+        setManualAppliedAmount(fr.fund_id, cents)
+        freshAmounts[fr.fund_id] = cents
+      }
+      runManualEngine(freshAmounts, new Set(ids), {})
+      return
+    }
+    // Case 2: returning from lot detail or subsequent mount — use closure values (valid)
     const total = Object.values(appliedAmounts).reduce((s, v) => s + v, 0)
     if (total > 0 && activeFunds.size > 0) {
       runManualEngine(appliedAmounts, activeFunds, costBasisMethods)
     }
-  }, []) // intentionally runs once on mount
+  }, []) // intentionally runs once on mount — see comment above for why [] is correct
 
   // handleApplyAmount — updates store then triggers engine
   function handleApplyAmount(ticker: string, cents: number) {
