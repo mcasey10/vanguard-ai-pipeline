@@ -435,6 +435,7 @@ export default function FundSelectionManual2() {
       .map(ticker => ({
         fund_id: ticker,
         accounting_method: toAccountingMethod(newMethods[ticker] ?? 'MinTax'),
+        sell_amount: r2((newAmounts[ticker] ?? 0) / 100),  // cents → dollars
       }))
     if (fundSelectionsForEngine.length === 0) { setFundResults([]); return }
     const result = runOptimization({

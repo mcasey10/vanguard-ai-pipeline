@@ -48,6 +48,7 @@ export interface ManualLotOverride {
 export interface ManualFundSelection {
   fund_id: string
   accounting_method: AccountingMethod
+  sell_amount?: number                  // dollars; if omitted falls back to targetSaleAmount ÷ n
   lot_overrides?: ManualLotOverride[]   // required when method = specific_lot_identification
 }
 
@@ -644,8 +645,9 @@ export function runOptimization(params: OptimizationParams): OptimizationResult 
       const holding = account.holdings.find(h => h.fund_id === sel.fund_id)
       if (!holding) continue
 
-      // Determine how much to sell: for SpecID, sum of lot overrides; otherwise caller must provide
-      let sellAmount = targetSaleAmount / manualSelections.fund_selections.length // fallback split
+      // Determine how much to sell: explicit per-fund amount takes priority,
+      // then SpecID lot overrides, then equal-split fallback
+      let sellAmount = sel.sell_amount ?? (targetSaleAmount / manualSelections.fund_selections.length)
       if (sel.lot_overrides && sel.lot_overrides.length > 0) {
         sellAmount = r2(sel.lot_overrides.reduce((s, o) => {
           const lot = holding.lots.find(l => l.lot_id === o.lot_id)
