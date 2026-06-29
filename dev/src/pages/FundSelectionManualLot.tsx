@@ -469,7 +469,7 @@ export default function FundSelectionManualLot() {
   const navigate = useNavigate()
   const location = useLocation()
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
-    manualConfig, manualAppliedAmountsCents, setManualCostBasisMethod,
+    manualConfig, manualAppliedAmountsCents, manualActiveFundIds, setManualCostBasisMethod,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
   const locationState   = location.state as { fund?: string; costBasisMethod?: string } | null
   const fund            = locationState?.fund ?? 'VTSAX'
@@ -717,6 +717,19 @@ export default function FundSelectionManualLot() {
   const iraExpanded  = expandedAccounts.has('ira')
   const rothExpanded = expandedAccounts.has('roth')
 
+  // Determine whether the "other" active fund should appear BEFORE the expanded fund.
+  // Reads manualActiveFundIds (activation order from FS-MAN-2) to preserve the order
+  // the user set — e.g. if VTSAX was activated first, it stays above VBTLX even when
+  // VBTLX's lot detail is open.
+  const otherFundId = fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'
+  const otherFundComesFirst = (() => {
+    const expandedIdx = manualActiveFundIds.indexOf(fund)
+    const otherIdx    = manualActiveFundIds.indexOf(otherFundId)
+    // If either isn't in the list fall back to current behavior (other fund after)
+    if (expandedIdx === -1 || otherIdx === -1) return false
+    return otherIdx < expandedIdx
+  })()
+
   const ltLots = lots.filter(l => l.holdingPeriod === 'LT')
   const stLots = lots.filter(l => l.holdingPeriod === 'ST')
 
@@ -855,6 +868,16 @@ export default function FundSelectionManualLot() {
                 </div>
                 <div className="flex-1" />
               </div>
+
+              {/* Other active fund — collapsed, shown BEFORE expanded fund when it was activated first */}
+              {otherFundComesFirst && COLLAPSED_FUND_DATA[otherFundId] && (
+                <CollapsedActiveFundRow
+                  fund={COLLAPSED_FUND_DATA[otherFundId]}
+                  onLotDetails={ticker => navigate('/manual-lot', { state: { fund: ticker } })}
+                  displayMethod={collapsedMethod}
+                  onEditClick={() => setShowCollapsedCBD(true)}
+                />
+              )}
 
               {/* EXPANDED active fund row — Main Row + Details Row + Lot Detail */}
               <div className="flex flex-col border-b border-[#e8e9e9] w-full bg-white">
@@ -1125,10 +1148,10 @@ export default function FundSelectionManualLot() {
                 </div>{/* end Table Section pl-8 wrapper */}
               </div>
 
-              {/* Other active fund — collapsed (Figma: 388:2534, y=777, 96px) */}
-              {COLLAPSED_FUND_DATA[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'] && (
+              {/* Other active fund — collapsed, shown AFTER expanded fund when it was activated later */}
+              {!otherFundComesFirst && COLLAPSED_FUND_DATA[otherFundId] && (
                 <CollapsedActiveFundRow
-                  fund={COLLAPSED_FUND_DATA[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX']}
+                  fund={COLLAPSED_FUND_DATA[otherFundId]}
                   onLotDetails={ticker => navigate('/manual-lot', { state: { fund: ticker } })}
                   displayMethod={collapsedMethod}
                   onEditClick={() => setShowCollapsedCBD(true)}
