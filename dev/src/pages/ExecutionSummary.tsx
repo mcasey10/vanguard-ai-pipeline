@@ -333,6 +333,16 @@ export default function ExecutionSummary() {
           </button>
         </div>
 
+        {/* Reset link — unobtrusive, for demo / fresh-start use */}
+        <div className="flex justify-end w-full pt-[8px]">
+          <a
+            className="text-[12px] text-[#717777] underline cursor-pointer hover:opacity-70"
+            onClick={() => navigate('/?reset=true')}
+          >
+            Reset application
+          </a>
+        </div>
+
       </div>
     </div>
   )

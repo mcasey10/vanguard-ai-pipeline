@@ -1,12 +1,23 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import { formatCurrency } from '../utils/format'
 
 export default function FundSelectionEntry() {
   const navigate = useNavigate()
-  const { mode: storeMode, setTargetSaleAmount, setMode, startNewScenario } = useAppStore()
+  const [searchParams] = useSearchParams()
+  const { mode: storeMode, setTargetSaleAmount, setMode, startNewScenario, resetSession } = useAppStore()
+
+  // /?reset=true — clears all localStorage and in-memory session state, then redirects to /
+  useEffect(() => {
+    if (searchParams.get('reset') === 'true') {
+      localStorage.removeItem('vsr_portfolio_state')
+      localStorage.removeItem('vsr_coach_marks_dismissed')
+      resetSession()
+      navigate('/', { replace: true })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [rawAmount, setRawAmount] = useState('')
   const [mode, setLocalMode] = useState<'automated' | 'manual'>(storeMode)
