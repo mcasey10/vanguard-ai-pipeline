@@ -307,6 +307,7 @@ export interface ManualConfiguration {
   active_fund_ids: string[]
   fund_selections: ScenarioFundSelection[]
   fund_results: FundSaleResult[]           // per-fund engine output for display (gains, tax, impact)
+  allocation_impact: AllocationImpact      // portfolio-level before/after allocation for IMPACT column
   applied_amounts: Record<string, number>  // ticker → cents (lifted state from ActiveFundRow)
   total_sell_amount: number
 }

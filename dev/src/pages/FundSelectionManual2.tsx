@@ -375,6 +375,8 @@ function ReadOnlyFundRow({ fund }: { fund: FundRow }) {
 
 function r2(n: number) { return Math.round(n * 100) / 100 }
 function fmtSigned(n: number) { return (n >= 0 ? '+' : '−') + formatCurrency(Math.abs(n)) }
+// 1-decimal percent for IMPACT column (matches FS-AUTO-1 fmtPct1)
+function fmtPct1(n: number) { return new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n) }
 // 2-decimal rate display for effective rate (Intl, no toFixed)
 function fmtRate2(n: number) { return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n) }
 
@@ -405,7 +407,7 @@ function taxDataFromResult(fr: FundSaleResult | undefined): TaxData {
 export default function FundSelectionManual2() {
   const navigate = useNavigate()
   const {
-    portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, recommendation,
+    portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, manualConfig, recommendation,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio,
     manualActiveFundIds, manualAppliedAmountsCents, manualCostBasisMethods,
     setManualActiveFunds, setManualAppliedAmount, clearManualAppliedAmount, setManualCostBasisMethod,
@@ -657,7 +659,7 @@ export default function FundSelectionManual2() {
             </div>
           </div>
 
-          {/* Summary Banner — values from engine output (fundResults) when available */}
+          {/* Summary Banner — values from engine output (fundResults + manualConfig) when available */}
           {(() => {
             const totalSale = r2(fundResults.reduce((s, f) => s + f.sell_amount, 0))
             const salePct = portfolio ? r2((totalSale / portfolio.total_investable_balance) * 100) : 0
@@ -668,6 +670,13 @@ export default function FundSelectionManual2() {
             const taxLT = Math.max(0, netGain - Math.min(netGain, Math.max(0, stGains))) * activeTaxRates.lt_rate
             const estNetTax = r2(taxST + taxLT)
             const effRate = totalSale > 0 ? r2((estNetTax / totalSale) * 100) : 0
+            // Allocation impact from manualConfig — computed by engine alongside fundResults
+            const allocImpact = manualConfig?.allocation_impact ?? null
+            const equityDelta = allocImpact ? r2(
+              (allocImpact.domestic_equity_after + allocImpact.international_equity_after) -
+              (allocImpact.domestic_equity_before + allocImpact.international_equity_before)
+            ) : null
+            const bondsDelta = allocImpact ? r2(allocImpact.domestic_bonds_after - allocImpact.domestic_bonds_before) : null
             const ai = fundResults.length > 0 ? { stGains, ltGains, estNetTax, effRate, totalSale, salePct } : null
             return (
           <div className="flex items-center px-8 w-full relative">
@@ -720,8 +729,26 @@ export default function FundSelectionManual2() {
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-vg-ink">—</span></div>
-                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-ink">—</span></div>
+                {equityDelta !== null ? (
+                  <div className="flex gap-1.5 items-center">
+                    <span className="text-[12px] text-vg-ink">Equity</span>
+                    <span className={`text-[12px] ${equityDelta <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
+                      {equityDelta <= 0 ? '−' : '+'}{fmtPct1(Math.abs(equityDelta))}%
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-vg-ink">—</span></div>
+                )}
+                {bondsDelta !== null ? (
+                  <div className="flex gap-1.5 items-center">
+                    <span className="text-[12px] text-vg-ink">Bonds</span>
+                    <span className={`text-[12px] ${bondsDelta >= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
+                      {bondsDelta >= 0 ? '+' : '−'}{fmtPct1(Math.abs(bondsDelta))}%
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-ink">—</span></div>
+                )}
                 <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
               </div>
             </div>

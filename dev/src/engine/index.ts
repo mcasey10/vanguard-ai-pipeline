@@ -630,12 +630,23 @@ export function runOptimization(params: OptimizationParams): OptimizationResult 
 
   } else {
     // Manual mode
+    const emptyAllocation: AllocationImpact = {
+      domestic_equity_before:      portfolio.current_allocation.domestic_equity_pct,
+      international_equity_before: portfolio.current_allocation.international_equity_pct,
+      domestic_bonds_before:       portfolio.current_allocation.domestic_bonds_pct,
+      short_term_reserves_before:  portfolio.current_allocation.short_term_reserves_pct,
+      domestic_equity_after:       portfolio.current_allocation.domestic_equity_pct,
+      international_equity_after:  portfolio.current_allocation.international_equity_pct,
+      domestic_bonds_after:        portfolio.current_allocation.domestic_bonds_pct,
+      short_term_reserves_after:   portfolio.current_allocation.short_term_reserves_pct,
+    }
     if (!manualSelections || manualSelections.fund_selections.length === 0) {
       return {
         mode: 'manual',
         active_fund_ids: [],
         fund_selections: [],
         fund_results: [],
+        allocation_impact: emptyAllocation,
         applied_amounts: {},
         total_sell_amount: 0,
       }
@@ -686,6 +697,7 @@ export function runOptimization(params: OptimizationParams): OptimizationResult 
         lots_selected: fr.lots_sold,
       })),
       fund_results: fundResults,
+      allocation_impact: computeAllocationImpact(portfolio, fundResults),
       applied_amounts: Object.fromEntries(fundResults.map(fr => [fr.fund_id, fr.sell_amount])),
       total_sell_amount: totalSaleAmount,
     }
