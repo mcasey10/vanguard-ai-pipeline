@@ -87,7 +87,9 @@ export default function FundSelectionAutomated() {
   // ── Derived display values ───────────────────────────────────────────────
 
   const rec = recommendation as Recommendation | null
-  const totalSale = rec ? rec.fund_results.reduce((s, f) => s + f.sell_amount, 0) : (targetSaleAmount ?? 0)
+  // Use targetSaleAmount (user-entered, store-persisted) for SALE TOTAL — the engine's
+  // fund allocation totals may differ slightly from the entered target due to lot sizing.
+  const totalSale = targetSaleAmount ?? (rec ? rec.fund_results.reduce((s, f) => s + f.sell_amount, 0) : 0)
   const salePct = portfolio ? (totalSale / portfolio.total_investable_balance) * 100 : 0
 
   const estSTGains = rec ? rec.fund_results.reduce((s, f) => s + f.est_st_gain_loss, 0) : null

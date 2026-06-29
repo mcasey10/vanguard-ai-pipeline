@@ -87,30 +87,11 @@ function buildConfirmData(
   let optMode: 'tax-first' | 'balance-first' = optimizationPriority
   let accountingMethod: AccountingMethod = 'MinTax'
 
-  if (scenario) {
-    funds = scenario.fund_selections.map(fs => {
-      const stg = fs.st_gain_loss ?? 0
-      const ltg = fs.lt_gain_loss ?? 0
-      const period: 'ST' | 'LT' | '' = stg !== 0 ? 'ST' : ltg !== 0 ? 'LT' : ''
-      return {
-        id: fs.fund_id,
-        name: shortFundName(fs.fund_name ?? fs.fund_id),
-        method: fs.accounting_method === 'specific_lot_identification' ? 'Spec ID' : fs.accounting_method,
-        sellAmount: fs.sell_amount,
-        gainLoss: period === 'ST' ? stg : ltg,
-        gainLossPeriod: period,
-        estTaxGross: fs.est_tax_gross ?? 0,
-      }
-    })
-    totalSaleAmount = scenario.total_sell_amount
-    stCapitalGains = r2(scenario.projected_st_gains)
-    ltCapitalGains = r2(scenario.projected_lt_gains)
-    lossesHarvested = r2(scenario.losses_harvested)
-    estNetTax = r2(scenario.est_net_tax)
-    effectiveRate = scenario.total_sell_amount > 0 ? r2((estNetTax / scenario.total_sell_amount) * 100) : 0
-    optMode = (scenario.optimization_priority as 'tax-first' | 'balance-first') ?? optimizationPriority
-    accountingMethod = (scenario.fund_selections[0]?.accounting_method as AccountingMethod) ?? 'MinTax'
-  } else if (rec) {
+  // Priority: current recommendation first (reflects the user's most recent calculation),
+  // then saved scenario (only used when arriving from Scenario Analysis with no fresh rec).
+  // Scenario-first caused BUG: stale $25k scenario would override a fresh $40k recommendation
+  // because scenarios are never cleared on session reset.
+  if (rec) {
     funds = rec.fund_results.map(fr => {
       const stg = fr.est_st_gain_loss
       const ltg = fr.est_lt_gain_loss
@@ -133,6 +114,29 @@ function buildConfirmData(
     effectiveRate = totalSaleAmount > 0 ? r2((estNetTax / totalSaleAmount) * 100) : 0
     optMode = rec.optimization_priority ?? optimizationPriority
     accountingMethod = (rec.fund_results[0]?.accounting_method as AccountingMethod) ?? 'MinTax'
+  } else if (scenario) {
+    funds = scenario.fund_selections.map(fs => {
+      const stg = fs.st_gain_loss ?? 0
+      const ltg = fs.lt_gain_loss ?? 0
+      const period: 'ST' | 'LT' | '' = stg !== 0 ? 'ST' : ltg !== 0 ? 'LT' : ''
+      return {
+        id: fs.fund_id,
+        name: shortFundName(fs.fund_name ?? fs.fund_id),
+        method: fs.accounting_method === 'specific_lot_identification' ? 'Spec ID' : fs.accounting_method,
+        sellAmount: fs.sell_amount,
+        gainLoss: period === 'ST' ? stg : ltg,
+        gainLossPeriod: period,
+        estTaxGross: fs.est_tax_gross ?? 0,
+      }
+    })
+    totalSaleAmount = scenario.total_sell_amount
+    stCapitalGains = r2(scenario.projected_st_gains)
+    ltCapitalGains = r2(scenario.projected_lt_gains)
+    lossesHarvested = r2(scenario.losses_harvested)
+    estNetTax = r2(scenario.est_net_tax)
+    effectiveRate = scenario.total_sell_amount > 0 ? r2((estNetTax / scenario.total_sell_amount) * 100) : 0
+    optMode = (scenario.optimization_priority as 'tax-first' | 'balance-first') ?? optimizationPriority
+    accountingMethod = (scenario.fund_selections[0]?.accounting_method as AccountingMethod) ?? 'MinTax'
   } else {
     return null
   }
@@ -330,7 +334,7 @@ export default function OrderConfirmation() {
 
               {/* Fund rows */}
               {data.funds.map((f, i) => {
-                const gainLossColor = f.gainLoss > 0 ? '#c8102e' : f.gainLoss < 0 ? '#007a00' : '#717777'
+                const gainLossColor = f.gainLoss > 0 ? '#007a00' : f.gainLoss < 0 ? '#c8102e' : '#717777'
                 const taxColor = f.estTaxGross > 0 ? '#040505' : '#717777'
                 return (
                   <div key={f.id} className={`flex h-[40px] items-start w-full border-b ${i < data.funds.length - 1 ? 'border-[#f0f0f0]' : 'border-[#f0f0f0]'}`}>
