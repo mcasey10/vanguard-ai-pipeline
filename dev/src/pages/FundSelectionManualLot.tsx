@@ -469,7 +469,7 @@ export default function FundSelectionManualLot() {
   const navigate = useNavigate()
   const location = useLocation()
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
-    manualConfig, manualAppliedAmountsCents, manualActiveFundIds, setManualCostBasisMethod,
+    manualConfig, manualAppliedAmountsCents, manualActiveFundIds, manualCostBasisMethods, setManualCostBasisMethod,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
   const locationState   = location.state as { fund?: string; costBasisMethod?: string } | null
   const fund            = locationState?.fund ?? 'VTSAX'
@@ -570,8 +570,10 @@ export default function FundSelectionManualLot() {
 
   // Modal state
   const [showAllocModal,  setShowAllocModal]  = useState(false)
-  // Cost basis for the collapsed other-fund row
-  const [collapsedMethod, setCollapsedMethod] = useState<CostBasisMethod>(fund === 'VTSAX' ? 'MinTax' : 'SpecID')
+  // Cost basis for the collapsed other-fund row — read from store, not hardcoded
+  const [collapsedMethod, setCollapsedMethod] = useState<CostBasisMethod>(
+    (manualCostBasisMethods[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'] as CostBasisMethod) ?? 'MinTax'
+  )
   const [showCollapsedCBD, setShowCollapsedCBD] = useState(false)
 
   // Per-lot shares input state
@@ -894,13 +896,23 @@ export default function FundSelectionManualLot() {
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{fund === 'VTSAX' ? '1,597' : '5,600'} shares</span>
                     <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? formatCurrency(231884.40) : formatCurrency(51408.00)}</span>
                   </div>
-                  {/* Read-only sell amount (SpecID mode: derived from lot inputs via bannerData) */}
+                  {/* Sell amount — SpecID: "SELL AMOUNT *" derived from lot inputs; non-SpecID: input-styled display matching FS-MAN-2 */}
                   <div className="w-[128px] h-full flex flex-col gap-[3px] items-start overflow-hidden px-[4px] py-[8px] shrink-0">
                     <div className="flex flex-1 flex-col gap-[4px] items-start justify-center min-h-0 w-[120px]">
-                      <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SELL AMOUNT *</span>
-                      <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
-                        {bannerData ? formatCurrency(bannerData.totalSale) : (fund === 'VTSAX' ? formatCurrency(15000.03) : formatCurrency(10000))}
+                      <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">
+                        {isReadOnly ? 'SELL AMOUNT' : 'SELL AMOUNT *'}
                       </span>
+                      {isReadOnly ? (
+                        <div className="w-[120px] h-[28px] px-3 border border-vg-ink rounded-[4px] bg-white flex items-center">
+                          <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
+                            {formatCurrency((manualAppliedAmountsCents[fund] ?? 0) / 100)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
+                          {bannerData ? formatCurrency(bannerData.totalSale) : (fund === 'VTSAX' ? formatCurrency(15000.03) : formatCurrency(10000))}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="w-[130px] h-full flex flex-col gap-2 items-start px-2 py-[12px] shrink-0 overflow-hidden">
