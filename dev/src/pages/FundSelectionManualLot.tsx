@@ -471,9 +471,8 @@ export default function FundSelectionManualLot() {
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
     manualConfig, manualAppliedAmountsCents, manualActiveFundIds, manualCostBasisMethods, setManualCostBasisMethod,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
-  const locationState   = location.state as { fund?: string; costBasisMethod?: string } | null
-  const fund            = locationState?.fund ?? 'VTSAX'
-  const costBasisMethod = (locationState?.costBasisMethod ?? 'MinTax') as CostBasisMethod
+  const locationState = location.state as { fund?: string } | null
+  const fund          = locationState?.fund ?? 'VTSAX'
   const [bannerData, setBannerData] = useState<LotBannerData | null>(null)
 
   // Always show 3 decimal places in read-only share cells (matches Figma "0.000" / "103.306")
@@ -481,9 +480,24 @@ export default function FundSelectionManualLot() {
     return new Intl.NumberFormat('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n)
   }
 
-  // Cost basis for expanded fund row — initialized from navigation state, updated on user change
-  const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(costBasisMethod)
+  // Cost basis for the expanded fund row — always initialized from the Zustand store
+  // (single source of truth). Navigation state is NOT used because it can be stale or
+  // absent when navigating via CollapsedActiveFundRow's Lot details link.
+  const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(
+    (manualCostBasisMethods[fund] as CostBasisMethod) ?? 'MinTax'
+  )
   const [showExpandedCBD, setShowExpandedCBD] = useState(false)
+
+  // Re-sync method state when `fund` changes via same-route navigation
+  // (/manual-lot → /manual-lot). React Router reuses the component instance so
+  // useState initializers don't re-run — this effect keeps them in sync with the store.
+  useEffect(() => {
+    const otherFund = fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'
+    setExpandedMethod((manualCostBasisMethods[fund]       as CostBasisMethod) ?? 'MinTax')
+    setCollapsedMethod((manualCostBasisMethods[otherFund] as CostBasisMethod) ?? 'MinTax')
+    setBannerData(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fund])
 
   // isReadOnly derived from CURRENT method — updates live when user changes method
   const isReadOnly = expandedMethod !== 'SpecID'
