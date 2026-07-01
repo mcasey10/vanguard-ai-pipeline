@@ -219,7 +219,7 @@ export default function ExecutionSummary() {
                 {/* Fund Rows */}
                 {txn.funds_sold.map(f => {
                   const gl = glForFund(f)
-                  const glColor = gl.amount > 0 ? '#c8102e' : gl.amount < 0 ? '#007a00' : '#717777'
+                  const glColor = gl.amount > 0 ? '#007a00' : gl.amount < 0 ? '#c8102e' : '#717777'
                   const glStr = (gl.amount > 0 ? '+' : gl.amount < 0 ? '−' : '') + formatCurrency(Math.abs(gl.amount)) + ' ' + gl.period
                   return (
                     <div key={f.fund_id} className="flex h-[40px] items-center border-b border-[#f0f0f0] bg-white w-full">
@@ -279,19 +279,19 @@ export default function ExecutionSummary() {
                 label="ST Capital Gains realized"
                 value={stGains !== 0 ? signed(stGains) : '$0.00'}
                 valueBold={stGains !== 0}
-                valueColor={stGains > 0 ? '#c8102e' : stGains < 0 ? '#007a00' : '#717777'}
+                valueColor={stGains > 0 ? '#007a00' : stGains < 0 ? '#c8102e' : '#717777'}
               />
               <TaxRow
                 label="LT Capital Gains realized"
                 value={ltGains !== 0 ? signed(ltGains) : '$0.00'}
                 muted={ltGains === 0}
-                valueColor={ltGains > 0 ? '#c8102e' : ltGains < 0 ? '#007a00' : undefined}
+                valueColor={ltGains > 0 ? '#007a00' : ltGains < 0 ? '#c8102e' : undefined}
               />
               <TaxRow
                 label="Losses Harvested"
                 value={lossesHarvested !== 0 ? signed(lossesHarvested) : '$0.00'}
                 valueBold={lossesHarvested !== 0}
-                valueColor={lossesHarvested < 0 ? '#007a00' : lossesHarvested > 0 ? '#c8102e' : '#717777'}
+                valueColor={lossesHarvested < 0 ? '#c8102e' : lossesHarvested > 0 ? '#007a00' : '#717777'}
               />
               <Divider />
               <TaxRow label="Net Taxable Gain"     value={formatCurrency(netTaxableGain)} valueBold />

@@ -463,7 +463,7 @@ export default function OrderConfirmation() {
 
               {/* Fund rows */}
               {data.funds.map((f, i) => {
-                const gainLossColor = f.gainLoss > 0 ? '#c8102e' : f.gainLoss < 0 ? '#007a00' : '#717777'
+                const gainLossColor = f.gainLoss > 0 ? '#007a00' : f.gainLoss < 0 ? '#c8102e' : '#717777'
                 const taxColor = f.estTaxGross > 0 ? '#040505' : '#717777'
                 return (
                   <div key={f.id} className={`flex h-[40px] items-start w-full border-b ${i < data.funds.length - 1 ? 'border-[#f0f0f0]' : 'border-[#f0f0f0]'}`}>
@@ -514,9 +514,9 @@ export default function OrderConfirmation() {
               <div className="flex flex-1 flex-col items-start min-w-0">
                 <span className="text-[12px] font-semibold text-[#040505]">Estimated tax impact</span>
                 <div className="h-[8px]" />
-                <TaxRow label="ST Capital Gains" value={data.stCapitalGains !== 0 ? fmtGainLoss(data.stCapitalGains, '') : '$0.00'} valueBold valueColor={data.stCapitalGains > 0 ? '#c8102e' : data.stCapitalGains < 0 ? '#007a00' : '#717777'} />
-                <TaxRow label="LT Capital Gains" value={data.ltCapitalGains !== 0 ? fmtGainLoss(data.ltCapitalGains, '') : '$0.00'} muted={data.ltCapitalGains === 0} valueColor={data.ltCapitalGains > 0 ? '#c8102e' : data.ltCapitalGains < 0 ? '#007a00' : undefined} />
-                <TaxRow label="Losses Harvested" value={data.lossesHarvested !== 0 ? fmtGainLoss(data.lossesHarvested, '') : '$0.00'} valueBold={data.lossesHarvested !== 0} valueColor={data.lossesHarvested < 0 ? '#007a00' : data.lossesHarvested > 0 ? '#c8102e' : '#717777'} />
+                <TaxRow label="ST Capital Gains" value={data.stCapitalGains !== 0 ? fmtGainLoss(data.stCapitalGains, '') : '$0.00'} valueBold valueColor={data.stCapitalGains > 0 ? '#007a00' : data.stCapitalGains < 0 ? '#c8102e' : '#717777'} />
+                <TaxRow label="LT Capital Gains" value={data.ltCapitalGains !== 0 ? fmtGainLoss(data.ltCapitalGains, '') : '$0.00'} muted={data.ltCapitalGains === 0} valueColor={data.ltCapitalGains > 0 ? '#007a00' : data.ltCapitalGains < 0 ? '#c8102e' : undefined} />
+                <TaxRow label="Losses Harvested" value={data.lossesHarvested !== 0 ? fmtGainLoss(data.lossesHarvested, '') : '$0.00'} valueBold={data.lossesHarvested !== 0} valueColor={data.lossesHarvested < 0 ? '#c8102e' : data.lossesHarvested > 0 ? '#007a00' : '#717777'} />
                 <Divider />
                 <TaxRow label="Net Taxable Gain" value={formatCurrency(data.netTaxableGain)} valueBold />
                 <TaxRow label="Federal Tax (estimated)" value={formatCurrency(data.federalTax)} />
