@@ -168,6 +168,83 @@ export default function ExecutionSummary() {
           </div>
         </div>
 
+        {/* Transaction Summary */}
+        {txn && txn.funds_sold.length > 0 && (() => {
+          const allHoldings = portfolio.accounts.flatMap(a => a.holdings)
+          const fundName = (id: string) =>
+            allHoldings.find(h => h.fund_id === id)?.fund_name ?? id
+          const methodLabel = (m: string) =>
+            m === 'average_cost' ? 'Avg Cost'
+            : m === 'specific_lot_identification' ? 'SpecID'
+            : m
+          const glForFund = (f: { st_gain_loss: number; lt_gain_loss: number }): { amount: number; period: 'ST' | 'LT' } => {
+            // Use whichever period has a non-zero value; if both, combine into the larger
+            const st = f.st_gain_loss
+            const lt = f.lt_gain_loss
+            if (st !== 0 && lt === 0) return { amount: st, period: 'ST' }
+            if (lt !== 0 && st === 0) return { amount: lt, period: 'LT' }
+            // Both non-zero — show the dominant one (larger absolute value)
+            return Math.abs(st) >= Math.abs(lt) ? { amount: st, period: 'ST' } : { amount: lt, period: 'LT' }
+          }
+          const totalSell = r2(txn.funds_sold.reduce((s, f) => s + f.sell_amount, 0))
+          return (
+            <div className="bg-white border border-[#e8e9e9] flex flex-col items-start rounded-[8px] overflow-clip w-full">
+              {/* Card Header */}
+              <div className="bg-[#f8f8f8] border-b border-[#e8e9e9] flex items-center h-[48px] px-[15px] w-full">
+                <span className="text-[13px] font-semibold text-[#040505]">Transaction summary</span>
+              </div>
+              {/* Funds Section */}
+              <div className="flex flex-col gap-[2px] w-full">
+                {/* Column Header */}
+                <div className="bg-[#f8f8f8] border-b border-[#e8e9e9] flex h-[30px] items-center w-full">
+                  <span className="text-[10px] font-semibold text-[#717777] uppercase flex-1 pl-[15px]">Funds Sold</span>
+                  <div className="w-[202px] pr-[0px] flex justify-end">
+                    <span className="text-[10px] font-semibold text-[#717777] uppercase">Method</span>
+                  </div>
+                  <div className="w-[269px] flex justify-end">
+                    <span className="text-[10px] font-semibold text-[#717777] uppercase">Sell Amount</span>
+                  </div>
+                  <div className="w-[446px] flex justify-end pr-[17px]">
+                    <span className="text-[10px] font-semibold text-[#717777] uppercase">Est. Gain/Loss</span>
+                  </div>
+                </div>
+                {/* Fund Rows */}
+                {txn.funds_sold.map(f => {
+                  const gl = glForFund(f)
+                  const glColor = gl.amount > 0 ? '#007a00' : gl.amount < 0 ? '#c8102e' : '#717777'
+                  const glStr = (gl.amount > 0 ? '+' : gl.amount < 0 ? '−' : '') + formatCurrency(Math.abs(gl.amount)) + ' ' + gl.period
+                  return (
+                    <div key={f.fund_id} className="flex h-[40px] items-center border-b border-[#f0f0f0] bg-white w-full">
+                      <div className="flex flex-col justify-center flex-1 pl-[15px]">
+                        <span className="text-[13px] font-bold text-[#1255cc] leading-none">{f.fund_id}</span>
+                        <span className="text-[10px] text-[#717777] leading-none mt-[4px]">{fundName(f.fund_id)}</span>
+                      </div>
+                      <div className="w-[202px] flex justify-end">
+                        <span className="text-[12px] text-[#717777]">{methodLabel(f.accounting_method)}</span>
+                      </div>
+                      <div className="w-[269px] flex justify-end">
+                        <span className="text-[13px] font-bold text-[#040505]">{formatCurrency(f.sell_amount)}</span>
+                      </div>
+                      <div className="w-[446px] flex justify-end pr-[17px]">
+                        <span className="text-[12px] font-bold" style={{ color: glColor }}>{glStr}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+                {/* Totals Row */}
+                <div className="flex h-[36px] items-center bg-[#f8f8f7] border-t border-[#e8e9e9] w-full">
+                  <span className="text-[12px] font-semibold text-[#040505] flex-1 pl-[15px]">Total</span>
+                  <div className="w-[202px]" />
+                  <div className="w-[269px] flex justify-end">
+                    <span className="text-[13px] font-bold text-[#040505]">{formatCurrency(totalSell)}</span>
+                  </div>
+                  <div className="w-[446px] pr-[17px]" />
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Two Column Row */}
         <div className="flex gap-[24px] items-start w-full">
 
