@@ -113,8 +113,9 @@ export default function ExecutionSummary() {
   const cumulativeYtdST = r2(txn?.cumulative_ytd_st_gains ?? 0)
   const cumulativeYtdLT = r2(txn?.cumulative_ytd_lt_gains ?? 0)
 
-  // Portfolio value after sale
-  const portfolioAfter  = r2(portfolio.total_investable_balance - totalSaleAmount)
+  // Portfolio value after sale — portfolio.total_investable_balance is already updated
+  // by applyTransactionToPortfolio in OrderConfirmation before navigation here
+  const portfolioAfter  = r2(portfolio.total_investable_balance)
 
   // Allocation data — read from transaction snapshot (set on submit) or fall back to current allocation
   const ca = portfolio.current_allocation
@@ -158,11 +159,11 @@ export default function ExecutionSummary() {
         <div className="bg-[#e8f5f0] border border-[#5dcaa5] flex gap-[12px] items-start p-[20px] rounded-[8px] w-full">
           <span className="text-[24px] font-bold text-[#007a00] shrink-0">✓</span>
           <div className="flex flex-1 flex-col gap-[4px] items-start min-w-0">
-            <p className="text-[16px] font-bold text-[#040505] w-full">Order submitted successfully</p>
-            <p className="text-[13px] text-[#040505] w-full">
+            <p className="text-[16px] font-bold text-[#040505] w-full leading-5">Order submitted successfully</p>
+            <p className="text-[13px] text-[#040505] w-full leading-4">
               Your sell order has been placed and is being processed. Confirmation #{confirmationId}
             </p>
-            <p className="text-[12px] text-[#717777] w-full">
+            <p className="text-[12px] text-[#717777] w-full leading-[15px]">
               Estimated settlement: 1–2 business days · Proceeds to Brokerage {masked} settlement fund
             </p>
           </div>
@@ -171,8 +172,15 @@ export default function ExecutionSummary() {
         {/* Transaction Summary */}
         {txn && txn.funds_sold.length > 0 && (() => {
           const allHoldings = portfolio.accounts.flatMap(a => a.holdings)
-          const fundName = (id: string) =>
-            allHoldings.find(h => h.fund_id === id)?.fund_name ?? id
+          const fundName = (id: string) => {
+            const name = allHoldings.find(h => h.fund_id === id)?.fund_name ?? id
+            return name
+              .replace(/^Vanguard\s+/i, '')
+              .replace(/\s+Admiral Shares$/i, '')
+              .replace(/\s+Investor Shares$/i, '')
+              .replace(/\s+ETF$/i, '')
+              .trim()
+          }
           const methodLabel = (m: string) =>
             m === 'average_cost' ? 'Avg Cost'
             : m === 'specific_lot_identification' ? 'SpecID'
@@ -211,7 +219,7 @@ export default function ExecutionSummary() {
                 {/* Fund Rows */}
                 {txn.funds_sold.map(f => {
                   const gl = glForFund(f)
-                  const glColor = gl.amount > 0 ? '#007a00' : gl.amount < 0 ? '#c8102e' : '#717777'
+                  const glColor = gl.amount > 0 ? '#c8102e' : gl.amount < 0 ? '#007a00' : '#717777'
                   const glStr = (gl.amount > 0 ? '+' : gl.amount < 0 ? '−' : '') + formatCurrency(Math.abs(gl.amount)) + ' ' + gl.period
                   return (
                     <div key={f.fund_id} className="flex h-[40px] items-center border-b border-[#f0f0f0] bg-white w-full">
@@ -252,15 +260,15 @@ export default function ExecutionSummary() {
           <div className="bg-white border border-[#e8e9e9] flex flex-1 flex-col items-start rounded-[8px] overflow-clip min-w-0">
             {/* Card Header */}
             <div className="bg-[#f8f8f8] border-b border-[#e8e9e9] flex items-center p-[16px] w-full">
-              <span className="text-[13px] font-semibold text-[#040505]">Tax summary</span>
+              <span className="text-[13px] font-semibold text-[#040505] leading-4">Tax summary</span>
             </div>
 
             {/* Optimization Savings */}
             <div className="bg-[#e8f5f0] border-b border-[#e8e9e9] flex flex-col gap-[4px] items-start p-[16px] w-full">
-              <p className="text-[13px] font-bold text-[#085041] w-full">
+              <p className="text-[13px] font-bold text-[#085041] w-full leading-4">
                 ↓ You saved an estimated {formatCurrency(estimatedSavings > 0 ? estimatedSavings : 1344.85)} compared to selling without optimization
               </p>
-              <p className="text-[11px] text-[#717777] w-full">
+              <p className="text-[11px] text-[#717777] w-full leading-[13px]">
                 Based on FIFO comparison at your active tax rate assumptions
               </p>
             </div>
@@ -271,19 +279,19 @@ export default function ExecutionSummary() {
                 label="ST Capital Gains realized"
                 value={stGains !== 0 ? signed(stGains) : '$0.00'}
                 valueBold={stGains !== 0}
-                valueColor={stGains > 0 ? '#007a00' : stGains < 0 ? '#c8102e' : '#717777'}
+                valueColor={stGains > 0 ? '#c8102e' : stGains < 0 ? '#007a00' : '#717777'}
               />
               <TaxRow
                 label="LT Capital Gains realized"
                 value={ltGains !== 0 ? signed(ltGains) : '$0.00'}
                 muted={ltGains === 0}
-                valueColor={ltGains > 0 ? '#007a00' : ltGains < 0 ? '#c8102e' : undefined}
+                valueColor={ltGains > 0 ? '#c8102e' : ltGains < 0 ? '#007a00' : undefined}
               />
               <TaxRow
                 label="Losses Harvested"
                 value={lossesHarvested !== 0 ? signed(lossesHarvested) : '$0.00'}
                 valueBold={lossesHarvested !== 0}
-                valueColor={lossesHarvested < 0 ? '#c8102e' : lossesHarvested > 0 ? '#007a00' : '#717777'}
+                valueColor={lossesHarvested < 0 ? '#007a00' : lossesHarvested > 0 ? '#c8102e' : '#717777'}
               />
               <Divider />
               <TaxRow label="Net Taxable Gain"     value={formatCurrency(netTaxableGain)} valueBold />
@@ -306,7 +314,7 @@ export default function ExecutionSummary() {
           <div className="bg-white border border-[#e8e9e9] flex flex-1 flex-col items-start rounded-[8px] overflow-clip min-w-0">
             {/* Card Header */}
             <div className="bg-[#f8f8f8] border-b border-[#e8e9e9] flex items-center p-[16px] w-full">
-              <span className="text-[13px] font-semibold text-[#040505]">Portfolio rebalancing impact</span>
+              <span className="text-[13px] font-semibold text-[#040505] leading-4">Portfolio rebalancing impact</span>
             </div>
 
             {/* Portfolio Total Row */}
@@ -319,7 +327,7 @@ export default function ExecutionSummary() {
             <div className="flex flex-col gap-[12px] items-start p-[16px] w-full">
               {/* Legend */}
               <div className="flex gap-[12px] items-center">
-                {([['#2bbfb3','Stocks'],['#c8902a','Bonds'],['#888','Reserves']] as const).map(([color, name]) => (
+                {([['#2bbfb3','Stocks'],['#c8902a','Bonds'],['#888','Short-term reserves']] as const).map(([color, name]) => (
                   <div key={name} className="flex gap-[4px] items-center">
                     <div className="w-[8px] h-[8px] rounded-full shrink-0" style={{ background: color }} />
                     <span className="text-[11px] text-[#040505] whitespace-nowrap">{name}</span>
@@ -376,7 +384,7 @@ export default function ExecutionSummary() {
         {/* Element 4 — What Happens Next */}
         <div className="bg-white border border-[#e8e9e9] flex flex-col items-start rounded-[8px] overflow-clip w-full">
           <div className="bg-[#f8f8f8] border-b border-[#e8e9e9] flex items-center p-[16px] w-full">
-            <span className="text-[13px] font-semibold text-[#040505]">What happens next</span>
+            <span className="text-[13px] font-semibold text-[#040505] leading-4">What happens next</span>
           </div>
           <div className="flex items-start justify-between px-[24px] py-[16px] w-full gap-4">
             <TimelineStep step="✓" label="Order submitted"    description="Sell order placed and confirmed"             done />

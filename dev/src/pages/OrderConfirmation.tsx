@@ -428,42 +428,42 @@ export default function OrderConfirmation() {
             {/* Section 1 — Transaction Summary */}
             <div className="bg-[#f8f8f8] border border-[#e8e9e9] flex items-center justify-between p-[16px] w-full">
               <div className="flex flex-col gap-[4px] items-start">
-                <span className="text-[10px] font-semibold text-[#717777] uppercase tracking-wide">ORDER SUMMARY</span>
-                <span className="text-[15px] font-bold text-[#040505]">{data.accountName} {data.accountMasked}</span>
+                <span className="text-[10px] font-semibold text-[#717777] uppercase tracking-wide leading-3">ORDER SUMMARY</span>
+                <span className="text-[15px] font-bold text-[#040505] leading-[18px]">{data.accountName} {data.accountMasked}</span>
               </div>
               <div className="flex flex-col gap-[4px] items-end text-right">
-                <span className="text-[10px] font-semibold text-[#717777] uppercase tracking-wide">TOTAL SALE AMOUNT</span>
-                <span className="text-[20px] font-bold text-[#040505]">{formatCurrency(data.totalSaleAmount)}</span>
+                <span className="text-[10px] font-semibold text-[#717777] uppercase tracking-wide leading-3">TOTAL SALE AMOUNT</span>
+                <span className="text-[20px] font-bold text-[#040505] leading-6">{formatCurrency(data.totalSaleAmount)}</span>
               </div>
             </div>
 
             {/* Section 2 — Funds to be sold */}
             <div className="border border-[#e8e9e9] flex flex-col items-start p-[16px] w-full">
-              <span className="text-[12px] font-semibold text-[#040505]">Funds to be sold</span>
+              <span className="text-[12px] font-semibold text-[#040505] leading-[15px]">Funds to be sold</span>
               <div className="h-[8px]" />
 
               {/* Column headers */}
               <div className="flex items-start border-b border-[#e8e9e9] pb-[6px] w-full">
-                <div className="flex flex-1 min-w-0">
+                <div className="flex flex-1 min-w-0 h-[24px] items-center">
                   <span className="text-[10px] font-semibold text-[#717777] uppercase">Fund</span>
                 </div>
-                <div className="w-[202px] flex justify-end">
+                <div className="w-[202px] h-[24px] flex items-center justify-end">
                   <span className="text-[10px] font-semibold text-[#717777] uppercase">Method</span>
                 </div>
-                <div className="w-[269px] flex justify-end">
+                <div className="w-[269px] h-[24px] flex items-center justify-end">
                   <span className="text-[10px] font-semibold text-[#717777] uppercase">Sell amount</span>
                 </div>
-                <div className="w-[202px] flex justify-end">
+                <div className="w-[202px] h-[24px] flex items-center justify-end">
                   <span className="text-[10px] font-semibold text-[#717777] uppercase">Est. gain/loss</span>
                 </div>
-                <div className="w-[244px] flex justify-end">
+                <div className="w-[244px] h-[24px] flex items-center justify-end">
                   <span className="text-[10px] font-semibold text-[#717777] uppercase">Est. tax</span>
                 </div>
               </div>
 
               {/* Fund rows */}
               {data.funds.map((f, i) => {
-                const gainLossColor = f.gainLoss > 0 ? '#007a00' : f.gainLoss < 0 ? '#c8102e' : '#717777'
+                const gainLossColor = f.gainLoss > 0 ? '#c8102e' : f.gainLoss < 0 ? '#007a00' : '#717777'
                 const taxColor = f.estTaxGross > 0 ? '#040505' : '#717777'
                 return (
                   <div key={f.id} className={`flex h-[40px] items-start w-full border-b ${i < data.funds.length - 1 ? 'border-[#f0f0f0]' : 'border-[#f0f0f0]'}`}>
@@ -514,9 +514,9 @@ export default function OrderConfirmation() {
               <div className="flex flex-1 flex-col items-start min-w-0">
                 <span className="text-[12px] font-semibold text-[#040505]">Estimated tax impact</span>
                 <div className="h-[8px]" />
-                <TaxRow label="ST Capital Gains" value={data.stCapitalGains !== 0 ? fmtGainLoss(data.stCapitalGains, '') : '$0.00'} valueBold valueColor={data.stCapitalGains > 0 ? '#007a00' : data.stCapitalGains < 0 ? '#c8102e' : '#717777'} />
-                <TaxRow label="LT Capital Gains" value={data.ltCapitalGains !== 0 ? fmtGainLoss(data.ltCapitalGains, '') : '$0.00'} muted={data.ltCapitalGains === 0} valueColor={data.ltCapitalGains > 0 ? '#007a00' : data.ltCapitalGains < 0 ? '#c8102e' : undefined} />
-                <TaxRow label="Losses Harvested" value={data.lossesHarvested !== 0 ? fmtGainLoss(data.lossesHarvested, '') : '$0.00'} valueBold={data.lossesHarvested !== 0} valueColor={data.lossesHarvested < 0 ? '#c8102e' : data.lossesHarvested > 0 ? '#007a00' : '#717777'} />
+                <TaxRow label="ST Capital Gains" value={data.stCapitalGains !== 0 ? fmtGainLoss(data.stCapitalGains, '') : '$0.00'} valueBold valueColor={data.stCapitalGains > 0 ? '#c8102e' : data.stCapitalGains < 0 ? '#007a00' : '#717777'} />
+                <TaxRow label="LT Capital Gains" value={data.ltCapitalGains !== 0 ? fmtGainLoss(data.ltCapitalGains, '') : '$0.00'} muted={data.ltCapitalGains === 0} valueColor={data.ltCapitalGains > 0 ? '#c8102e' : data.ltCapitalGains < 0 ? '#007a00' : undefined} />
+                <TaxRow label="Losses Harvested" value={data.lossesHarvested !== 0 ? fmtGainLoss(data.lossesHarvested, '') : '$0.00'} valueBold={data.lossesHarvested !== 0} valueColor={data.lossesHarvested < 0 ? '#007a00' : data.lossesHarvested > 0 ? '#c8102e' : '#717777'} />
                 <Divider />
                 <TaxRow label="Net Taxable Gain" value={formatCurrency(data.netTaxableGain)} valueBold />
                 <TaxRow label="Federal Tax (estimated)" value={formatCurrency(data.federalTax)} />
@@ -539,19 +539,19 @@ export default function OrderConfirmation() {
             {/* Section 4 — Settlement Details */}
             <div className="border border-[#e8e9e9] flex gap-[24px] items-start p-[16px] w-full">
               <div className="flex flex-1 flex-col gap-[4px] items-start min-w-0">
-                <span className="text-[10px] font-semibold text-[#717777] uppercase">DESTINATION</span>
-                <span className="text-[13px] font-normal text-[#040505]">Settlement fund</span>
-                <span className="text-[13px] font-bold text-[#040505]">Brokerage {data.accountMasked}</span>
+                <span className="text-[10px] font-semibold text-[#717777] uppercase leading-3">DESTINATION</span>
+                <span className="text-[13px] font-normal text-[#040505] leading-4">Settlement fund</span>
+                <span className="text-[13px] font-bold text-[#040505] leading-4">Brokerage {data.accountMasked}</span>
               </div>
               <div className="flex flex-1 flex-col gap-[4px] items-start min-w-0">
-                <span className="text-[10px] font-semibold text-[#717777] uppercase">ESTIMATED SETTLEMENT</span>
-                <span className="text-[13px] font-bold text-[#040505]">1–2 business days</span>
-                <span className="text-[11px] text-[#717777]">Proceeds available in your settlement fund</span>
+                <span className="text-[10px] font-semibold text-[#717777] uppercase leading-3">ESTIMATED SETTLEMENT</span>
+                <span className="text-[13px] font-bold text-[#040505] leading-4">1–2 business days</span>
+                <span className="text-[11px] text-[#717777] leading-[13px]">Proceeds available in your settlement fund</span>
               </div>
               <div className="flex flex-1 flex-col gap-[4px] items-start min-w-0">
-                <span className="text-[10px] font-semibold text-[#717777] uppercase">TAX YEAR</span>
-                <span className="text-[13px] font-bold text-[#040505]">{taxYear}</span>
-                <span className="text-[11px] text-[#717777]">Gains will be reported on your {taxYear} tax return</span>
+                <span className="text-[10px] font-semibold text-[#717777] uppercase leading-3">TAX YEAR</span>
+                <span className="text-[13px] font-bold text-[#040505] leading-4">{taxYear}</span>
+                <span className="text-[11px] text-[#717777] leading-[13px]">Gains will be reported on your {taxYear} tax return</span>
               </div>
             </div>
 
@@ -559,8 +559,8 @@ export default function OrderConfirmation() {
             <div className="bg-[#f8f8f7] border border-[#e8e9e9] flex gap-[12px] items-start p-[16px] w-full text-[#717777]">
               <span className="text-[16px] shrink-0">ⓘ</span>
               <div className="flex flex-1 flex-col gap-[4px] items-start text-[12px]">
-                <p>All tax figures above are estimates based on federal rates only. State taxes are not included.</p>
-                <p>For complex tax situations, a tax professional can help you evaluate these figures before executing.</p>
+                <p className="leading-[15px]">All tax figures above are estimates based on federal rates only. State taxes are not included.</p>
+                <p className="leading-[15px]">For complex tax situations, a tax professional can help you evaluate these figures before executing.</p>
               </div>
             </div>
 
