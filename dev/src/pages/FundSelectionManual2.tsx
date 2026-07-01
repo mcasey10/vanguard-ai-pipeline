@@ -731,13 +731,13 @@ export default function FundSelectionManual2() {
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
                 {equityDelta !== null ? (
                   <div className="flex gap-1.5 items-center">
-                    <span className="text-[12px] text-vg-ink">Equity</span>
+                    <span className="text-[12px] text-vg-ink">Stocks</span>
                     <span className={`text-[12px] ${equityDelta <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
                       {equityDelta <= 0 ? '−' : '+'}{fmtPct1(Math.abs(equityDelta))}%
                     </span>
                   </div>
                 ) : (
-                  <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-vg-ink">—</span></div>
+                  <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Stocks</span><span className="text-[12px] text-vg-ink">—</span></div>
                 )}
                 {bondsDelta !== null ? (
                   <div className="flex gap-1.5 items-center">
@@ -769,7 +769,7 @@ export default function FundSelectionManual2() {
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">
-                  62% Equity / 28% Bonds / 10% Other
+                  62% Stocks / 28% Bonds / 10% Reserves
                 </span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? formatCurrency(taxableAcct.account_balance) : '—'}</span>
@@ -851,7 +851,7 @@ export default function FundSelectionManual2() {
                   </div>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Equity / 78% Bonds / 0% Other</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Stocks / 78% Bonds / 0% Reserves</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct2 ? formatCurrency(iraAcct2.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
@@ -873,7 +873,7 @@ export default function FundSelectionManual2() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct2?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Stocks</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct2 ? formatCurrency(rothAcct2.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />

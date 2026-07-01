@@ -102,7 +102,7 @@ function r2(n: number): number { return Math.round(n * 100) / 100 }
  * (per Verification Table 4's "Stocks" grouping and Figma FS-MAN-2/FS-AUTO-1).
  */
 export function shortAssetClass(assetClass: string): string {
-  if (assetClass === 'domestic_equity' || assetClass === 'international_equity') return 'Equity'
+  if (assetClass === 'domestic_equity' || assetClass === 'international_equity') return 'Stocks'
   if (assetClass === 'domestic_bonds') return 'Bonds'
   if (assetClass === 'short_term_reserves') return 'Reserves'
   return assetClass

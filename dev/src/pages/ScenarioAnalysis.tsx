@@ -358,7 +358,7 @@ function ScenarioColumn({ scenario, index, portfolio, activeTaxRates, onEdit, on
 
         {/* Legend */}
         <div className="flex gap-[12px] items-center pt-[6px]">
-          {([['Stocks','#2bbfb3'],['Bonds','#c8902a'],['Short-term reserves','#888']] as const).map(([name, color]) => (
+          {([['Stocks','#2bbfb3'],['Bonds','#c8902a'],['Reserves','#888']] as const).map(([name, color]) => (
             <div key={name} className="flex gap-[6px] items-center">
               <div className="w-[8px] h-[8px] rounded-full shrink-0" style={{ background: color }} />
               <span className="text-[11px] text-[#040505]">{name}</span>

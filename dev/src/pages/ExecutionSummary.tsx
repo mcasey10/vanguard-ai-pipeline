@@ -242,7 +242,7 @@ export default function ExecutionSummary() {
             <div className="flex flex-col gap-[12px] items-start p-[16px] w-full">
               {/* Legend */}
               <div className="flex gap-[12px] items-center">
-                {([['#2bbfb3','Stocks'],['#c8902a','Bonds'],['#888','Short-term reserves']] as const).map(([color, name]) => (
+                {([['#2bbfb3','Stocks'],['#c8902a','Bonds'],['#888','Reserves']] as const).map(([color, name]) => (
                   <div key={name} className="flex gap-[4px] items-center">
                     <div className="w-[8px] h-[8px] rounded-full shrink-0" style={{ background: color }} />
                     <span className="text-[11px] text-[#040505] whitespace-nowrap">{name}</span>

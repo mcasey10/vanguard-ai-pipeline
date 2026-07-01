@@ -427,7 +427,7 @@ const COLLAPSED_FUND_DATA: Record<string, CollapsedActiveFundData> = {
     shares: formatShares(1597), balance: formatCurrency(231884.40), sellAmount: formatCurrency(15000.03),
     estSTGains: '+' + formatCurrency(1515.85), estSTColor: 'text-[#007a00]',
     estLTGains: formatCurrency(0), estLTColor: 'text-vg-ink',
-    estTax: formatCurrency(363.80), impact: '-0.8% Equity', impactColor: 'text-[#007a00]',
+    estTax: formatCurrency(363.80), impact: '-0.8% Stocks', impactColor: 'text-[#007a00]',
     rationale: 'Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.',
     waitAndSave: formatCurrency(37.03),
   },
@@ -847,7 +847,7 @@ export default function FundSelectionManualLot() {
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Equity</span><span className="text-[12px] text-vg-ink">—</span></div>
+                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Stocks</span><span className="text-[12px] text-vg-ink">—</span></div>
                 <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-ink">—</span></div>
                 <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
               </div>
@@ -867,7 +867,7 @@ export default function FundSelectionManualLot() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct?.masked_number ?? '...4782'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Equity / 28% Bonds / 10% Other</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Stocks / 28% Bonds / 10% Reserves</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$507,194.40</span>
                 <div className="w-4 shrink-0" />
@@ -975,7 +975,7 @@ export default function FundSelectionManualLot() {
                   })()}
                   <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                    <span className={`text-[12px] font-semibold whitespace-nowrap ${fund === 'VTSAX' ? 'text-[#007a00]' : 'text-[#c8102e]'}`}>{fund === 'VTSAX' ? '-0.8% Equity' : '-0.4% Bonds'}</span>
+                    <span className={`text-[12px] font-semibold whitespace-nowrap ${fund === 'VTSAX' ? 'text-[#007a00]' : 'text-[#c8102e]'}`}>{fund === 'VTSAX' ? '-0.8% Stocks' : '-0.4% Bonds'}</span>
                   </div>
                   <div className="flex flex-1 h-full items-center justify-end px-2">
                     <button onClick={() => navigate('/manual-2')} className="h-[36px] w-[90px] rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink shrink-0 hover:opacity-90 active:opacity-80 transition-opacity">Cancel</button>
@@ -1202,7 +1202,7 @@ export default function FundSelectionManualLot() {
                   </div>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Equity / 78% Bonds / 0% Other</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Stocks / 78% Bonds / 0% Reserves</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$211,065.00</span>
                 <div className="w-4 shrink-0" />
@@ -1218,7 +1218,7 @@ export default function FundSelectionManualLot() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Equity</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Stocks</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$131,592.00</span>
                 <div className="w-4 shrink-0" />
