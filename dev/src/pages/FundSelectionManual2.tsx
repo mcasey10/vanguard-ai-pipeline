@@ -2,9 +2,9 @@ import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
-import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
+import { CostBasisDialog } from '../components/CostBasisDialog'
 import { CoachMark } from '../components/CoachMark'
-import type { AccountingMethod } from '../types'
+import type { AccountingMethod, CostBasisMethod } from '../types'
 
 // Map UI method label → engine AccountingMethod
 function toAccountingMethod(m: CostBasisMethod): AccountingMethod {
@@ -409,7 +409,7 @@ export default function FundSelectionManual2() {
   const {
     portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, manualConfig, recommendation,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio,
-    manualActiveFundIds, manualAppliedAmountsCents, manualCostBasisMethods,
+    manualActiveFundIds, manualAppliedAmountsCents, manualCostBasisMethods, manualLotSelections,
     setManualActiveFunds, setManualAppliedAmount, clearManualAppliedAmount, setManualCostBasisMethod,
   } = useAppStore()
 
@@ -420,7 +420,7 @@ export default function FundSelectionManual2() {
   // On first mount from Automated mode: seed from recommendation if store is empty
   const activeFunds = new Set(manualActiveFundIds)
   const appliedAmounts = manualAppliedAmountsCents
-  const costBasisMethods = manualCostBasisMethods as Record<string, CostBasisMethod>
+  const costBasisMethods = manualCostBasisMethods
 
   // runManualEngine — builds ManualSelections from current activeFunds + appliedAmounts
   // and calls runOptimization() in manual mode. Called on Apply/blur/Enter.
@@ -434,11 +434,22 @@ export default function FundSelectionManual2() {
     if (totalDollars <= 0 || newActiveFunds.size === 0) { setFundResults([]); return }
     const fundSelectionsForEngine = Array.from(newActiveFunds)
       .filter(ticker => (newAmounts[ticker] ?? 0) > 0)
-      .map(ticker => ({
-        fund_id: ticker,
-        accounting_method: toAccountingMethod(newMethods[ticker] ?? 'MinTax'),
-        sell_amount: r2((newAmounts[ticker] ?? 0) / 100),  // cents → dollars
-      }))
+      .map(ticker => {
+        const method = newMethods[ticker] ?? 'MinTax'
+        const base = {
+          fund_id: ticker,
+          accounting_method: toAccountingMethod(method),
+          sell_amount: r2((newAmounts[ticker] ?? 0) / 100),
+        }
+        if (method !== 'SpecID') return base
+        // For SpecID: attach persisted lot selections so the engine produces a valid result
+        const storedInputs = manualLotSelections[ticker]
+        if (!storedInputs) return base
+        const lot_overrides = Object.entries(storedInputs)
+          .filter(([, v]) => parseFloat(v) > 0)
+          .map(([lot_id, v]) => ({ lot_id, shares: parseFloat(v) }))
+        return lot_overrides.length > 0 ? { ...base, lot_overrides } : base
+      })
     if (fundSelectionsForEngine.length === 0) { setFundResults([]); return }
     const result = runOptimization({
       portfolio,
@@ -452,7 +463,7 @@ export default function FundSelectionManual2() {
     const config = result as ManualConfiguration
     setManualConfig(config)
     setFundResults(config.fund_results)
-  }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
+  }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig, manualLotSelections])
 
   // handleMethodChange — updates per-fund method in store and re-runs engine
   function handleMethodChange(ticker: string, method: CostBasisMethod) {
@@ -545,6 +556,12 @@ export default function FundSelectionManual2() {
       setFundResults([])
     }
   }
+
+  // B2: "Review order" is disabled when any active SpecID fund has no confirmed lot selections
+  const hasUnresolvedSpecID = Array.from(activeFunds).some(
+    ticker => costBasisMethods[ticker] === 'SpecID' &&
+      !Object.values(manualLotSelections[ticker] ?? {}).some(v => parseFloat(v) > 0)
+  )
 
   // Inactive account expansion
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set())
@@ -888,9 +905,24 @@ export default function FundSelectionManual2() {
               "Review order" (primary) + "Go to Scenario Analysis" (secondary) +
               "↩ Reset to system recommendation" (ghost-link → NF-1 dialog) */}
           <div className="flex gap-3 items-center px-8 w-full">
-            <button onClick={() => navigate('/confirm')} className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">
-              Review order
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => !hasUnresolvedSpecID && navigate('/confirm')}
+                disabled={hasUnresolvedSpecID}
+                className={`h-[48px] px-7 rounded-full text-[14px] font-bold whitespace-nowrap transition-opacity ${
+                  hasUnresolvedSpecID
+                    ? 'bg-vg-ink/30 text-white cursor-not-allowed'
+                    : 'bg-vg-ink text-white hover:opacity-90'
+                }`}
+              >
+                Review order
+              </button>
+              {hasUnresolvedSpecID && (
+                <div className="absolute bottom-full left-0 mb-2 w-56 bg-vg-ink text-white text-[12px] rounded px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  Enter lot quantities for all SpecID funds before reviewing your order.
+                </div>
+              )}
+            </div>
             <button onClick={handleGoToScenarios} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">
               Go to Scenario Analysis
             </button>

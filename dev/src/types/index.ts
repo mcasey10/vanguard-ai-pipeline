@@ -107,6 +107,10 @@ export type AccountingMethod =
   | 'HIFO'
   | 'MinTax'
 
+// UI-layer cost basis method labels (stored in Zustand, displayed in CostBasisDialog).
+// Distinct from AccountingMethod — converted via toAccountingMethod() before engine calls.
+export type CostBasisMethod = 'MinTax' | 'HIFO' | 'FIFO' | 'SpecID' | 'AvgCost'
+
 export interface FundHolding {
   fund_id: string
   fund_name: string

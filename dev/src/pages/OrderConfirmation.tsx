@@ -10,7 +10,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '../store/useAppStore'
 import { appendTransaction } from '../data/loader'
-import type { SavedScenario, Recommendation, TransactionRecord, TransactionFundRecord, AccountingMethod, Portfolio } from '../types'
+import type { SavedScenario, Recommendation, ManualConfiguration, TransactionRecord, TransactionFundRecord, AccountingMethod, Portfolio, TaxAssumptionSet } from '../types'
 import { formatCurrency } from '../utils/format'
 
 function r2(n: number) { return Math.round(n * 100) / 100 }
@@ -71,7 +71,10 @@ function buildConfirmData(
   rec: Recommendation | null,
   portfolio: Portfolio,
   activeAccountId: string,
-  optimizationPriority: 'tax-first' | 'balance-first'
+  optimizationPriority: 'tax-first' | 'balance-first',
+  mode?: 'automated' | 'manual',
+  manualConfig?: ManualConfiguration | null,
+  activeTaxRates?: Pick<TaxAssumptionSet, 'st_rate' | 'lt_rate'>
 ): ConfirmData | null {
   const acct = portfolio.accounts.find((a) => a.account_id === activeAccountId)
     ?? portfolio.accounts.find((a) => a.account_type === 'taxable_brokerage')
@@ -87,11 +90,42 @@ function buildConfirmData(
   let optMode: 'tax-first' | 'balance-first' = optimizationPriority
   let accountingMethod: AccountingMethod = 'MinTax'
 
+  // For manual mode: use manualConfig.fund_results (reflects current SpecID/method selections).
+  // Must take priority over recommendation which always holds the automated engine output.
+  if (mode === 'manual' && manualConfig && manualConfig.fund_results.length > 0) {
+    const stRate = activeTaxRates?.st_rate ?? 0.24
+    const ltRate = activeTaxRates?.lt_rate ?? 0.15
+    funds = manualConfig.fund_results.map(fr => {
+      const stg = fr.est_st_gain_loss
+      const ltg = fr.est_lt_gain_loss
+      const period: 'ST' | 'LT' | '' = stg !== 0 ? 'ST' : ltg !== 0 ? 'LT' : ''
+      return {
+        id: fr.fund_id,
+        name: shortFundName(fr.fund_name),
+        method: fr.accounting_method === 'specific_lot_identification' ? 'SpecID'
+          : fr.accounting_method === 'average_cost' ? 'AvgCost'
+          : fr.accounting_method,
+        sellAmount: fr.sell_amount,
+        gainLoss: stg !== 0 ? stg : ltg,
+        gainLossPeriod: period,
+        estTaxGross: fr.est_tax_gross,
+      }
+    })
+    totalSaleAmount = r2(manualConfig.fund_results.reduce((s, f) => s + f.sell_amount, 0))
+    stCapitalGains = r2(manualConfig.fund_results.reduce((s, f) => s + Math.max(0, f.est_st_gain_loss), 0))
+    ltCapitalGains = r2(manualConfig.fund_results.reduce((s, f) => s + Math.max(0, f.est_lt_gain_loss), 0))
+    lossesHarvested = r2(manualConfig.fund_results.reduce((s, f) => s + Math.min(0, f.est_st_gain_loss) + Math.min(0, f.est_lt_gain_loss), 0))
+    const netGain = Math.max(0, r2(stCapitalGains + ltCapitalGains + lossesHarvested))
+    const taxST = Math.min(netGain, stCapitalGains) * stRate
+    const taxLT = Math.max(0, netGain - Math.min(netGain, stCapitalGains)) * ltRate
+    estNetTax = r2(taxST + taxLT)
+    effectiveRate = totalSaleAmount > 0 ? r2((estNetTax / totalSaleAmount) * 100) : 0
+    accountingMethod = (manualConfig.fund_results[0]?.accounting_method as AccountingMethod) ?? 'MinTax'
   // Priority: current recommendation first (reflects the user's most recent calculation),
   // then saved scenario (only used when arriving from Scenario Analysis with no fresh rec).
   // Scenario-first caused BUG: stale $25k scenario would override a fresh $40k recommendation
   // because scenarios are never cleared on session reset.
-  if (rec) {
+  } else if (rec) {
     funds = rec.fund_results.map(fr => {
       const stg = fr.est_st_gain_loss
       const ltg = fr.est_lt_gain_loss
@@ -171,6 +205,7 @@ function applyTransactionToPortfolio(
   d: ConfirmData,
   rec: Recommendation | null,
   activeAccountId: string,
+  manualConfig?: ManualConfiguration | null,
 ): Portfolio {
   const p = structuredClone(portfolio)
 
@@ -182,7 +217,9 @@ function applyTransactionToPortfolio(
     const holding = acct.holdings.find(h => h.fund_id === fundSold.id)
     if (!holding || holding.current_balance === 0) continue
 
-    const lotsDetail = rec?.fund_results.find(fr => fr.fund_id === fundSold.id)?.lots_sold ?? []
+    const lotsDetail = manualConfig?.fund_results.find(fr => fr.fund_id === fundSold.id)?.lots_sold
+      ?? rec?.fund_results.find(fr => fr.fund_id === fundSold.id)?.lots_sold
+      ?? []
 
     if (lotsDetail.length > 0) {
       for (const ls of lotsDetail) {
@@ -290,18 +327,21 @@ export default function OrderConfirmation() {
   const {
     portfolio,
     recommendation,
+    manualConfig,
     scenarios,
     activeAccountId,
     optimizationPriority,
+    activeTaxRates,
     mode,
     setPortfolio,
+    clearManualSession,
   } = useAppStore()
 
   // Resolve the best available data: first scenario, then recommendation
   const scenario = scenarios.length > 0 ? scenarios[0] : null
   const rec = recommendation as Recommendation | null
 
-  const data = buildConfirmData(scenario, rec, portfolio, activeAccountId, optimizationPriority)
+  const data = buildConfirmData(scenario, rec, portfolio, activeAccountId, optimizationPriority, mode, manualConfig, activeTaxRates)
 
   // If no data available, nothing to confirm — redirect back
   if (!data) {
@@ -319,7 +359,7 @@ export default function OrderConfirmation() {
     const d = data!
 
     // Apply the sale to the portfolio so balances, lots, and allocation reflect the transaction
-    const updatedPortfolio = applyTransactionToPortfolio(portfolio, d, rec, activeAccountId)
+    const updatedPortfolio = applyTransactionToPortfolio(portfolio, d, rec, activeAccountId, manualConfig)
     setPortfolio(updatedPortfolio)
 
     // Resolve allocation impact from scenario or recommendation for ES-1 display
@@ -356,6 +396,7 @@ export default function OrderConfirmation() {
       reserves_after_pct: ai ? r2(ai.short_term_reserves_after)  : r2(portfolio.current_allocation.short_term_reserves_pct),
     }
     appendTransaction(updatedPortfolio, record)
+    clearManualSession()
     navigate('/summary')
   }
 

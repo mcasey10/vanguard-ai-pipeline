@@ -14,8 +14,9 @@
  */
 
 import { useState } from 'react'
+import type { CostBasisMethod } from '../types'
 
-export type CostBasisMethod = 'MinTax' | 'HIFO' | 'FIFO' | 'SpecID' | 'AvgCost'
+export type { CostBasisMethod }
 
 const METHODS: { id: CostBasisMethod; label: string; description: string }[] = [
   {

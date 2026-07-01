@@ -35,6 +35,7 @@ export default function FundSelectionAutomated() {
     portfolio, targetSaleAmount, activeAccountId, optimizationPriority, activeTaxRates,
     recommendation, setRecommendation, setTargetSaleAmount, setOptimizationPriority,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio,
+    setMode,
   } = useAppStore()
 
   // Local input state for the amount field (display only — store is source of truth)
@@ -210,7 +211,7 @@ export default function FundSelectionAutomated() {
                 <Sparkles size={16} className="text-white" />
                 <span className="text-[14px] font-bold text-white">Automated</span>
               </div>
-              <button onClick={() => navigate('/manual-2')} className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink">
+              <button onClick={() => { setMode('manual'); navigate('/manual-2') }} className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink">
                 <PenLine size={16} className="text-vg-ink" />Manual
               </button>
             </div>

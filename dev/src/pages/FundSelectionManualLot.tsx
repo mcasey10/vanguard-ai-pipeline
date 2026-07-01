@@ -3,12 +3,12 @@ import { formatCurrency, formatShares, formatPercent, accountAllocStr } from '..
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
-import { CostBasisDialog, type CostBasisMethod } from '../components/CostBasisDialog'
+import { CostBasisDialog } from '../components/CostBasisDialog'
 import { CoachMark } from '../components/CoachMark'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
-import type { Lot as CanonicalLot } from '../types'
+import type { CostBasisMethod, Lot as CanonicalLot } from '../types'
 import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
 
 function RadioDot({ selected }: { selected: boolean }) {
@@ -470,6 +470,7 @@ export default function FundSelectionManualLot() {
   const location = useLocation()
   const { portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig,
     manualConfig, manualAppliedAmountsCents, manualActiveFundIds, manualCostBasisMethods, setManualCostBasisMethod,
+    manualLotSelections, setManualLotSelections,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId } = useAppStore()
   const locationState = location.state as { fund?: string } | null
   const fund          = locationState?.fund ?? 'VTSAX'
@@ -484,7 +485,7 @@ export default function FundSelectionManualLot() {
   // (single source of truth). Navigation state is NOT used because it can be stale or
   // absent when navigating via CollapsedActiveFundRow's Lot details link.
   const [expandedMethod,  setExpandedMethod]  = useState<CostBasisMethod>(
-    (manualCostBasisMethods[fund] as CostBasisMethod) ?? 'MinTax'
+    manualCostBasisMethods[fund] ?? 'MinTax'
   )
   const [showExpandedCBD, setShowExpandedCBD] = useState(false)
 
@@ -493,8 +494,8 @@ export default function FundSelectionManualLot() {
   // useState initializers don't re-run — this effect keeps them in sync with the store.
   useEffect(() => {
     const otherFund = fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'
-    setExpandedMethod((manualCostBasisMethods[fund]       as CostBasisMethod) ?? 'MinTax')
-    setCollapsedMethod((manualCostBasisMethods[otherFund] as CostBasisMethod) ?? 'MinTax')
+    setExpandedMethod(manualCostBasisMethods[fund]       ?? 'MinTax')
+    setCollapsedMethod(manualCostBasisMethods[otherFund] ?? 'MinTax')
     setBannerData(null)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fund])
@@ -586,13 +587,15 @@ export default function FundSelectionManualLot() {
   const [showAllocModal,  setShowAllocModal]  = useState(false)
   // Cost basis for the collapsed other-fund row — read from store, not hardcoded
   const [collapsedMethod, setCollapsedMethod] = useState<CostBasisMethod>(
-    (manualCostBasisMethods[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'] as CostBasisMethod) ?? 'MinTax'
+    manualCostBasisMethods[fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'] ?? 'MinTax'
   )
   const [showCollapsedCBD, setShowCollapsedCBD] = useState(false)
 
-  // Per-lot shares input state
-  // Initial values: T-VTSAX-09 pre-populated with primary scenario SpecID amount
+  // Per-lot shares input state — seeded from persisted store selections when available.
+  // Falls back to hardcoded T-VTSAX-09 pre-population only when no prior selection exists.
   const [sharesInputs, setSharesInputs] = useState<Record<string, string>>(() => {
+    const stored = manualLotSelections[fund]
+    if (stored && Object.keys(stored).length > 0) return stored
     const init: Record<string, string> = {}
     for (const lot of lots) {
       init[lot.lotId] = lot.lotId === 'T-VTSAX-09' ? '103.306' : '0.000'
@@ -653,15 +656,20 @@ export default function FundSelectionManualLot() {
   function handleSharesCommit(lotId: string, value: string) {
     const newInputs = { ...sharesInputs, [lotId]: value }
     setSharesInputs(newInputs)
+    setManualLotSelections(fund, newInputs)
     runLotEngine(newInputs)
   }
 
   // Auto-fire engine on mount when inputs are pre-populated (SpecID interactive only).
+  // Also persists initial selections to the store so navigate-back in FS-MAN-2 can use them.
   // Skip in read-only mode — manualConfig is already correct from the non-SpecID engine run.
   useEffect(() => {
     if (isReadOnly) return
     const hasSelections = Object.values(sharesInputs).some(v => parseFloat(v) > 0)
-    if (hasSelections) runLotEngine(sharesInputs)
+    if (hasSelections) {
+      setManualLotSelections(fund, sharesInputs)
+      runLotEngine(sharesInputs)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Populate bannerData on mount for non-SpecID (read-only) views.

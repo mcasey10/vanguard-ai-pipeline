@@ -16,6 +16,7 @@ import type {
   ManualConfiguration,
   SavedScenario,
   TaxAssumptionSet,
+  CostBasisMethod,
 } from '../types'
 import { loadPortfolio, savePortfolioState } from '../data/loader'
 
@@ -41,7 +42,8 @@ interface AppState {
   //    navigation to /manual-lot and back (local React state resets on unmount)
   manualActiveFundIds: string[]
   manualAppliedAmountsCents: Record<string, number>   // ticker → cents
-  manualCostBasisMethods: Record<string, string>       // ticker → CostBasisMethod label
+  manualCostBasisMethods: Record<string, CostBasisMethod>  // ticker → UI method label
+  manualLotSelections: Record<string, Record<string, string>>  // ticker → { lot_id → sharesString }
 
   // ── Scenarios (max 3, REQ-SC-001) ─────────────────────────────────────────
   scenarios: SavedScenario[]
@@ -74,7 +76,8 @@ interface AppActions {
   setManualActiveFunds: (ids: string[]) => void
   setManualAppliedAmount: (ticker: string, cents: number) => void
   clearManualAppliedAmount: (ticker: string) => void
-  setManualCostBasisMethod: (ticker: string, method: string) => void
+  setManualCostBasisMethod: (ticker: string, method: CostBasisMethod) => void
+  setManualLotSelections: (ticker: string, inputs: Record<string, string>) => void
   clearManualSession: () => void
 
   // Scenarios
@@ -129,6 +132,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   manualActiveFundIds: [],
   manualAppliedAmountsCents: {},
   manualCostBasisMethods: {},
+  manualLotSelections: {},
 
   scenarios: [],
   activeScenarioId: null,
@@ -174,11 +178,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
       manualCostBasisMethods: { ...state.manualCostBasisMethods, [ticker]: method },
     })),
 
+  setManualLotSelections: (ticker, inputs) =>
+    set((state) => ({
+      manualLotSelections: { ...state.manualLotSelections, [ticker]: inputs },
+    })),
+
   clearManualSession: () =>
     set({
       manualActiveFundIds: [],
       manualAppliedAmountsCents: {},
       manualCostBasisMethods: {},
+      manualLotSelections: {},
       manualConfig: null,
     }),
 
@@ -216,6 +226,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       manualActiveFundIds: [],
       manualAppliedAmountsCents: {},
       manualCostBasisMethods: {},
+      manualLotSelections: {},
     }),
 
   startNewScenario: () =>
@@ -229,6 +240,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       manualActiveFundIds: [],
       manualAppliedAmountsCents: {},
       manualCostBasisMethods: {},
+      manualLotSelections: {},
     }),
 
   setActiveTaxRates: (rates) => set({ activeTaxRates: rates }),
@@ -245,6 +257,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       manualActiveFundIds: [],
       manualAppliedAmountsCents: {},
       manualCostBasisMethods: {},
+      manualLotSelections: {},
       // Scenarios are NOT cleared on session reset — they persist across sessions
     }),
 }))
