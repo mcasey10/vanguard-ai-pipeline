@@ -9,6 +9,7 @@ import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization } from '../engine/index'
 import type { CostBasisMethod, Lot as CanonicalLot } from '../types'
+import { toAccountingMethod } from '../utils/methods'
 import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
 
 function RadioDot({ selected }: { selected: boolean }) {
@@ -517,13 +518,6 @@ export default function FundSelectionManualLot() {
   const rothAcct    = portfolio?.accounts.find(a => a.account_type === 'roth_IRA')
   const holding = taxableAcct?.holdings.find(h => h.fund_id === fund)
   const lots: Lot[] = (holding?.lots ?? []).map(toDisplayLot)
-
-  // Map UI method label → engine AccountingMethod (mirrors FS-MAN-2)
-  function toAccountingMethod(m: CostBasisMethod): import('../types').AccountingMethod {
-    if (m === 'SpecID')  return 'specific_lot_identification'
-    if (m === 'AvgCost') return 'average_cost'
-    return m as import('../types').AccountingMethod
-  }
 
   // Handle method change in lot view: persist to store, re-run engine, update display
   function handleExpandedMethodChange(newMethod: CostBasisMethod) {

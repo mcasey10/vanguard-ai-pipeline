@@ -19,6 +19,7 @@ import type {
   CostBasisMethod,
 } from '../types'
 import { loadPortfolio, savePortfolioState } from '../data/loader'
+import { fromAccountingMethod } from '../utils/methods'
 
 // ---------------------------------------------------------------------------
 // Store shape
@@ -216,18 +217,48 @@ export const useAppStore = create<AppStore>((set, get) => ({
   setActiveScenarioId: (id) => set({ activeScenarioId: id }),
 
   // Restore session state from a saved scenario so Fund Selection shows the right context
-  startEditingScenario: (scenario) =>
-    set({
-      activeScenarioId: scenario.scenario_id,
-      targetSaleAmount: scenario.total_sell_amount,
-      mode: scenario.source_mode,
-      recommendation: null,
-      manualConfig: null,
-      manualActiveFundIds: [],
-      manualAppliedAmountsCents: {},
-      manualCostBasisMethods: {},
-      manualLotSelections: {},
-    }),
+  startEditingScenario: (scenario) => {
+    if (scenario.source_mode === 'manual') {
+      // Reconstruct manual session from the saved fund selections
+      const ids: string[] = []
+      const amounts: Record<string, number> = {}
+      const methods: Record<string, CostBasisMethod> = {}
+      const lotSelections: Record<string, Record<string, string>> = {}
+      for (const fs of scenario.fund_selections) {
+        ids.push(fs.fund_id)
+        amounts[fs.fund_id] = Math.round(fs.sell_amount * 100)
+        methods[fs.fund_id] = fromAccountingMethod(fs.accounting_method)
+        if (fs.accounting_method === 'specific_lot_identification' && fs.lots_selected.length > 0) {
+          lotSelections[fs.fund_id] = Object.fromEntries(
+            fs.lots_selected.map(ls => [ls.lot_id, String(ls.shares_to_sell)])
+          )
+        }
+      }
+      set({
+        activeScenarioId: scenario.scenario_id,
+        targetSaleAmount: scenario.total_sell_amount,
+        mode: 'manual',
+        recommendation: null,
+        manualConfig: null,
+        manualActiveFundIds: ids,
+        manualAppliedAmountsCents: amounts,
+        manualCostBasisMethods: methods,
+        manualLotSelections: lotSelections,
+      })
+    } else {
+      set({
+        activeScenarioId: scenario.scenario_id,
+        targetSaleAmount: scenario.total_sell_amount,
+        mode: scenario.source_mode,
+        recommendation: null,
+        manualConfig: null,
+        manualActiveFundIds: [],
+        manualAppliedAmountsCents: {},
+        manualCostBasisMethods: {},
+        manualLotSelections: {},
+      })
+    }
+  },
 
   startNewScenario: () =>
     set({

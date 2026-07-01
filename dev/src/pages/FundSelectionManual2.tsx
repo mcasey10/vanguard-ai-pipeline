@@ -4,14 +4,8 @@ import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
 import { CostBasisDialog } from '../components/CostBasisDialog'
 import { CoachMark } from '../components/CoachMark'
-import type { AccountingMethod, CostBasisMethod } from '../types'
-
-// Map UI method label → engine AccountingMethod
-function toAccountingMethod(m: CostBasisMethod): AccountingMethod {
-  if (m === 'SpecID')   return 'specific_lot_identification'
-  if (m === 'AvgCost')  return 'average_cost'
-  return m as AccountingMethod  // MinTax | HIFO | FIFO pass through unchanged
-}
+import type { CostBasisMethod } from '../types'
+import { toAccountingMethod } from '../utils/methods'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization, shortAssetClass } from '../engine/index'
