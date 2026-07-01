@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
-import { formatCurrency, formatShares, formatPercent } from '../utils/format'
+import { formatCurrency, formatShares, formatPercent, accountAllocStr } from '../utils/format'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
@@ -867,7 +867,7 @@ export default function FundSelectionManualLot() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct?.masked_number ?? '...4782'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Stocks / 28% Bonds / 10% Reserves</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct ? accountAllocStr(taxableAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$507,194.40</span>
                 <div className="w-4 shrink-0" />
@@ -1202,7 +1202,7 @@ export default function FundSelectionManualLot() {
                   </div>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Stocks / 78% Bonds / 0% Reserves</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct ? accountAllocStr(iraAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$211,065.00</span>
                 <div className="w-4 shrink-0" />
@@ -1218,7 +1218,7 @@ export default function FundSelectionManualLot() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Stocks</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct ? accountAllocStr(rothAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$131,592.00</span>
                 <div className="w-4 shrink-0" />

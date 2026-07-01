@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Sparkles, PenLine, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import { useModeToggleGuard, SaveDiscardDialog } from '../components/ModeToggleGuard'
-import { formatCurrency, formatShares } from '../utils/format'
+import { formatCurrency, formatShares, accountAllocStr } from '../utils/format'
 
 function RadioDot({ selected }: { selected: boolean }) {
   return (
@@ -116,7 +116,7 @@ export default function FundSelectionManual() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct?.masked_number ?? '...4782'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">62% Stocks / 28% Bonds / 10% Reserves</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct ? accountAllocStr(taxableAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? formatCurrency(taxableAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
@@ -173,7 +173,7 @@ export default function FundSelectionManual() {
                   )}
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Stocks / 78% Bonds / 0% Reserves</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct ? accountAllocStr(iraAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct ? formatCurrency(iraAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
@@ -200,7 +200,7 @@ export default function FundSelectionManual() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Stocks</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct ? accountAllocStr(rothAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct ? formatCurrency(rothAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />

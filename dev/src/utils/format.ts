@@ -1,3 +1,15 @@
+import type { Account } from '../types'
+
+// Compute "X% Stocks / Y% Bonds / Z% Reserves" from live account holdings.
+export function accountAllocStr(account: Account): string {
+  const total = account.holdings.reduce((s, h) => s + h.current_balance, 0)
+  if (total === 0) return ''
+  const stocks  = account.holdings.filter(h => h.asset_class === 'domestic_equity' || h.asset_class === 'international_equity').reduce((s, h) => s + h.current_balance, 0)
+  const bonds   = account.holdings.filter(h => h.asset_class === 'domestic_bonds').reduce((s, h) => s + h.current_balance, 0)
+  const reserves = account.holdings.filter(h => h.asset_class === 'short_term_reserves').reduce((s, h) => s + h.current_balance, 0)
+  return `${Math.round(stocks / total * 100)}% Stocks / ${Math.round(bonds / total * 100)}% Bonds / ${Math.round(reserves / total * 100)}% Reserves`
+}
+
 // Currency — always shows $ sign, comma separators, 2 decimal places
 // e.g. 25000.03 → "$25,000.03"
 export function formatCurrency(amount: number): string {

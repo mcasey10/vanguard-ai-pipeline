@@ -13,11 +13,11 @@ import { appendTransaction } from '../data/loader'
 import type { SavedScenario, Recommendation, TransactionRecord, TransactionFundRecord, AccountingMethod, Portfolio } from '../types'
 import { formatCurrency } from '../utils/format'
 
+function r2(n: number) { return Math.round(n * 100) / 100 }
+
 // ---------------------------------------------------------------------------
 // Helpers — derive confirmation data from whatever is in the store
 // ---------------------------------------------------------------------------
-
-function r2(n: number) { return Math.round(n * 100) / 100 }
 
 // Shorten fund names for the confirmation table — strip share-class suffixes
 function shortFundName(name: string): string {
@@ -166,6 +166,88 @@ function buildConfirmData(
   }
 }
 
+function applyTransactionToPortfolio(
+  portfolio: Portfolio,
+  d: ConfirmData,
+  rec: Recommendation | null,
+  activeAccountId: string,
+): Portfolio {
+  const p = structuredClone(portfolio)
+
+  const acct = p.accounts.find(a => a.account_id === activeAccountId)
+    ?? p.accounts.find(a => a.account_type === 'taxable_brokerage')
+  if (!acct) return p
+
+  for (const fundSold of d.funds) {
+    const holding = acct.holdings.find(h => h.fund_id === fundSold.id)
+    if (!holding || holding.current_balance === 0) continue
+
+    const lotsDetail = rec?.fund_results.find(fr => fr.fund_id === fundSold.id)?.lots_sold ?? []
+
+    if (lotsDetail.length > 0) {
+      for (const ls of lotsDetail) {
+        const lot = holding.lots.find(l => l.lot_id === ls.lot_id)
+        if (!lot) continue
+        lot.shares           = r2(lot.shares - ls.shares_to_sell)
+        lot.total_cost_basis = r2(lot.total_cost_basis - ls.cost_basis)
+        lot.current_value    = r2(lot.current_value - ls.proceeds)
+        lot.unrealized_gain_loss = r2(lot.current_value - lot.total_cost_basis)
+      }
+      holding.lots = holding.lots.filter(l => l.shares > 0.0001)
+    } else {
+      const ratio = Math.max(0, 1 - fundSold.sellAmount / holding.current_balance)
+      holding.lots = holding.lots.map(l => ({
+        ...l,
+        shares:               r2(l.shares * ratio),
+        total_cost_basis:     r2(l.total_cost_basis * ratio),
+        current_value:        r2(l.current_value * ratio),
+        unrealized_gain_loss: r2(l.unrealized_gain_loss * ratio),
+      })).filter(l => l.shares > 0.0001)
+    }
+
+    holding.total_shares       = r2(holding.lots.reduce((s, l) => s + l.shares, 0))
+    holding.total_cost_basis   = r2(holding.lots.reduce((s, l) => s + l.total_cost_basis, 0))
+    holding.current_balance    = r2(holding.current_balance - fundSold.sellAmount)
+    holding.unrealized_st_gain_loss  = r2(holding.lots.filter(l => l.holding_period === 'ST').reduce((s, l) => s + l.unrealized_gain_loss, 0))
+    holding.unrealized_lt_gain_loss  = r2(holding.lots.filter(l => l.holding_period === 'LT').reduce((s, l) => s + l.unrealized_gain_loss, 0))
+    holding.total_unrealized_gain_loss = r2(holding.unrealized_st_gain_loss + holding.unrealized_lt_gain_loss)
+  }
+
+  acct.account_balance = r2(acct.holdings.reduce((s, h) => s + h.current_balance, 0))
+  if (acct.account_balance > 0) {
+    for (const h of acct.holdings) {
+      h.current_allocation_weight_pct = r2(h.current_balance / acct.account_balance * 100)
+    }
+  }
+
+  p.total_investable_balance = r2(p.total_investable_balance - d.totalSaleAmount)
+
+  const allHoldings = p.accounts.flatMap(a => a.holdings)
+  const newTotal = p.total_investable_balance
+  if (newTotal > 0) {
+    const de = allHoldings.filter(h => h.asset_class === 'domestic_equity').reduce((s, h) => s + h.current_balance, 0)
+    const ie = allHoldings.filter(h => h.asset_class === 'international_equity').reduce((s, h) => s + h.current_balance, 0)
+    const db = allHoldings.filter(h => h.asset_class === 'domestic_bonds').reduce((s, h) => s + h.current_balance, 0)
+    const sr = allHoldings.filter(h => h.asset_class === 'short_term_reserves').reduce((s, h) => s + h.current_balance, 0)
+    p.current_allocation = {
+      domestic_equity_pct:      r2(de / newTotal * 100),
+      international_equity_pct: r2(ie / newTotal * 100),
+      domestic_bonds_pct:       r2(db / newTotal * 100),
+      short_term_reserves_pct:  r2(sr / newTotal * 100),
+    }
+  }
+
+  if (p.ytd_gains_record) {
+    p.ytd_gains_record = {
+      ...p.ytd_gains_record,
+      st_gains_realized_ytd: r2(p.ytd_gains_record.st_gains_realized_ytd + d.stCapitalGains),
+      lt_gains_realized_ytd: r2(p.ytd_gains_record.lt_gains_realized_ytd + d.ltCapitalGains + d.lossesHarvested),
+    }
+  }
+
+  return p
+}
+
 // ---------------------------------------------------------------------------
 // Divider
 // ---------------------------------------------------------------------------
@@ -212,6 +294,7 @@ export default function OrderConfirmation() {
     activeAccountId,
     optimizationPriority,
     mode,
+    setPortfolio,
   } = useAppStore()
 
   // Resolve the best available data: first scenario, then recommendation
@@ -234,6 +317,11 @@ export default function OrderConfirmation() {
 
   function handleSubmit() {
     const d = data!
+
+    // Apply the sale to the portfolio so balances, lots, and allocation reflect the transaction
+    const updatedPortfolio = applyTransactionToPortfolio(portfolio, d, rec, activeAccountId)
+    setPortfolio(updatedPortfolio)
+
     // Resolve allocation impact from scenario or recommendation for ES-1 display
     const ai = scenario?.allocation_impact ?? (rec as Recommendation | null)?.allocation_impact
     const record: TransactionRecord = {
@@ -267,7 +355,7 @@ export default function OrderConfirmation() {
       bonds_after_pct:   ai ? r2(ai.domestic_bonds_after)   : r2(portfolio.current_allocation.domestic_bonds_pct),
       reserves_after_pct: ai ? r2(ai.short_term_reserves_after)  : r2(portfolio.current_allocation.short_term_reserves_pct),
     }
-    appendTransaction(portfolio, record)
+    appendTransaction(updatedPortfolio, record)
     navigate('/summary')
   }
 

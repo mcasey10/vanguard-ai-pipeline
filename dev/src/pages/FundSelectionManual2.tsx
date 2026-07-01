@@ -16,7 +16,7 @@ import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
 import { runOptimization, shortAssetClass } from '../engine/index'
 import type { FundSaleResult, ManualConfiguration } from '../types'
-import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent } from '../utils/format'
+import { formatCurrency, formatCurrencyCompact, formatShares, formatPercent, accountAllocStr } from '../utils/format'
 import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
 
 // ---------------------------------------------------------------------------
@@ -768,9 +768,7 @@ export default function FundSelectionManual2() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct?.masked_number ?? '...4782'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">
-                  62% Stocks / 28% Bonds / 10% Reserves
-                </span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct ? accountAllocStr(taxableAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{taxableAcct ? formatCurrency(taxableAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
@@ -851,7 +849,7 @@ export default function FundSelectionManual2() {
                   </div>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">22% Stocks / 78% Bonds / 0% Reserves</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct2 ? accountAllocStr(iraAcct2) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct2 ? formatCurrency(iraAcct2.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
@@ -873,7 +871,7 @@ export default function FundSelectionManual2() {
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct2?.masked_number ?? '...8148'}</span>
                 </div>
                 <div className="flex-1" />
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">100% Stocks</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct2 ? accountAllocStr(rothAcct2) : ''}</span>
                 <div className="w-4 shrink-0" />
                 <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct2 ? formatCurrency(rothAcct2.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
