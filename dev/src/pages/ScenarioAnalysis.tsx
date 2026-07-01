@@ -312,8 +312,8 @@ function ScenarioColumn({ scenario, index, portfolio, activeTaxRates, onEdit, on
           const stg = fs.st_gain_loss ?? 0
           const ltg = fs.lt_gain_loss ?? 0
           const etx = fs.est_tax_gross ?? 0
-          const stColor = stg > 0 ? 'text-[#c8102e]' : stg < 0 ? 'text-[#007a00]' : 'text-[#717777]'
-          const ltColor = ltg > 0 ? 'text-[#c8102e]' : ltg < 0 ? 'text-[#007a00]' : 'text-[#717777]'
+          const stColor = stg > 0 ? 'text-[#007a00]' : stg < 0 ? 'text-[#c8102e]' : 'text-[#717777]'
+          const ltColor = ltg > 0 ? 'text-[#007a00]' : ltg < 0 ? 'text-[#c8102e]' : 'text-[#717777]'
           return (
             <div key={fs.fund_id} className={`flex items-center h-[38px] w-full ${i < scenario.fund_selections.length - 1 ? 'border-b border-[#e8e9e9]' : ''}`}>
               <div className="flex flex-col gap-px flex-1 min-w-0 overflow-hidden">
@@ -340,9 +340,9 @@ function ScenarioColumn({ scenario, index, portfolio, activeTaxRates, onEdit, on
       <div className="bg-white border-b border-[#e8e9e9] flex flex-col p-[16px] shrink-0">
         <span className="text-[12px] font-semibold text-[#040505] pb-[8px]">Tax summary</span>
 
-        <TaxRow label="ST Capital Gains"  value={scenario.projected_st_gains}  isGain valueColor={scenario.projected_st_gains > 0 ? '#c8102e' : undefined} />
-        <TaxRow label="LT Capital Gains"  value={scenario.projected_lt_gains}  isGain valueColor={scenario.projected_lt_gains > 0 ? '#c8102e' : undefined} />
-        <TaxRow label="Losses Harvested"  value={scenario.losses_harvested}    signed valueColor={scenario.losses_harvested < 0 ? '#007a00' : undefined} />
+        <TaxRow label="ST Capital Gains"  value={scenario.projected_st_gains}  isGain valueColor={scenario.projected_st_gains > 0 ? '#007a00' : undefined} />
+        <TaxRow label="LT Capital Gains"  value={scenario.projected_lt_gains}  isGain valueColor={scenario.projected_lt_gains > 0 ? '#007a00' : undefined} />
+        <TaxRow label="Losses Harvested"  value={scenario.losses_harvested}    signed valueColor={scenario.losses_harvested < 0 ? '#c8102e' : undefined} />
         <div className="bg-[#e8e9e9] h-px w-full my-0" />
         <TaxRow label="Net Taxable Gain"  value={scenario.net_taxable_gain}    bold />
         <TaxRow label="Federal Tax"       value={displayFederalTax} />

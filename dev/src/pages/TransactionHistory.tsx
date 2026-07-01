@@ -92,8 +92,8 @@ function fmtGainLoss(fd: FundDisplay): { text: string; color: string } {
   const n = fd.netGainLoss
   const abs = formatCurrency(Math.abs(n))
   const suffix = fd.holdingPeriod !== 'none' && fd.holdingPeriod !== 'mixed' ? ` ${fd.holdingPeriod}` : ''
-  if (n > 0) return { text: `+${abs}${suffix}`, color: 'text-[#c8102e]' }   // gain = red (taxable cost)
-  if (n < 0) return { text: `−${abs}${suffix}`, color: 'text-[#007a00]' }   // loss = green (tax savings)
+  if (n > 0) return { text: `+${abs}${suffix}`, color: 'text-[#007a00]' }
+  if (n < 0) return { text: `−${abs}${suffix}`, color: 'text-[#c8102e]' }
   return { text: '$0.00', color: 'text-[#717777]' }
 }
 
@@ -243,7 +243,7 @@ export default function TransactionHistory() {
         <div className="flex gap-[24px] items-start">
           <div className="flex flex-col gap-[4px] items-start">
             <span className="text-[10px] font-semibold text-[#717777] uppercase tracking-wide">YTD ST REALIZED</span>
-            <span className="text-[15px] font-bold text-[#c8102e]">{formatCurrency(ytdST)}</span>
+            <span className="text-[15px] font-bold text-[#007a00]">{formatCurrency(ytdST)}</span>
           </div>
           <div className="flex flex-col gap-[4px] items-start">
             <span className="text-[10px] font-semibold text-[#717777] uppercase tracking-wide">YTD LT REALIZED</span>
