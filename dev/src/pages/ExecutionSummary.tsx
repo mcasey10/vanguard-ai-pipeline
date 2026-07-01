@@ -398,12 +398,6 @@ export default function ExecutionSummary() {
         <div className="flex items-center justify-between w-full">
           {/* Left group */}
           <div className="flex gap-[12px] items-center">
-            <button className="h-[48px] w-[200px] rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink hover:opacity-90 transition-opacity shrink-0">
-              Download confirmation
-            </button>
-            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80">
-              View order in Activity →
-            </a>
             <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80" onClick={() => navigate('/history')}>
               View transaction history →
             </a>

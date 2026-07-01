@@ -298,9 +298,6 @@ export default function TransactionHistory() {
         >
           ← Back to Fund Selection
         </a>
-        <button className="h-[48px] px-[28px] rounded-full border-[1.5px] border-[#040505] bg-white text-[14px] font-bold text-[#040505] hover:opacity-90 transition-opacity whitespace-nowrap">
-          Download session summary
-        </button>
       </div>
 
     </div>
