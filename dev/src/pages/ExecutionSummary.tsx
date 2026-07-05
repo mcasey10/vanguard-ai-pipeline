@@ -59,11 +59,12 @@ function TaxRow({ label, value, labelBold, valueBold, valueLg, muted, valueColor
 // Timeline step
 // ---------------------------------------------------------------------------
 
-function TimelineStep({ step, label, description, done }: {
+function TimelineStep({ step, label, description, done, lastStep }: {
   step: number | '✓'
   label: string
   description: string
   done?: boolean
+  lastStep?: boolean
 }) {
   const isDone = done || step === '✓'
   return (
@@ -78,7 +79,7 @@ function TimelineStep({ step, label, description, done }: {
             {step}
           </span>
         </div>
-        <div className="flex-1 h-px bg-[#e8e9e9]" />
+        <div className={`flex-1 h-px ${lastStep ? '' : 'bg-[#e8e9e9]'}`} />
       </div>
       <span className={`text-[12px] font-semibold text-center w-full ${isDone ? 'text-[#007a00]' : 'text-[#040505]'}`}>
         {label}
@@ -201,7 +202,7 @@ export default function ExecutionSummary() {
                 <span className="text-[13px] font-semibold text-[#040505]">Transaction summary</span>
               </div>
               {/* Funds Section */}
-              <div className="flex flex-col gap-[2px] w-full">
+              <div className="bg-white border border-[#e8e9e9] flex flex-col gap-[2px] w-full">
                 {/* Column Header */}
                 <div className="bg-[#f8f8f8] border-b border-[#e8e9e9] flex h-[30px] items-center w-full">
                   <span className="text-[10px] font-semibold text-[#717777] uppercase flex-1 pl-[15px]">Funds Sold</span>
@@ -239,7 +240,7 @@ export default function ExecutionSummary() {
                   )
                 })}
                 {/* Totals Row */}
-                <div className="flex h-[36px] items-center bg-[#f8f8f7] border-t border-[#e8e9e9] w-full">
+                <div className="flex h-[36px] items-center bg-[#f8f8f7] border border-[#e8e9e9] w-full">
                   <span className="text-[12px] font-semibold text-[#040505] flex-1 pl-[15px]">Total</span>
                   <div className="w-[202px]" />
                   <div className="w-[269px] flex justify-end">
@@ -387,11 +388,11 @@ export default function ExecutionSummary() {
           <div className="bg-[#f8f8f8] border-b border-[#e8e9e9] flex items-center p-[16px] w-full">
             <span className="text-[13px] font-semibold text-[#040505] leading-4">What happens next</span>
           </div>
-          <div className="flex items-start justify-between px-[24px] py-[16px] w-full gap-4">
+          <div className="flex items-start justify-between px-[24px] py-[16px] w-full">
             <TimelineStep step="✓" label="Order submitted"    description="Sell order placed and confirmed"             done />
             <TimelineStep step={2}  label="Execution at NAV"  description="Trades execute at next available NAV pricing" />
             <TimelineStep step={3}  label="Settlement"        description="Proceeds settle in 1–2 business days"         />
-            <TimelineStep step={4}  label="Tax lot update"    description={`Lot records updated for ${taxYear} tax year`}  />
+            <TimelineStep step={4}  label="Tax lot update"    description={`Lot records updated for ${taxYear} tax year`} lastStep />
           </div>
         </div>
 

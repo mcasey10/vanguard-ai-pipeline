@@ -476,7 +476,7 @@ export default function OrderConfirmation() {
               <div className="h-[8px]" />
 
               {/* Column headers */}
-              <div className="flex items-start border-b border-[#e8e9e9] pb-[6px] w-full">
+              <div className="flex items-start border border-[#e8e9e9] pb-[6px] w-full">
                 <div className="flex flex-1 min-w-0 h-[24px] items-center">
                   <span className="text-[10px] font-semibold text-[#717777] uppercase">Fund</span>
                 </div>
@@ -499,7 +499,7 @@ export default function OrderConfirmation() {
                 const gainLossColor = f.gainLoss > 0 ? '#007a00' : f.gainLoss < 0 ? '#c8102e' : '#717777'
                 const taxColor = f.estTaxGross > 0 ? '#040505' : '#717777'
                 return (
-                  <div key={f.id} className={`flex h-[40px] items-start w-full border-b ${i < data.funds.length - 1 ? 'border-[#f0f0f0]' : 'border-[#f0f0f0]'}`}>
+                  <div key={f.id} className="flex h-[40px] items-start w-full border border-[#f0f0f0]">
                     <div className="flex flex-1 min-w-0 flex-col gap-[2px] h-[40px] justify-center overflow-hidden">
                       <span className="text-[13px] font-bold text-[#1255cc] underline">{f.id}</span>
                       <span className="text-[10px] text-[#717777] truncate">{f.name}</span>
@@ -563,7 +563,7 @@ export default function OrderConfirmation() {
                 <span className="text-[12px] font-semibold text-[#040505]">Estimated proceeds</span>
                 <div className="h-[8px]" />
                 <TaxRow label="Gross proceeds" value={formatCurrency(data.grossProceeds)} />
-                <TaxRow label="Est. federal tax" value={data.estFederalTax > 0 ? '−' + formatCurrency(data.estFederalTax) : formatCurrency(0)} valueColor={data.estFederalTax > 0 ? '#c8102e' : undefined} muted={data.estFederalTax === 0} />
+                <TaxRow label="Est. federal tax" value={data.estFederalTax > 0 ? '−' + formatCurrency(data.estFederalTax) : formatCurrency(0)} valueColor={data.estFederalTax > 0 ? '#c8102e' : '#717777'} />
                 <Divider />
                 <TaxRow label="Est. net proceeds" value={formatCurrency(data.estNetProceeds)} labelBold valueBold valueLg />
               </div>
