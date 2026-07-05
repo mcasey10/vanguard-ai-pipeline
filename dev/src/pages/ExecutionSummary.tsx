@@ -131,8 +131,7 @@ export default function ExecutionSummary() {
   const bondsTarget  = ta ? r2(ta.domestic_bonds_pct) : 35
   const resTarget    = ta ? r2(ta.short_term_reserves_pct) : 10
 
-  // Optimization savings headline — approximate for prototype
-  const estimatedSavings = r2(estTotalTax * (estTotalTax > 0 ? 12.19 : 0))  // canonical: $110.21 saved $1,344.85
+  const estimatedSavings = txn?.tax_savings_vs_fifo ?? 0
 
   // Confirmation ID
   const confirmationId = txn?.transaction_id ?? 'VSR-2026-48291'
@@ -264,14 +263,16 @@ export default function ExecutionSummary() {
             </div>
 
             {/* Optimization Savings */}
-            <div className="bg-[#e8f5f0] border-b border-[#e8e9e9] flex flex-col gap-[4px] items-start p-[16px] w-full">
-              <p className="text-[13px] font-bold text-[#085041] w-full leading-4">
-                ↓ You saved an estimated {formatCurrency(estimatedSavings > 0 ? estimatedSavings : 1344.85)} compared to selling without optimization
-              </p>
-              <p className="text-[11px] text-[#717777] w-full leading-[13px]">
-                Based on FIFO comparison at your active tax rate assumptions
-              </p>
-            </div>
+            {estimatedSavings > 0 && (
+              <div className="bg-[#e8f5f0] border-b border-[#e8e9e9] flex flex-col gap-[4px] items-start p-[16px] w-full">
+                <p className="text-[13px] font-bold text-[#085041] w-full leading-4">
+                  ↓ You saved an estimated {formatCurrency(estimatedSavings)} compared to selling without optimization
+                </p>
+                <p className="text-[11px] text-[#717777] w-full leading-[13px]">
+                  Based on FIFO comparison at your active tax rate assumptions
+                </p>
+              </div>
+            )}
 
             {/* Tax Rows */}
             <div className="flex flex-col gap-[6px] items-start p-[16px] w-full">

@@ -358,6 +358,38 @@ export default function OrderConfirmation() {
   function handleSubmit() {
     const d = data!
 
+    // Compute FIFO baseline tax for the same funds/amounts to derive optimization savings
+    const stRate = activeTaxRates?.st_rate ?? 0.24
+    const ltRate = activeTaxRates?.lt_rate ?? 0.15
+    const acctForFifo = portfolio.accounts.find(a => a.account_id === activeAccountId)
+      ?? portfolio.accounts.find(a => a.account_type === 'taxable_brokerage')
+    let fifoTax = 0
+    if (acctForFifo) {
+      for (const f of d.funds) {
+        const holding = acctForFifo.holdings.find(h => h.fund_id === f.id)
+        if (!holding) continue
+        const sortedLots = [...holding.lots].sort(
+          (a, b) => new Date(a.acquisition_date).getTime() - new Date(b.acquisition_date).getTime()
+        )
+        let remaining = f.sellAmount
+        let fifoStGain = 0
+        let fifoLtGain = 0
+        for (const lot of sortedLots) {
+          if (remaining <= 0) break
+          const lotValue = lot.shares * lot.current_nav
+          const sellFraction = Math.min(remaining, lotValue) / lotValue
+          const proceeds = sellFraction * lotValue
+          const cost = sellFraction * lot.total_cost_basis
+          const gain = proceeds - cost
+          if (lot.holding_period === 'ST') fifoStGain += gain
+          else fifoLtGain += gain
+          remaining -= proceeds
+        }
+        fifoTax += Math.max(0, fifoStGain) * stRate + Math.max(0, fifoLtGain) * ltRate
+      }
+    }
+    const taxSavingsVsFifo = r2(fifoTax - d.estNetTax)
+
     // Apply the sale to the portfolio so balances, lots, and allocation reflect the transaction
     const updatedPortfolio = applyTransactionToPortfolio(portfolio, d, rec, activeAccountId, manualConfig)
     setPortfolio(updatedPortfolio)
@@ -394,6 +426,7 @@ export default function OrderConfirmation() {
       stocks_after_pct:  ai ? r2(ai.domestic_equity_after  + ai.international_equity_after)  : r2(portfolio.current_allocation.domestic_equity_pct + portfolio.current_allocation.international_equity_pct),
       bonds_after_pct:   ai ? r2(ai.domestic_bonds_after)   : r2(portfolio.current_allocation.domestic_bonds_pct),
       reserves_after_pct: ai ? r2(ai.short_term_reserves_after)  : r2(portfolio.current_allocation.short_term_reserves_pct),
+      tax_savings_vs_fifo: taxSavingsVsFifo > 0 ? taxSavingsVsFifo : undefined,
     }
     appendTransaction(updatedPortfolio, record)
     clearManualSession()

@@ -365,6 +365,7 @@ export interface TransactionRecord {
   stocks_after_pct: number
   bonds_after_pct: number
   reserves_after_pct: number
+  tax_savings_vs_fifo?: number  // optimized EST. NET TAX vs naive FIFO baseline for same funds/amounts
 }
 
 // ---------------------------------------------------------------------------
