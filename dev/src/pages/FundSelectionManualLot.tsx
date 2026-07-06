@@ -7,7 +7,7 @@ import { CostBasisDialog } from '../components/CostBasisDialog'
 import { CoachMark } from '../components/CoachMark'
 import { TargetAllocationModal } from '../components/TargetAllocationModal'
 import { useAppStore } from '../store/useAppStore'
-import { runOptimization } from '../engine/index'
+import { runOptimization, shortAssetClass } from '../engine/index'
 import type { CostBasisMethod, Lot as CanonicalLot } from '../types'
 import { toAccountingMethod } from '../utils/methods'
 import { buildScenarioFromFundResults, isDuplicateScenario } from '../utils/scenarioBuilder'
@@ -420,26 +420,8 @@ function InactiveFundRowLOT({ ticker, fullName, shares, balance }: {
   )
 }
 
-// Collapsed active fund data for primary scenario (the OTHER active fund)
-// Values derived from canonical dataset (pm/08-sample-dataset.json) via utility formatters
-const COLLAPSED_FUND_DATA: Record<string, CollapsedActiveFundData> = {
-  VTSAX: {
-    ticker: 'VTSAX', fullName: 'Vanguard Total Stock Market Index Fund',
-    shares: formatShares(1597), balance: formatCurrency(231884.40), sellAmount: formatCurrency(15000.03),
-    estSTGains: '+' + formatCurrency(1515.85), estSTColor: 'text-[#007a00]',
-    estLTGains: formatCurrency(0), estLTColor: 'text-vg-ink',
-    estTax: formatCurrency(363.80), impact: '-0.8% Stocks', impactColor: 'text-[#007a00]',
-    rationale: 'Selling the lowest-gain short-term lot (acquired Nov 2025) reduces domestic equity overweight while limiting estimated gross tax to $364.',
-    waitAndSave: formatCurrency(37.03),
-  },
-  VBTLX: {
-    ticker: 'VBTLX', fullName: 'Vanguard Total Bond Market Index Fund',
-    shares: formatShares(5600), balance: formatCurrency(51408), sellAmount: formatCurrency(10000),
-    estSTGains: formatCurrency(0), estSTColor: 'text-vg-ink',
-    estLTGains: '−' + formatCurrency(1056.65), estLTColor: 'text-[#c8102e]',
-    estTax: formatCurrency(0), impact: '-0.4% Bonds', impactColor: 'text-[#c8102e]',
-    rationale: 'Harvesting a $1,057 long-term bond loss nets against equity gains; combined taxable gain is $459 and estimated net tax is $110.',
-  },
+function fmtPct1(n: number): string {
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(n)
 }
 
 // ---------------------------------------------------------------------------
@@ -592,7 +574,7 @@ export default function FundSelectionManualLot() {
     if (stored && Object.keys(stored).length > 0) return stored
     const init: Record<string, string> = {}
     for (const lot of lots) {
-      init[lot.lotId] = lot.lotId === 'T-VTSAX-09' ? '103.306' : '0.000'
+      init[lot.lotId] = '0.000'
     }
     return init
   })
@@ -740,6 +722,36 @@ export default function FundSelectionManualLot() {
   // the user set — e.g. if VTSAX was activated first, it stays above VBTLX even when
   // VBTLX's lot detail is open.
   const otherFundId = fund === 'VTSAX' ? 'VBTLX' : 'VTSAX'
+
+  // Derive live collapsed fund data from manualConfig for the other active fund
+  const collapsedFundData: CollapsedActiveFundData | null = (() => {
+    const otherHolding = taxableAcct?.holdings.find(h => h.fund_id === otherFundId) ?? null
+    if (!otherHolding) return null
+    const fr = manualConfig?.fund_results.find(r => r.fund_id === otherFundId) ?? null
+    const sellAmountCents = manualAppliedAmountsCents[otherFundId] ?? 0
+    const stg = fr?.est_st_gain_loss ?? null
+    const ltg = fr?.est_lt_gain_loss ?? null
+    const impact = fr?.impact_pct ?? null
+    const assetClass = fr?.impact_asset_class ?? otherHolding.asset_class
+    return {
+      ticker: otherFundId,
+      fullName: otherHolding.fund_name,
+      shares: formatShares(otherHolding.total_shares),
+      balance: formatCurrency(otherHolding.current_balance),
+      sellAmount: formatCurrency(sellAmountCents / 100),
+      estSTGains: stg !== null ? (stg !== 0 ? fmtSigned(stg) : formatCurrency(0)) : '—',
+      estSTColor: stg !== null ? (stg > 0 ? 'text-[#007a00]' : stg < 0 ? 'text-[#c8102e]' : 'text-vg-ink') : 'text-vg-ink',
+      estLTGains: ltg !== null ? (ltg !== 0 ? fmtSigned(ltg) : formatCurrency(0)) : '—',
+      estLTColor: ltg !== null ? (ltg > 0 ? 'text-[#007a00]' : ltg < 0 ? 'text-[#c8102e]' : 'text-vg-ink') : 'text-vg-ink',
+      estTax: fr ? formatCurrency(fr.est_tax_gross) : '—',
+      impact: impact !== null
+        ? `${impact <= 0 ? '−' : '+'}${fmtPct1(Math.abs(impact))}% ${shortAssetClass(assetClass)}`
+        : '—',
+      impactColor: impact !== null ? (impact <= 0 ? 'text-[#007a00]' : 'text-[#c8102e]') : 'text-vg-ink',
+      rationale: fr?.rationale ?? '',
+    }
+  })()
+
   const otherFundComesFirst = (() => {
     const expandedIdx = manualActiveFundIds.indexOf(fund)
     const otherIdx    = manualActiveFundIds.indexOf(otherFundId)
@@ -888,9 +900,9 @@ export default function FundSelectionManualLot() {
               </div>
 
               {/* Other active fund — collapsed, shown BEFORE expanded fund when it was activated first */}
-              {otherFundComesFirst && COLLAPSED_FUND_DATA[otherFundId] && (
+              {otherFundComesFirst && collapsedFundData && (
                 <CollapsedActiveFundRow
-                  fund={COLLAPSED_FUND_DATA[otherFundId]}
+                  fund={collapsedFundData}
                   onLotDetails={ticker => navigate('/manual-lot', { state: { fund: ticker } })}
                   displayMethod={collapsedMethod}
                   onEditClick={() => setShowCollapsedCBD(true)}
@@ -1177,9 +1189,9 @@ export default function FundSelectionManualLot() {
               </div>
 
               {/* Other active fund — collapsed, shown AFTER expanded fund when it was activated later */}
-              {!otherFundComesFirst && COLLAPSED_FUND_DATA[otherFundId] && (
+              {!otherFundComesFirst && collapsedFundData && (
                 <CollapsedActiveFundRow
-                  fund={COLLAPSED_FUND_DATA[otherFundId]}
+                  fund={collapsedFundData}
                   onLotDetails={ticker => navigate('/manual-lot', { state: { fund: ticker } })}
                   displayMethod={collapsedMethod}
                   onEditClick={() => setShowCollapsedCBD(true)}
