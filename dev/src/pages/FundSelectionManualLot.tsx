@@ -653,7 +653,7 @@ export default function FundSelectionManualLot() {
         est_st_gain_loss: mergedStGain,
         est_lt_gain_loss: mergedLtGain,
         est_net_tax: r2(mergedTaxST + mergedTaxLT),
-        allocation_impact: result.allocation_impact,
+        allocation_impact: manualConfig.allocation_impact,
       })
     } else {
       setManualConfig(result)
@@ -911,12 +911,40 @@ export default function FundSelectionManualLot() {
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{combinedBanner ? fmtRate2(combinedBanner.effRate) + '% effective rate' : ''}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
-              <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
-                <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Stocks</span><span className="text-[12px] text-vg-ink">—</span></div>
-                <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-ink">—</span></div>
-                <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
-              </div>
+              {(() => {
+                const allocImpact = manualConfig?.allocation_impact ?? null
+                const equityDelta = allocImpact ? r2(
+                  (allocImpact.domestic_equity_after + allocImpact.international_equity_after) -
+                  (allocImpact.domestic_equity_before + allocImpact.international_equity_before)
+                ) : null
+                const bondsDelta = allocImpact ? r2(allocImpact.domestic_bonds_after - allocImpact.domestic_bonds_before) : null
+                return (
+                  <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
+                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
+                    {equityDelta !== null ? (
+                      <div className="flex gap-1.5 items-center">
+                        <span className="text-[12px] text-vg-ink">Stocks</span>
+                        <span className={`text-[12px] ${equityDelta <= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
+                          {equityDelta <= 0 ? '−' : '+'}{fmtPct1(Math.abs(equityDelta))}%
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Stocks</span><span className="text-[12px] text-vg-ink">—</span></div>
+                    )}
+                    {bondsDelta !== null ? (
+                      <div className="flex gap-1.5 items-center">
+                        <span className="text-[12px] text-vg-ink">Bonds</span>
+                        <span className={`text-[12px] ${bondsDelta >= 0 ? 'text-[#007a00]' : 'text-vg-red'}`}>
+                          {bondsDelta >= 0 ? '+' : '−'}{fmtPct1(Math.abs(bondsDelta))}%
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5 items-center"><span className="text-[12px] text-vg-ink">Bonds</span><span className="text-[12px] text-vg-ink">—</span></div>
+                    )}
+                    <a className="text-[10px] text-[#1255cc] underline cursor-pointer whitespace-nowrap" onClick={() => setShowAllocModal(true)}>Target allocation</a>
+                  </div>
+                )
+              })()}
             </div>
           </div>
 
