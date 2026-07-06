@@ -265,7 +265,7 @@ export default function FundSelectionAutomated() {
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
                 <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{formatCurrencyCompact(totalSale)}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{formatPercent(salePct, true)} of portfolio</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{formatPercent(salePct, true)} of {portfolio ? formatCurrency(portfolio.total_investable_balance) : '—'}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
 

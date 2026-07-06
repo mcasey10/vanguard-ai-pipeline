@@ -872,7 +872,7 @@ export default function FundSelectionManualLot() {
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
                 <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{combinedBanner ? formatCurrency(combinedBanner.totalSell) : '—'}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{combinedBanner ? formatPercent(combinedBanner.salePct, true) + ' of portfolio' : '0.0% of portfolio'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{combinedBanner && portfolio ? formatPercent(combinedBanner.salePct, true) + ' of ' + formatCurrency(portfolio.total_investable_balance) : '0.0% of portfolio'}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
