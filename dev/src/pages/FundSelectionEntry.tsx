@@ -19,18 +19,27 @@ export default function FundSelectionEntry() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [rawAmount, setRawAmount] = useState('')
+  const [inputDisplay, setInputDisplay] = useState('')  // what the input shows
+  const [amountDollars, setAmountDollars] = useState(0) // parsed dollar value
   const [mode, setLocalMode] = useState<'automated' | 'manual'>(storeMode)
 
-  function formatDollar(value: string): string {
-    const digits = value.replace(/\D/g, '')
-    if (!digits) return ''
-    return formatCurrency(parseInt(digits, 10) / 100)
+  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(/[^0-9.]/g, '')
+    const firstDot = raw.indexOf('.')
+    const normalized = firstDot === -1
+      ? raw
+      : raw.slice(0, firstDot + 1) + raw.slice(firstDot + 1).replace(/\./g, '').slice(0, 2)
+    const dollars = parseFloat(normalized) || 0
+    setAmountDollars(dollars)
+    setInputDisplay(normalized)
   }
 
-  function handleAmountChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const digits = e.target.value.replace(/\D/g, '')
-    setRawAmount(digits)
+  function handleFocus() {
+    if (amountDollars > 0) setInputDisplay(String(amountDollars))
+  }
+
+  function handleBlur() {
+    if (amountDollars > 0) setInputDisplay(formatCurrency(amountDollars))
   }
 
   function handleModeChange(m: 'automated' | 'manual') {
@@ -46,14 +55,13 @@ export default function FundSelectionEntry() {
   }
 
   function handleSubmit() {
-    const dollars = parseInt(rawAmount, 10) / 100
-    setTargetSaleAmount(dollars)
+    if (amountDollars <= 0) return
+    setTargetSaleAmount(amountDollars)
     setMode(mode)
     navigate('/automated')
   }
 
-  const displayAmount = rawAmount ? formatDollar(rawAmount) : ''
-  const hasAmount = rawAmount.length > 0 && parseInt(rawAmount, 10) > 0
+  const hasAmount = amountDollars > 0
 
   return (
     <div className="flex flex-col items-start w-full">
@@ -95,9 +103,11 @@ export default function FundSelectionEntry() {
             <input
               id="sale-amount"
               type="text"
-              inputMode="numeric"
-              value={displayAmount}
+              inputMode="decimal"
+              value={inputDisplay}
               onChange={handleAmountChange}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
               onKeyDown={e => e.key === 'Enter' && hasAmount && handleSubmit()}
               placeholder="$0.00"
               className="w-[200px] h-[48px] px-3 border border-vg-ink rounded-[4px]

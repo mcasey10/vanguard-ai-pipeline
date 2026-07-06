@@ -124,6 +124,10 @@ export default function FundSelectionAutomated() {
     setIsDirty(dollars !== (targetSaleAmount ?? 0))
   }
 
+  function handleFocus() {
+    if (inputDollars > 0) setInputDisplay(String(inputDollars))
+  }
+
   // On blur: format raw typed value to currency display without triggering engine
   function handleBlur() {
     if (inputDollars > 0) {
@@ -226,6 +230,7 @@ export default function FundSelectionAutomated() {
                 inputMode="decimal"
                 value={inputDisplay}
                 onChange={handleAmountChange}
+                onFocus={handleFocus}
                 onKeyDown={e => e.key === 'Enter' && handleRecalculate()}
                 onBlur={handleBlur}
                 className="w-[200px] h-[48px] px-3 border border-vg-ink rounded-[4px] text-[14px] text-vg-ink text-right bg-white focus:outline-none focus:ring-2 focus:ring-vg-ink/20"
