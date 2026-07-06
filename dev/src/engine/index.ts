@@ -83,8 +83,8 @@ export const KNOWN_ROUNDING_ARTIFACTS = {
     engine_gain: 1515.50,         // (103.306/172) × 22451.16 → proceeds 15000.03 - cost 13484.53
     vt8_stated_gain: 1515.85,     // VT8: $15,000.03 - $13,484.18 (backwards from $14.67 display)
     delta: 0.35,
-    net_tax_engine: 110.12,       // ($1515.50 - $1056.65) × 24% = $458.85 × 24%
-    net_tax_vt8: 110.21,          // ($1515.85 - $1056.65) × 24% = $459.20 × 24%
+    net_tax_engine: 111.21,       // ($1515.50 - $1052.12) × 24% = $463.38 × 24% [VBTLX at NAV $10.36]
+    net_tax_vt8: 111.30,          // ($1515.85 - $1052.12) × 24% = $463.73 × 24%
     net_tax_delta: 0.09,
   },
 } as const

@@ -7,10 +7,10 @@
  * Behavioral cases check structural properties; numeric cases use tolerances
  * documented in KNOWN_ROUNDING_ARTIFACTS.
  *
- * Expected VT8 figures (standard proportional-cost method):
+ * Expected VT8 figures (standard proportional-cost method, VBTLX NAV $10.36):
  *   VTSAX T-VTSAX-09 partial gain: $1,515.50 (not $1,515.85 — see KNOWN_ROUNDING_ARTIFACTS)
- *   NET TAX (VT8 scenario): $110.12 (not $110.21 — same rounding artifact)
- *   VBTLX T-VBTLX-02 loss: -$1,056.65 ✓ exact match
+ *   NET TAX (VT8 scenario): $111.21 (not $111.30 — same 35¢ VTSAX rounding artifact)
+ *   VBTLX T-VBTLX-02 loss: -$1,052.12 ✓ (965.251 shares at NAV $10.36, cost $11.45/sh)
  */
 
 import * as fs from 'fs'
@@ -260,10 +260,11 @@ caseHeader(7, 'Harvestable losses — 5 lots across VBIRX and VBTLX')
   const taxable = BASE_PORTFOLIO.accounts.find(a => a.account_id === TAXABLE_ID)!
   const allLots = taxable.holdings.flatMap(h => h.lots)
   const harvestable = allLots.filter(l => (l.harvestable_loss_flag === true))
-  assert('5 harvestable lots in taxable', harvestable.length, 5)
+  // At NAV $10.36: T-VBTLX-03 becomes a gain (+$1,065) — removed from harvestable list
+  // Remaining: T-VBTLX-01 (-$1,260), T-VBTLX-02 (-$2,180), T-VBIRX-02 (-$575), T-VBIRX-03 (-$540)
+  assert('4 harvestable lots in taxable', harvestable.length, 4)
   const totalHarvest = harvestable.reduce((s, l) => s + l.unrealized_gain_loss, 0)
-  // After correction: -3030 + -1940 + -705 + -575 + -540 = -6790
-  assert('total harvestable loss = -6790', Math.round(totalHarvest), -6790)
+  assert('total harvestable loss = -4555', Math.round(totalHarvest), -4555)
 
   // Engine in tax-first should select loss lots
   const params: OptimizationParams = {
@@ -514,8 +515,12 @@ caseHeader(15, 'Accounting method change — FIFO vs SpecID for VTSAX')
 // ---------------------------------------------------------------------------
 
 console.log('\n=== Verification Table 8 — Primary Sale Scenario ===')
-console.log('Manual/SpecID VTSAX (T-VTSAX-09, 103.306 sh) + MinTax VBTLX (T-VBTLX-02)')
+console.log('Manual/SpecID VTSAX (T-VTSAX-09, 103.306 sh) + SpecID VBTLX (T-VBTLX-02, 965.251 sh)')
 {
+  // At NAV $10.36, selling $10,000 VBTLX requires 10000/10.36 = 965.251 shares.
+  // T-VBTLX-02 cost $11.45/sh ($22,900 total) → largest loss/share (-$1.09) → MinTax selects it.
+  // Use SpecID to exactly match the VT8 share count for assertion precision.
+  const VBTLX_SHARES_FOR_10K = 10000 / 10.36  // 965.2509...
   const vt8Params: OptimizationParams = {
     portfolio: BASE_PORTFOLIO,
     targetSaleAmount: 25000.03,
@@ -527,12 +532,8 @@ console.log('Manual/SpecID VTSAX (T-VTSAX-09, 103.306 sh) + MinTax VBTLX (T-VBTL
       fund_selections: [
         { fund_id: 'VTSAX', accounting_method: 'specific_lot_identification',
           lot_overrides: [{ lot_id: 'T-VTSAX-09', shares: 103.306 }] },
-        // VT8 specifies T-VBTLX-02 exactly. Use SpecID to match the stated lot,
-        // since correcting T-VBTLX-02 cost to $10.15/sh means MinTax would now
-        // select T-VBTLX-01 first ($2.02/sh loss > $0.97/sh). VT8's "MinTax selects
-        // T-VBTLX-02" was true under the old $11.45 cost but not the corrected cost.
         { fund_id: 'VBTLX', accounting_method: 'specific_lot_identification',
-          lot_overrides: [{ lot_id: 'T-VBTLX-02', shares: 1089.325 }] },
+          lot_overrides: [{ lot_id: 'T-VBTLX-02', shares: VBTLX_SHARES_FOR_10K }] },
       ],
     },
   }
@@ -547,18 +548,18 @@ console.log('Manual/SpecID VTSAX (T-VTSAX-09, 103.306 sh) + MinTax VBTLX (T-VBTL
       vtsaxGain, KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.engine_gain, EPSILON)
     console.log(`    ℹ Delta from VT8: $${KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.delta} (backwards-construction rounding artifact)`)
 
-    section('VBTLX (MinTax, T-VBTLX-02, 1089.325 shares)')
+    section('VBTLX (SpecID, T-VBTLX-02, 965.251 shares @ NAV $10.36, cost $11.45/sh)')
     const vbtlxGain = vbtlxFund?.lots_selected.reduce((s, l) => s + l.realized_gain_loss, 0) ?? 0
-    assert('LT loss = -$1,056.65 ✓', vbtlxGain, -1056.65, EPSILON)
+    assert('LT loss = -$1,052.12 ✓', vbtlxGain, -1052.12, EPSILON)
 
     section('Portfolio-level netting')
     const netGain = vtsaxGain + vbtlxGain
-    const netTax = Math.max(0, netGain) * DEFAULT_RATES.st_rate  // all net is ST origin
-    assert(`NET GAIN ≈ $${KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.engine_gain - 1056.65}`,
-      netGain, KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.engine_gain - 1056.65, EPSILON)
+    const netTax = Math.max(0, netGain) * DEFAULT_RATES.st_rate
+    assert(`NET GAIN ≈ $${KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.engine_gain - 1052.12}`,
+      netGain, KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.engine_gain - 1052.12, EPSILON)
     assert(`EST. NET TAX ≈ $${KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.net_tax_engine} (VT8: $${KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.net_tax_vt8})`,
       netTax, KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.net_tax_engine, EPSILON)
-    console.log(`    ℹ $${KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.net_tax_delta} delta from VT8 — same rounding artifact`)
+    console.log(`    ℹ $${KNOWN_ROUNDING_ARTIFACTS.VTSAX_T09_PARTIAL_SALE.net_tax_delta} delta from VT8 — same VTSAX rounding artifact`)
   }
 }
 

@@ -61,8 +61,8 @@ The Lovable prototype failed this constraint when not explicitly instructed.
   Example: VTSAX ST gain $1,515.85 → EST. TAX = $363.80
 - EST. NET TAX (Summary Banner): portfolio-level NETTING.
   Sum all realized gains, subtract all realized losses, apply rate.
-  Example: VTSAX ST gain $1,515.85 − VBTLX LT loss $1,056.65 =
-  net $459.20 × 24% = EST. NET TAX $110.21
+  Example: VTSAX ST gain $1,515.50 − VBTLX LT loss $1,052.12 =
+  net $463.38 × 24% = EST. NET TAX $111.21
 - NEVER display per-fund EST. TAX as the user's total tax liability.
 - Effective rate = EST. NET TAX ÷ total sale amount (0.44% in primary scenario).
 
@@ -186,13 +186,13 @@ Plain-language rationale (REQ-OE-007):
 ## Canonical sample data — key figures
 
 Investor: Margaret R. Ellison, age 73
-Portfolio total: $849,851.40
+Portfolio total: $870,619.40
 Reference date: 2026-05-27 (ST/LT boundary: 2025-05-27)
 
 Accounts:
 
-- Taxable Brokerage ...4782: $507,194.40 (VTSAX, VTIAX, VBIRX, VBTLX)
-- Traditional IRA ...2973: $211,065.00 (VBTLX, VFITX) — RMD remaining $3,667.92
+- Taxable Brokerage ...4782: $513,802.40 (VTSAX, VTIAX, VBIRX, VBTLX)
+- Traditional IRA ...2973: $225,225.00 (VBTLX, VFITX) — RMD remaining $3,667.92
 - Roth IRA ...8148: $131,592.00 (VFIAX)
 
 Target allocation: Stocks 55% / Bonds 35% / Reserves 10%
@@ -206,15 +206,16 @@ Special condition lots:
 - T-VTIAX-07: Wait & Save — 400 sh, acquired 2025-06-10, ST, 14 days to LT,
   tax savings by waiting = $55.80
 - T-VBIRX-02, T-VBIRX-03: Harvestable LT losses (-$575, -$540)
-- T-VBTLX-01, T-VBTLX-02, T-VBTLX-03: Harvestable LT losses (-$3,030, -$4,540, -$705)
+- T-VBTLX-01, T-VBTLX-02: Harvestable LT losses (-$1,260, -$2,180)
+  (T-VBTLX-03 is now a gain at NAV $10.36 — no longer harvestable)
 
 Primary sale scenario (Verification Table 8):
 
 - VTSAX: 103.306 sh T-VTSAX-09 SpecID (ST) → $15,000.03 · ST gain +$1,515.85
   EST. TAX $363.80 · Wait & Save (converts 2026-11-20, saves $37.03 by waiting)
-- VBTLX: 1,089.325 sh T-VBTLX-02 MinTax (LT loss) → $10,000.00 · LT loss -$1,056.65
+- VBTLX: 965.251 sh T-VBTLX-02 MinTax (LT loss) → $10,000.00 · LT loss -$1,052.12
   EST. TAX $0.00
-- EST. NET TAX: $110.21 (= $459.20 × 24%) · Effective rate: 0.44%
+- EST. NET TAX: $111.21 (= $463.38 × 24%) · Effective rate: 0.44%
 - Impact: VTSAX -0.8% Equity (GREEN — moves toward target)
   VBTLX -0.4% Bonds (RED — worsens underweight)
 
@@ -515,16 +516,16 @@ because VT8 was hand-constructed by working backwards from a rounded
 per-share gain rather than forward from lot records. The engine
 produces the arithmetically correct result from stored data.
 
-| Figure                          | VT8 states | Engine produces | Difference | Cause                                                       |
-| ------------------------------- | ---------- | --------------- | ---------- | ----------------------------------------------------------- |
-| T-VTSAX-09 partial sale gain    | $1,515.85  | $1,515.50       | 35¢        | VT8 used backwards construction from rounded $14.67/sh gain |
-| EST. NET TAX (primary scenario) | $110.21    | $110.12         | 9¢         | Cascades from the 35¢ gain difference above                 |
+| Figure                          | VT8 states | Engine produces | Difference | Cause                                                        |
+| ------------------------------- | ---------- | --------------- | ---------- | ------------------------------------------------------------ |
+| T-VTSAX-09 partial sale gain    | $1,515.85  | $1,515.50       | 35¢        | VT8 used backwards construction from rounded $14.67/sh gain  |
+| EST. NET TAX (primary scenario) | $111.30    | $111.21         | 9¢         | Cascades from the 35¢ gain difference above (VBTLX at $10.36 NAV) |
 
 These are recorded in `dev/src/engine/index.ts` as the
 `KNOWN_ROUNDING_ARTIFACTS` constant. The Figma screens display
-VT8's figures ($1,515.85, $110.21) — those display values are
+VT8's figures ($1,515.85, $111.30) — those display values are
 correct as design artifacts. The engine's computed values ($1,515.50,
-$110.12) are correct as calculated results. Do not attempt to make
+$111.21) are correct as calculated results. Do not attempt to make
 the engine match VT8's figures exactly — it cannot be done by any
 standard lot accounting method from the stored data.
 
@@ -542,16 +543,16 @@ The following lot records were corrected in pm/08-sample-dataset.json
 during Step 2/3 of the Dev phase. The original values were wrong
 relative to PRD 10 Verification Tables:
 
-| Lot        | Field                | Old value | Corrected value |
-| ---------- | -------------------- | --------- | --------------- |
-| T-VTSAX-09 | cost_basis_per_share | 128.90    | 130.53          |
-| T-VBTLX-02 | cost_basis_per_share | 11.45     | 10.15           |
-| T-VTSAX-07 | cost_basis_per_share | 138.50    | 117.37          |
-| T-VTIAX-06 | cost_basis_per_share | 37.80     | 27.20           |
+| Lot          | Field                | Old value   | Corrected value | Notes                                                     |
+| ------------ | -------------------- | ----------- | --------------- | --------------------------------------------------------- |
+| T-VTSAX-09   | cost_basis_per_share | 128.90      | 130.53          | Matched VT1/VT7                                           |
+| T-VBTLX-02   | cost_basis_per_share | 11.45→10.15 | 10.15→11.45     | 10.15 was IRA-VBTLX-02's cost; reverted to correct $11.45 |
+| T-VTSAX-07   | cost_basis_per_share | 138.50      | 117.37          | Matched VT1/VT7                                           |
+| T-VTIAX-06   | cost_basis_per_share | 37.80       | 27.20           | Matched VT1/VT7                                           |
+| All VBTLX    | current_nav          | 9.18        | 10.36           | NAV corrected to value used when VT8 was authored; at $10.36 T-VBTLX-02 loss = -$1,052.12 matching VT8 intent |
 
 PRD 10 VT9 Scenario 1 VBTLX cost basis was also corrected in Notion
-from $12,472.77 to $11,056.65 to match VT8's internally consistent
-figure.
+from $12,472.77 to match the corrected VT8 figure at NAV $10.36.
 
 ---
 
