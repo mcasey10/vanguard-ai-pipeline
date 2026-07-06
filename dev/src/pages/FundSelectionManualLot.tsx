@@ -549,8 +549,20 @@ export default function FundSelectionManualLot() {
         }
       }
     } else {
-      // SpecID: clear bannerData so it recomputes from lot inputs
-      setBannerData(null)
+      // SpecID: seed lot inputs from engine's current selection so results stay stable
+      const fr = manualConfig?.fund_results.find(r => r.fund_id === fund)
+      if (fr && fr.lots_sold.length > 0) {
+        const prePopulated: Record<string, string> = {}
+        for (const lot of lots) {
+          const ls = fr.lots_sold.find(s => s.lot_id === lot.lotId)
+          prePopulated[lot.lotId] = ls ? ls.shares_to_sell.toFixed(3) : '0.000'
+        }
+        setSharesInputs(prePopulated)
+        setManualLotSelections(fund, prePopulated)
+        runLotEngine(prePopulated)
+      } else {
+        setBannerData(null)
+      }
     }
   }
 
@@ -786,6 +798,23 @@ export default function FundSelectionManualLot() {
   const ltLots = lots.filter(l => l.holdingPeriod === 'LT')
   const stLots = lots.filter(l => l.holdingPeriod === 'ST')
 
+  // Combined session-level banner derived from all active funds in manualConfig.
+  // Drives the top summary bar so it remains stable while the user edits lot inputs.
+  const combinedBanner = useMemo(() => {
+    if (!manualConfig || !portfolio || manualConfig.fund_results.length === 0) return null
+    const results = manualConfig.fund_results
+    const totalSell  = r2(results.reduce((s, fr) => s + fr.sell_amount, 0))
+    const stGain     = r2(results.reduce((s, fr) => s + fr.est_st_gain_loss, 0))
+    const ltGain     = r2(results.reduce((s, fr) => s + fr.est_lt_gain_loss, 0))
+    const netGain    = Math.max(0, r2(stGain + ltGain))
+    const taxST      = Math.min(netGain, Math.max(0, stGain)) * activeTaxRates.st_rate
+    const taxLT      = Math.max(0, netGain - Math.min(netGain, Math.max(0, stGain))) * activeTaxRates.lt_rate
+    const estNetTax  = r2(taxST + taxLT)
+    const salePct    = r2((totalSell / portfolio.total_investable_balance) * 100)
+    const effRate    = totalSell > 0 ? r2((estNetTax / totalSell) * 100) : 0
+    return { totalSell, stGain, ltGain, estNetTax, salePct, effRate }
+  }, [manualConfig, portfolio, activeTaxRates])
+
   return (
     <>
       {/* Target Allocation Modal */}
@@ -837,13 +866,13 @@ export default function FundSelectionManualLot() {
             </div>
           </div>
 
-          {/* Summary Banner — reactive from bannerData (computed in runLotEngine) */}
+          {/* Summary Banner — combined session totals from manualConfig (stable across lot-editing) */}
           <div className="flex items-center px-8 w-full">
             <div className="flex flex-1 items-start bg-[#e8f5f0] px-6 py-4">
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">SALE TOTAL</span>
-                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{bannerData ? formatCurrency(bannerData.totalSale) : '—'}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bannerData ? formatPercent(bannerData.salePct, true) + ' of portfolio' : '0.0% of portfolio'}</span>
+                <span className="text-[20px] font-bold text-vg-ink whitespace-nowrap">{combinedBanner ? formatCurrency(combinedBanner.totalSell) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{combinedBanner ? formatPercent(combinedBanner.salePct, true) + ' of portfolio' : '0.0% of portfolio'}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
@@ -864,22 +893,22 @@ export default function FundSelectionManualLot() {
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
-                <span className={`text-[16px] font-bold whitespace-nowrap ${bannerData && bannerData.stGainLoss > 0 ? 'text-[#007a00]' : bannerData && bannerData.stGainLoss < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
-                  {bannerData ? fmtSigned(bannerData.stGainLoss) : '—'}
+                <span className={`text-[16px] font-bold whitespace-nowrap ${combinedBanner && combinedBanner.stGain > 0 ? 'text-[#007a00]' : combinedBanner && combinedBanner.stGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {combinedBanner ? fmtSigned(combinedBanner.stGain) : '—'}
                 </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
-                <span className={`text-[16px] font-bold whitespace-nowrap ${bannerData && bannerData.ltGainLoss > 0 ? 'text-[#007a00]' : bannerData && bannerData.ltGainLoss < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
-                  {bannerData ? fmtSigned(bannerData.ltGainLoss) : '—'}
+                <span className={`text-[16px] font-bold whitespace-nowrap ${combinedBanner && combinedBanner.ltGain > 0 ? 'text-[#007a00]' : combinedBanner && combinedBanner.ltGain < 0 ? 'text-vg-red' : 'text-vg-ink'}`}>
+                  {combinedBanner ? fmtSigned(combinedBanner.ltGain) : '—'}
                 </span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. NET TAX</span>
-                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{bannerData ? formatCurrency(bannerData.estNetTax) : '—'}</span>
-                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{bannerData ? fmtRate2(bannerData.effRate) + '% effective rate' : ''}</span>
+                <span className="text-[16px] font-bold text-vg-ink whitespace-nowrap">{combinedBanner ? formatCurrency(combinedBanner.estNetTax) : '—'}</span>
+                <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{combinedBanner ? fmtRate2(combinedBanner.effRate) + '% effective rate' : ''}</span>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-0.5 flex-1 min-w-0 overflow-hidden px-3">
