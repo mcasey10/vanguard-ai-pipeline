@@ -938,13 +938,15 @@
         <div class="step-num dev-num">5</div>
         <div class="step-main">
           <div class="step-title">Testing + quality assurance</div>
-          <div class="step-desc">Unit tests for the optimization engine against all 15 coverage cases from PRD 10's sample data coverage map — figures must match Verification Tables 8 and 9 exactly. Integration tests for complete user flows (FS-ENTRY-1 through ES-1, both Automated and Manual paths). Claude Code writes tests against its own implementation. Gate: full test suite passes with no failures.</div>
+          <div class="step-desc">Two test suites: (1) Vitest unit tests — the optimization engine's 58 assertions across all 15 coverage cases from the canonical sample dataset, converted from the standalone verify.ts script into named, grouped Vitest test cases. Run with <code>npm test</code> from the dev/ directory. (2) Playwright end-to-end integration tests — two complete user flows (Automated mode and Manual mode) from entry through order submission to execution summary. Run with <code>npm run test:e2e</code> from the dev/ directory with the Vite dev server running on localhost:5173. Both suites run in the terminal; Vitest UI mode (<code>npx vitest --ui</code>) and Playwright UI mode (<code>npx playwright test --ui</code>) provide browser-based visual test runners showing pass/fail trees, timing, and screenshots at each assertion step. Gate: 58/58 unit tests pass, 2/2 integration flows pass end-to-end.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Writes Vitest unit tests for the optimization engine and Playwright integration tests for complete user flows. Test oracle is PRD 10 Verification Tables — not inferred expected values.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Converted verify.ts into engine.test.ts (58 named Vitest tests grouped by coverage case in describe() blocks, KNOWN_ROUNDING_ARTIFACTS ±$0.02 tolerance applied to exactly 2 documented cases). Wrote flows.spec.ts (2 Playwright flows: Automated happy path and Manual mode entry, both passing end-to-end). No application code fixes required — both suites passed after correcting selector names to match actual rendered button text ("Get recommendation" not "Calculate").</span></span>
+          <span class="chip chip-used">Vitest<span class="tip">Unit test framework for the optimization engine. 58 tests across 15 coverage cases derived from PRD 10 Verification Tables 8 and 9. Run: npm test (from dev/). UI mode: npx vitest --ui (opens browser at localhost with visual pass/fail tree and timing per test). The original verify.ts standalone script is preserved alongside the Vitest suite.</span></span>
+          <span class="chip chip-used">Playwright<span class="tip">End-to-end integration test framework. 2 flows: Flow A (Automated mode — entry → recommendation → review order → submit → execution summary) and Flow B (Manual mode — entry → automated recommendation → manual toggle → review order → submit → execution summary). Run: npm run test:e2e (from dev/, requires Vite dev server running on localhost:5173). UI mode: npx playwright test --ui shows step-by-step timeline with screenshots at each assertion.</span></span>
         </div>
       </div>
     </div>
