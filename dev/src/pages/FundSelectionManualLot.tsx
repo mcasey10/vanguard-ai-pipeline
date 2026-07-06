@@ -296,7 +296,7 @@ function WaitSaveLotRow({ lot, sharesInput, onSharesChange, onSharesCommit, show
           <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Wait &amp; Save opportunity</span>
           <p className="text-[12px] text-vg-ink flex-1">{ws.noticeText}</p>
           {showHint && (
-            <CoachMark id="ws" text="This lot will qualify for the lower long-term capital gains rate in 166 days. Selling it now costs more in estimated tax than waiting." />
+            <CoachMark id="ws" text={`This lot will qualify for the lower long-term capital gains rate in ${ws.daysUntilLT} days. Selling it now costs more in estimated tax than waiting.`} />
           )}
         </div>
       </div>
@@ -883,7 +883,7 @@ export default function FundSelectionManualLot() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{taxableAcct ? accountAllocStr(taxableAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$507,194.40</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{formatCurrency(taxableAcct?.account_balance ?? 0)}</span>
                 <div className="w-4 shrink-0" />
                 <ChevronDown size={24} className="text-vg-ink shrink-0" />
               </div>
@@ -916,13 +916,13 @@ export default function FundSelectionManualLot() {
                 <div className="flex h-16 items-center overflow-hidden px-3 w-full bg-white">
                   <div className="w-[280px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
                     <span className="text-[12px] text-vg-ink-muted truncate">
-                      {fund === 'VTSAX' ? 'Vanguard Total Stock Market Index Fund' : 'Vanguard Total Bond Market Index Fund'}
+                      {holding?.fund_name ?? fund}
                     </span>
                     <a className="text-[14px] font-bold text-[#1255cc] underline whitespace-nowrap">{fund}</a>
                   </div>
                   <div className="w-[140px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0 overflow-hidden">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{fund === 'VTSAX' ? '1,597' : '5,600'} shares</span>
-                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{fund === 'VTSAX' ? formatCurrency(231884.40) : formatCurrency(51408.00)}</span>
+                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">{formatShares(holding?.total_shares ?? 0)} shares</span>
+                    <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{formatCurrency(holding?.current_balance ?? 0)}</span>
                   </div>
                   {/* Sell amount — SpecID: "SELL AMOUNT *" derived from lot inputs; non-SpecID: input-styled display matching FS-MAN-2 */}
                   <div className="w-[128px] h-full flex flex-col gap-[3px] items-start overflow-hidden px-[4px] py-[8px] shrink-0">
@@ -970,27 +970,40 @@ export default function FundSelectionManualLot() {
                   <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. ST GAINS</span>
                     <span className={`text-[14px] font-bold whitespace-nowrap ${stColor}`}>
-                      {bannerData ? (stg !== 0 ? fmtSigned(stg) : formatCurrency(0)) : (fund === 'VTSAX' ? '+' + formatCurrency(1515.85) : formatCurrency(0))}
+                      {bannerData ? (stg !== 0 ? fmtSigned(stg) : formatCurrency(0)) : '—'}
                     </span>
                   </div>
                   <div className="w-[95px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. LT GAINS</span>
                     <span className={`text-[14px] font-bold whitespace-nowrap ${ltColor}`}>
-                      {bannerData ? (ltg !== 0 ? fmtSigned(ltg) : formatCurrency(0)) : (fund === 'VTSAX' ? formatCurrency(0) : '−' + formatCurrency(1056.65))}
+                      {bannerData ? (ltg !== 0 ? fmtSigned(ltg) : formatCurrency(0)) : '—'}
                     </span>
                   </div>
                   <div className="w-[85px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
                     <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">EST. TAX</span>
                     <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">
-                      {bannerData ? formatCurrency(grossTax) : (fund === 'VTSAX' ? formatCurrency(363.80) : formatCurrency(0))}
+                      {bannerData ? formatCurrency(grossTax) : '—'}
                     </span>
                   </div>
                     </>)
                   })()}
-                  <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
-                    <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
-                    <span className={`text-[12px] font-semibold whitespace-nowrap ${fund === 'VTSAX' ? 'text-[#007a00]' : 'text-[#c8102e]'}`}>{fund === 'VTSAX' ? '-0.8% Stocks' : '-0.4% Bonds'}</span>
-                  </div>
+                  {(() => {
+                    const expFr = bannerData ? manualConfig?.fund_results.find(r => r.fund_id === fund) : null
+                    const expImpact = expFr?.impact_pct ?? null
+                    const expAsset  = expFr?.impact_asset_class ?? holding?.asset_class ?? ''
+                    const expImpactStr = expImpact !== null
+                      ? `${expImpact <= 0 ? '−' : '+'}${fmtPct1(Math.abs(expImpact))}% ${shortAssetClass(expAsset)}`
+                      : '—'
+                    const expImpactColor = expImpact !== null
+                      ? (expImpact <= 0 ? 'text-[#007a00]' : 'text-[#c8102e]')
+                      : 'text-vg-ink'
+                    return (
+                      <div className="w-[110px] h-full flex flex-col justify-center gap-[3px] px-2 shrink-0">
+                        <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">IMPACT</span>
+                        <span className={`text-[12px] font-semibold whitespace-nowrap ${expImpactColor}`}>{expImpactStr}</span>
+                      </div>
+                    )
+                  })()}
                   <div className="flex flex-1 h-full items-center justify-end px-2">
                     <button onClick={() => navigate('/manual-2')} className="h-[36px] w-[90px] rounded-full border-[1.5px] border-vg-ink bg-white text-[14px] font-bold text-vg-ink shrink-0 hover:opacity-90 active:opacity-80 transition-opacity">Cancel</button>
                   </div>
@@ -1199,8 +1212,14 @@ export default function FundSelectionManualLot() {
               )}
 
               {/* Inactive fund rows — VTIAX and VBIRX (Figma: 382:1898-1899, 64px each) */}
-              <InactiveFundRowLOT ticker="VTIAX" fullName="Vanguard Total Intl Stock Index Fund"  shares={formatShares(3600)} balance={formatCurrency(139500)} />
-              <InactiveFundRowLOT ticker="VBIRX" fullName="Vanguard Short-Term Bond Index Fund" shares={formatShares(8100)} balance={formatCurrency(84402)} />
+              {(() => {
+                const vtiax = taxableAcct?.holdings.find(h => h.fund_id === 'VTIAX')
+                const vbirx = taxableAcct?.holdings.find(h => h.fund_id === 'VBIRX')
+                return (<>
+                  {vtiax && <InactiveFundRowLOT ticker="VTIAX" fullName={vtiax.fund_name} shares={formatShares(vtiax.total_shares)} balance={formatCurrency(vtiax.current_balance)} />}
+                  {vbirx && <InactiveFundRowLOT ticker="VBIRX" fullName={vbirx.fund_name} shares={formatShares(vbirx.total_shares)} balance={formatCurrency(vbirx.current_balance)} />}
+                </>)
+              })()}
 
               {/* Traditional IRA — collapsed, expandable */}
               <div className="flex h-16 items-center px-4 bg-[#f8f8f8] border-t border-[#e8e9e9] w-full cursor-pointer" onClick={() => toggleAccount('ira')}>
@@ -1209,16 +1228,20 @@ export default function FundSelectionManualLot() {
                 <div className="flex gap-1 items-center flex-wrap">
                   <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">Traditional IRA</span>
                   <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct?.masked_number ?? '...2973'}</span>
-                  <div className="w-2 shrink-0" />
-                  <div className="flex items-center gap-[4px] px-2 py-[2px] rounded-full bg-[#e07000]">
-                    <Clock size={12} className="text-white shrink-0" />
-                    <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">Remaining 2026 RMD: $3,668</span>
-                  </div>
+                  {iraAcct?.rmd_record && (
+                    <>
+                      <div className="w-2 shrink-0" />
+                      <div className="flex items-center gap-[4px] px-2 py-[2px] rounded-full bg-[#e07000]">
+                        <Clock size={12} className="text-white shrink-0" />
+                        <span className="text-[9px] font-bold text-white tracking-[0.36px] whitespace-nowrap">Remaining 2026 RMD: {formatCurrency(Math.round(iraAcct.rmd_record.rmd_remaining))}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{iraAcct ? accountAllocStr(iraAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$211,065.00</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{iraAcct ? formatCurrency(iraAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 {iraExpanded ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>
@@ -1234,7 +1257,7 @@ export default function FundSelectionManualLot() {
                 <div className="flex-1" />
                 <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">{rothAcct ? accountAllocStr(rothAcct) : ''}</span>
                 <div className="w-4 shrink-0" />
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">$131,592.00</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{rothAcct ? formatCurrency(rothAcct.account_balance) : '—'}</span>
                 <div className="w-4 shrink-0" />
                 {rothExpanded ? <ChevronUp size={24} className="text-vg-ink shrink-0" /> : <ChevronDown size={24} className="text-vg-ink shrink-0" />}
               </div>

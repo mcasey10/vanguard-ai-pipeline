@@ -65,7 +65,7 @@ interface FundDisplay {
   accounting_method: string
   netGainLoss: number
   holdingPeriod: 'ST' | 'LT' | 'mixed' | 'none'
-  estTax: number   // gross per-fund tax (24% ST, 15% LT defaults)
+  estTax: number   // gross per-fund tax at active rates
 }
 
 function buildFundDisplay(
@@ -73,11 +73,13 @@ function buildFundDisplay(
   sell_amount: number,
   accounting_method: string,
   st_gain_loss: number,
-  lt_gain_loss: number
+  lt_gain_loss: number,
+  stRate: number,
+  ltRate: number,
 ): FundDisplay {
   const netGainLoss = r2(st_gain_loss + lt_gain_loss)
-  // Gross per-fund tax: positive gains × rate (losses don't generate tax)
-  const estTax = r2(Math.max(0, st_gain_loss) * 0.24 + Math.max(0, lt_gain_loss) * 0.15)
+  // Gross per-fund tax: positive gains × active rate (losses don't generate tax)
+  const estTax = r2(Math.max(0, st_gain_loss) * stRate + Math.max(0, lt_gain_loss) * ltRate)
 
   let holdingPeriod: FundDisplay['holdingPeriod'] = 'none'
   if (st_gain_loss !== 0 && lt_gain_loss !== 0) holdingPeriod = 'mixed'
@@ -149,9 +151,9 @@ function FundRow({ fd }: { fd: FundDisplay }) {
   )
 }
 
-function TransactionCard({ txn, acctMasked }: { txn: TransactionRecord; acctMasked: string }) {
+function TransactionCard({ txn, acctMasked, stRate, ltRate }: { txn: TransactionRecord; acctMasked: string; stRate: number; ltRate: number }) {
   const funds = txn.funds_sold.map(f =>
-    buildFundDisplay(f.fund_id, f.sell_amount, f.accounting_method, f.st_gain_loss ?? 0, f.lt_gain_loss ?? 0)
+    buildFundDisplay(f.fund_id, f.sell_amount, f.accounting_method, f.st_gain_loss ?? 0, f.lt_gain_loss ?? 0, stRate, ltRate)
   )
   const totalSold = r2(funds.reduce((s, f) => s + f.sell_amount, 0))
   const effectiveRateDisplay = fmtPct2(txn.effective_rate)
@@ -284,7 +286,7 @@ export default function TransactionHistory() {
         ) : (
           <div className="flex flex-col items-start w-full divide-y divide-[#e8e9e9]">
             {history.map((txn, i) => (
-              <TransactionCard key={txn.transaction_id ?? i} txn={txn} acctMasked={acctMasked} />
+              <TransactionCard key={txn.transaction_id ?? i} txn={txn} acctMasked={acctMasked} stRate={activeTaxRates.st_rate} ltRate={activeTaxRates.lt_rate} />
             ))}
           </div>
         )}

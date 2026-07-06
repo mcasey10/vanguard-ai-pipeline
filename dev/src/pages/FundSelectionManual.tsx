@@ -16,7 +16,7 @@ function RadioDot({ selected }: { selected: boolean }) {
 
 export default function FundSelectionManual() {
   const navigate = useNavigate()
-  const { portfolio } = useAppStore()
+  const { portfolio, activeTaxRates } = useAppStore()
 
   const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set())
   function toggleAccount(id: string) {
@@ -64,7 +64,7 @@ export default function FundSelectionManual() {
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
               <div className="flex flex-col gap-1 flex-1 min-w-0 overflow-hidden px-3">
                 <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">TAX BRACKET</span>
-                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">24% ST / 15% LT</span>
+                <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{Math.round(activeTaxRates.st_rate * 100)}% ST / {Math.round(activeTaxRates.lt_rate * 100)}% LT</span>
                 <a className="text-[12px] text-[#1255cc] underline cursor-pointer whitespace-nowrap">Change</a>
               </div>
               <div className="self-stretch w-px bg-[#c8d8d4] shrink-0" />
