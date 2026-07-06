@@ -621,9 +621,32 @@ export default function FundSelectionManualLot() {
       optimizationPriority,
       activeTaxRates,
       manualSelections: { fund_selections: [{ fund_id: fund, accounting_method: 'specific_lot_identification', lot_overrides: lotOverrides }] },
-    })
-    setManualConfig(result as import('../types').ManualConfiguration)
-  }, [portfolio, holding, fund, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig])
+    }) as import('../types').ManualConfiguration
+
+    // Merge this fund's result into existing manualConfig so other funds' results are preserved.
+    const newFundResult = result.fund_results.find(r => r.fund_id === fund)
+    if (newFundResult && manualConfig && manualConfig.fund_results.some(r => r.fund_id !== fund)) {
+      const mergedFundResults = manualConfig.fund_results.map(r => r.fund_id === fund ? newFundResult : r)
+      if (!mergedFundResults.some(r => r.fund_id === fund)) mergedFundResults.push(newFundResult)
+      const mergedTotalSell = r2(mergedFundResults.reduce((s, r) => s + r.sell_amount, 0))
+      const mergedStGain    = r2(mergedFundResults.reduce((s, r) => s + r.est_st_gain_loss, 0))
+      const mergedLtGain    = r2(mergedFundResults.reduce((s, r) => s + r.est_lt_gain_loss, 0))
+      const mergedNetGain   = Math.max(0, r2(mergedStGain + mergedLtGain))
+      const mergedTaxST     = Math.min(mergedNetGain, Math.max(0, mergedStGain)) * activeTaxRates.st_rate
+      const mergedTaxLT     = Math.max(0, mergedNetGain - Math.min(mergedNetGain, Math.max(0, mergedStGain))) * activeTaxRates.lt_rate
+      setManualConfig({
+        ...manualConfig,
+        fund_results: mergedFundResults,
+        total_sell_amount: mergedTotalSell,
+        est_st_gain_loss: mergedStGain,
+        est_lt_gain_loss: mergedLtGain,
+        est_net_tax: r2(mergedTaxST + mergedTaxLT),
+        allocation_impact: result.allocation_impact,
+      })
+    } else {
+      setManualConfig(result)
+    }
+  }, [portfolio, holding, fund, activeAccountId, optimizationPriority, activeTaxRates, manualConfig, setManualConfig])
 
   function handleSharesChange(lotId: string, value: string) {
     setSharesInputs(prev => ({ ...prev, [lotId]: value }))
