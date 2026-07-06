@@ -495,7 +495,7 @@ export default function OrderConfirmation() {
               </div>
 
               {/* Fund rows */}
-              {data.funds.map((f, i) => {
+              {data.funds.map((f) => {
                 const gainLossColor = f.gainLoss > 0 ? '#007a00' : f.gainLoss < 0 ? '#c8102e' : '#717777'
                 const taxColor = f.estTaxGross > 0 ? '#040505' : '#717777'
                 return (
