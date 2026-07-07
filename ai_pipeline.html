@@ -901,8 +901,8 @@
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Primary implementation tool. Reads REQ-OE-001 through REQ-OE-010 via Notion MCP. Account withdrawal priority (Taxable → TradIRA → Roth) is a hard rule in dev/CLAUDE.md — never derived from tax efficiency. Engine output must match PRD 10 Verification Tables exactly before screen implementation begins.</span></span>
-          <span class="chip chip-pending">Notion MCP<span class="tip">Reads REQ-OE-001 through REQ-OE-010 and PRD 10 Verification Tables as the test oracle for all 15 coverage cases.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Built the dual-objective optimization engine (dev/src/engine/index.ts) implementing all REQ-OE requirements. Two-phase fund-level algorithm: Phase 1 sells from overweight asset classes, Phase 2 harvests losses. Lot selection per accounting method (MinTax, HIFO, FIFO, AvgCost, SpecID). Verified against all 15 coverage cases via verify.ts (58/58 assertions passing). Key correction during Dev: VBTLX NAV corrected from $9.18 to $10.36 — the original NAV used when authoring VT8, which had been replaced during an earlier prototype phase without updating the scenario figures.</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Read REQ-OE-001 through REQ-OE-010 and PRD 10 Verification Tables as the test oracle for all 15 coverage cases. Multiple PRD 10 corrections applied during engine verification: T-VTSAX-09, T-VTSAX-07, T-VTIAX-06 cost bases corrected; VT9 Scenario 1 VBTLX cost basis corrected; VBTLX NAV updated throughout all verification tables.</span></span>
         </div>
       </div>
     </div>
@@ -962,12 +962,12 @@
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Writes vercel.json and GitHub Actions workflow alongside application code in the same session.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Created dev/vercel.json (Vite framework, React Router rewrites rule required for client-side routing) and .github/workflows/deploy.yml (GitHub Actions workflow: install → unit tests → build → Vercel deploy). Unit tests run as a gate — deployment blocked if any of 58 tests fail.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t3">T3</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Vercel<span class="tip">Primary deployment target. Deploy-on-push from GitHub main branch. Free tier sufficient for this application — static Vite build, no server required.</span></span>
+          <span class="chip chip-used">Vercel<span class="tip">Deployed as a new project (vanguard-ai-pipeline) separate from prior prototype deployments. Root directory set to dev/. Deploy-on-push from main via GitHub Actions. Live at: https://vanguard-ai-pipeline-jade.vercel.app/ — reset URL: https://vanguard-ai-pipeline-jade.vercel.app/?reset=true</span></span>
         </div>
       </div>
     </div>
@@ -983,14 +983,14 @@
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">Claude Code<span class="tip">Creates PRs and coordinates with MCP tools for cross-system updates.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Coordinated cross-system updates via MCP tools in a single session. GitHub PR created summarizing the full Dev phase. Jira VSR tickets transitioned to Done (implemented features) or Deferred (deliberately scoped out). Notion PRD workspace updated with deployment URL and Dev phase completion status.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t5">T5 emerging</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-pending">GitHub MCP<span class="tip">Creates pull requests and links to Jira stories.</span></span>
-          <span class="chip chip-pending">Atlassian Rovo MCP<span class="tip">Transitions Jira stories to Done and adds completion comments with links to merged PRs.</span></span>
-          <span class="chip chip-pending">n8n<span class="tip">Open-source workflow automation — orchestrates cross-system pipelines connecting Jira, GitHub, and Notion beyond what individual MCP connections support.</span></span>
+          <span class="chip chip-used">GitHub MCP<span class="tip">Created the Dev phase PR on mcasey10/vanguard-ai-pipeline summarizing all seven Dev phase steps, technical decisions, test results (58/58 unit, 2/2 integration), deployed URL, and documented known gaps.</span></span>
+          <span class="chip chip-used">Atlassian Rovo MCP<span class="tip">Transitioned implemented VSR stories to Done with comments linking to the deployed application. Deferred features (IRA account selection, FS-DEGRADE) moved to Deferred status with documented rationale. VSR-78 (ES-1) amended with post-handoff revision comment referencing ES-1-rev.</span></span>
+          <span class="chip chip-skipped">n8n<span class="tip">Evaluated for orchestrating cross-system automation beyond individual MCP connections — not used. The MCP tools available (GitHub, Atlassian Rovo, Notion) were sufficient to complete all cross-system updates directly from Claude.ai without requiring a separate workflow automation layer.</span></span>
         </div>
       </div>
     </div>
