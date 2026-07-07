@@ -705,3 +705,24 @@ export function formatPercent(value: number, alreadyPercent = false): string {
 - The parenthetical per-share gain format (e.g., `($115.20)`) does
   not show a sign prefix — the parentheses imply a loss context.
   Use `formatCurrency(Math.abs(value))` wrapped in parentheses.
+
+---
+
+## Intentionally omitted UI elements
+
+The following elements appear in Figma frames but have been deliberately
+omitted from the implementation. Do not reintroduce them during visual passes:
+
+- **"Download confirmation" button on /summary** — non-functional placeholder
+  removed per UX decision. A button implying a file download with no
+  implementation is worse than no button.
+- **"View order in Activity →" link on /summary** — dead link, no Activity
+  screen exists. Documented as deferred in DDB Known Gaps.
+- **"Download session summary" button on /history** — same rationale as
+  Download confirmation.
+
+The following element does NOT appear in Figma but IS intentionally present
+in the implementation:
+
+- **"Reset application" link on /summary** — developer utility for demo and
+  testing, navigates to `/?reset=true`. Must not be removed during visual passes.
