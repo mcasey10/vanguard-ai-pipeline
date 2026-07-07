@@ -397,16 +397,13 @@ export default function ExecutionSummary() {
 
         {/* Element 5 — Actions */}
         <div className="flex items-center justify-between w-full">
-          {/* Left group: Download confirmation + ghost links */}
-          <div className="flex gap-[12px] items-center">
-            <button className="h-[48px] w-[200px] rounded-full border-[1.5px] border-[#040505] bg-white text-[14px] font-bold text-[#040505] shrink-0 hover:opacity-90 transition-opacity whitespace-nowrap">
-              Download confirmation
-            </button>
-            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80">
-              View order in Activity →
-            </a>
+          {/* Left group: ghost links */}
+          <div className="flex gap-[16px] items-center">
             <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80" onClick={() => navigate('/history')}>
               View transaction history →
+            </a>
+            <a className="text-[12px] text-[#717777] cursor-pointer whitespace-nowrap hover:underline" onClick={() => navigate('/?reset=true')}>
+              Reset application
             </a>
           </div>
 
