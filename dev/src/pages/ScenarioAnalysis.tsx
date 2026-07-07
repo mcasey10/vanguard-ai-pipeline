@@ -412,7 +412,7 @@ function ScenarioColumn({ scenario, index, portfolio, activeTaxRates, onEdit, on
           ))}
           {/* Diff row — target − after_sale: negative=overweight, positive=underweight */}
           <div className="flex items-center py-[4px] bg-[#f8f8f7] text-[11px]">
-            <span className="text-[#717777] flex-1">Diff vs target</span>
+            <span className="text-[#717777] flex-1">Gap to target</span>
             <span className={`font-bold text-right w-[22%] ${diffColor(diffStocks)}`}>{fmtDiff(diffStocks)}</span>
             <span className={`font-bold text-right w-[22%] ${diffColor(diffBonds)}`}>{fmtDiff(diffBonds)}</span>
             <span className={`text-right w-[22%] ${diffColor(diffRes)}`}>{fmtDiff(diffRes)}</span>
