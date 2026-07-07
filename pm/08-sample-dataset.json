@@ -34,10 +34,10 @@
     "user_id": "USR-20260411-001",
     "total_investable_balance": 870619.4,
     "current_allocation": {
-      "domestic_equity_pct": 42.77,
-      "international_equity_pct": 16.41,
-      "domestic_bonds_pct": 30.89,
-      "short_term_reserves_pct": 9.93
+      "domestic_equity_pct": 41.75,
+      "international_equity_pct": 16.02,
+      "domestic_bonds_pct": 32.53,
+      "short_term_reserves_pct": 9.69
     }
   },
   "target_allocation": {

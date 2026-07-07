@@ -9,17 +9,33 @@ import { formatCurrency, formatCurrencyCompact, formatPercent } from '../utils/f
 // All values from pm/08-sample-dataset.json — never recalled from memory.
 // Call on mount when store.scenarios is empty.
 // ---------------------------------------------------------------------------
-function seedCanonicalScenarios(): SavedScenario[] {
+function seedCanonicalScenarios(portfolio: Portfolio | null): SavedScenario[] {
   const DEFAULT_TAX = { st_rate: 0.24, lt_rate: 0.15, income_bracket_label: '24% / 15%', source: 'default' as const, selection_timestamp: new Date().toISOString() }
   const NOW = new Date().toISOString()
 
-  // Allocation impact — percentage format (0–100 range), matching Figma SC-1B display values.
-  // Stocks combined into domestic_equity; international_equity = 0 in seed.
-  // Current: Stocks 59.2%, Bonds 30.9%, Reserves 9.9% (from canonical dataset, CLAUDE.md)
-  const ALLOC_CURRENT = { domestic_equity_before: 59.2, international_equity_before: 0, domestic_bonds_before: 30.9, short_term_reserves_before: 9.9 }
-  const SC1_AFTER  = { domestic_equity_after: 59.2, international_equity_after: 0, domestic_bonds_after: 30.6, short_term_reserves_after: 10.2 }
-  const SC2_AFTER  = { domestic_equity_after: 57.9, international_equity_after: 0, domestic_bonds_after: 31.8, short_term_reserves_after: 10.2 }
-  const SC3_AFTER  = { domestic_equity_after: 60.1, international_equity_after: 0, domestic_bonds_after: 30.9, short_term_reserves_after: 9.0 }
+  // Compute current allocation from actual holding balances (Fix 3 — previously hardcoded stale values).
+  // Matches the computation in engine/index.ts computeAllocationImpact() Fix 1.
+  function computeCurrentAlloc(port: Portfolio | null) {
+    if (!port) return { de: 41.75, ie: 16.02, db: 32.53, sr: 9.69 } // fallback to correct computed values
+    const total = port.total_investable_balance
+    const sums: Record<string, number> = { domestic_equity: 0, international_equity: 0, domestic_bonds: 0, short_term_reserves: 0 }
+    for (const acct of port.accounts)
+      for (const h of acct.holdings)
+        sums[h.asset_class] = (sums[h.asset_class] ?? 0) + h.current_balance
+    const p = (v: number) => total > 0 ? Math.round((v / total) * 10000) / 100 : 0
+    return { de: p(sums.domestic_equity), ie: p(sums.international_equity), db: p(sums.domestic_bonds), sr: p(sums.short_term_reserves) }
+  }
+  const cur = computeCurrentAlloc(portfolio)
+
+  // Allocation impact — percentage format (0–100 range), split into domestic/international equity.
+  // After-sale values computed from actual balances (portfolio total $870,619.40, new total $845,619.40 for $25K sale).
+  const ALLOC_CURRENT = { domestic_equity_before: cur.de, international_equity_before: cur.ie, domestic_bonds_before: cur.db, short_term_reserves_before: cur.sr }
+  // SC1: sell VTSAX $15K (domestic_equity) + VBTLX $10K (domestic_bonds)
+  const SC1_AFTER  = { domestic_equity_after: 41.21, international_equity_after: 16.50, domestic_bonds_after: 32.31, short_term_reserves_after: 9.98 }
+  // SC2: sell VTSAX $15K (domestic_equity) + VTIAX $10K (international_equity)
+  const SC2_AFTER  = { domestic_equity_after: 41.21, international_equity_after: 15.31, domestic_bonds_after: 33.49, short_term_reserves_after: 9.98 }
+  // SC3: sell VTSAX $15K (domestic_equity) + VBIRX $10K (short_term_reserves)
+  const SC3_AFTER  = { domestic_equity_after: 41.21, international_equity_after: 16.50, domestic_bonds_after: 33.49, short_term_reserves_after: 8.80 }
 
   return [
     {
@@ -471,7 +487,7 @@ export default function ScenarioAnalysis() {
   // The activeScenarioId check ensures a returning edit session isn't overwritten.
   useEffect(() => {
     if (scenarios.length === 0 && activeScenarioId === null) {
-      setScenarios(seedCanonicalScenarios())
+      setScenarios(seedCanonicalScenarios(portfolio))
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

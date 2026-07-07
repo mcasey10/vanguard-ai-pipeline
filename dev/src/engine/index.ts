@@ -260,11 +260,13 @@ function computeAllocationImpact(
     }
   }
 
+  const totalBalance = portfolio.total_investable_balance
+  const pctBefore = (v: number) => totalBalance > 0 ? r2((v / totalBalance) * 100) : 0
   const before = {
-    domestic_equity: portfolio.current_allocation.domestic_equity_pct,
-    international_equity: portfolio.current_allocation.international_equity_pct,
-    domestic_bonds: portfolio.current_allocation.domestic_bonds_pct,
-    short_term_reserves: portfolio.current_allocation.short_term_reserves_pct,
+    domestic_equity:      pctBefore(classValues.domestic_equity      ?? 0),
+    international_equity: pctBefore(classValues.international_equity ?? 0),
+    domestic_bonds:       pctBefore(classValues.domestic_bonds       ?? 0),
+    short_term_reserves:  pctBefore(classValues.short_term_reserves  ?? 0),
   }
 
   // After-sale values: subtract sold amounts from their respective asset classes
