@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
+import { loadPortfolio } from '../data/loader'
 import { formatCurrency } from '../utils/format'
 
 export default function FundSelectionEntry() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { mode: storeMode, setTargetSaleAmount, setMode, startNewScenario, resetSession } = useAppStore()
+  const { mode: storeMode, setTargetSaleAmount, setMode, startNewScenario, resetSession, setPortfolio } = useAppStore()
 
   // /?reset=true — clears all localStorage and in-memory session state, then redirects to /
   useEffect(() => {
     if (searchParams.get('reset') === 'true') {
       localStorage.removeItem('vsr_portfolio_state')
       localStorage.removeItem('vsr_coach_marks_dismissed')
+      setPortfolio(loadPortfolio())  // reload canonical dataset into Zustand store
       resetSession()
       navigate('/', { replace: true })
     }
