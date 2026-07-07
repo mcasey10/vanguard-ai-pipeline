@@ -548,7 +548,7 @@ export default function OrderConfirmation() {
                 <span className="text-[12px] font-semibold text-[#040505]">Estimated tax impact</span>
                 <div className="h-[8px]" />
                 <TaxRow label="ST Capital Gains" value={data.stCapitalGains !== 0 ? fmtGainLoss(data.stCapitalGains, '') : '$0.00'} valueBold valueColor={data.stCapitalGains > 0 ? '#007a00' : data.stCapitalGains < 0 ? '#c8102e' : '#717777'} />
-                <TaxRow label="LT Capital Gains" value={data.ltCapitalGains !== 0 ? fmtGainLoss(data.ltCapitalGains, '') : '$0.00'} muted={data.ltCapitalGains === 0} valueColor={data.ltCapitalGains > 0 ? '#007a00' : data.ltCapitalGains < 0 ? '#c8102e' : undefined} />
+                <TaxRow label="LT Capital Gains" value={data.ltCapitalGains !== 0 ? fmtGainLoss(data.ltCapitalGains, '') : '$0.00'} valueColor={data.ltCapitalGains > 0 ? '#007a00' : data.ltCapitalGains < 0 ? '#c8102e' : '#717777'} />
                 <TaxRow label="Losses Harvested" value={data.lossesHarvested !== 0 ? fmtGainLoss(data.lossesHarvested, '') : '$0.00'} valueBold={data.lossesHarvested !== 0} valueColor={data.lossesHarvested < 0 ? '#c8102e' : data.lossesHarvested > 0 ? '#007a00' : '#717777'} />
                 <Divider />
                 <TaxRow label="Net Taxable Gain" value={formatCurrency(data.netTaxableGain)} valueBold />

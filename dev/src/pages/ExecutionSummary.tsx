@@ -286,8 +286,7 @@ export default function ExecutionSummary() {
               <TaxRow
                 label="LT Capital Gains realized"
                 value={ltGains !== 0 ? signed(ltGains) : '$0.00'}
-                muted={ltGains === 0}
-                valueColor={ltGains > 0 ? '#007a00' : ltGains < 0 ? '#c8102e' : undefined}
+                valueColor={ltGains > 0 ? '#007a00' : ltGains < 0 ? '#c8102e' : '#717777'}
               />
               <TaxRow
                 label="Losses Harvested"
@@ -398,8 +397,14 @@ export default function ExecutionSummary() {
 
         {/* Element 5 — Actions */}
         <div className="flex items-center justify-between w-full">
-          {/* Left group */}
+          {/* Left group: Download confirmation + ghost links */}
           <div className="flex gap-[12px] items-center">
+            <button className="h-[48px] w-[200px] rounded-full border-[1.5px] border-[#040505] bg-white text-[14px] font-bold text-[#040505] shrink-0 hover:opacity-90 transition-opacity whitespace-nowrap">
+              Download confirmation
+            </button>
+            <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80">
+              View order in Activity →
+            </a>
             <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80" onClick={() => navigate('/history')}>
               View transaction history →
             </a>
@@ -412,16 +417,6 @@ export default function ExecutionSummary() {
           >
             Start a new sale
           </button>
-        </div>
-
-        {/* Reset link — unobtrusive, for demo / fresh-start use */}
-        <div className="flex justify-end w-full pt-[8px]">
-          <a
-            className="text-[12px] text-[#717777] underline cursor-pointer hover:opacity-70"
-            onClick={() => navigate('/?reset=true')}
-          >
-            Reset application
-          </a>
         </div>
 
       </div>
