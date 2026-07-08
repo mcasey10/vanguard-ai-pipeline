@@ -976,21 +976,22 @@
       <div class="step-head">
         <div class="step-num dev-num">7</div>
         <div class="step-main">
-          <div class="step-title">PR creation + ticket management</div>
-          <div class="step-desc">Agents create GitHub PRs, update Jira tickets to reflect completion, and post summaries — closing the loop back to the PM backlog without manual status updates. Demonstrates T5 orchestrated agentic workflow across Jira, GitHub, and Notion simultaneously.</div>
+          <div class="step-title">Release tagging + ticket management</div>
+          <div class="step-desc">Mark Dev phase completion with a git tag, update Jira tickets to reflect completion or deferral, and create the DDB (Dev Decisions &amp; Build) documentation space in Notion. A traditional PR was not created because all Dev phase work was committed directly to main — a git tag is the correct artifact for marking a milestone on a single-branch workflow. Demonstrates cross-system documentation closure via MCP tools across Jira and Notion simultaneously.</div>
         </div>
       </div>
       <div class="step-footer">
         <span class="tag t4">T4</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">Claude Code<span class="tip">Coordinated cross-system updates via MCP tools in a single session. GitHub PR created summarizing the full Dev phase. Jira VSR tickets transitioned to Done (implemented features) or Deferred (deliberately scoped out). Notion PRD workspace updated with deployment URL and Dev phase completion status.</span></span>
+          <span class="chip chip-used">Claude Code<span class="tip">Created git tag dev-phase-complete (0725626b) pointing to commit 923323b on main. Pushed tag to origin — visible at github.com/mcasey10/vanguard-ai-pipeline/releases/tag/dev-phase-complete. Coordinated Jira and Notion updates via MCP tools.</span></span>
         </div>
         <span class="sep"></span>
         <span class="tag t5">T5 emerging</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-used">GitHub MCP<span class="tip">Created the Dev phase PR on mcasey10/vanguard-ai-pipeline summarizing all seven Dev phase steps, technical decisions, test results (58/58 unit, 2/2 integration), deployed URL, and documented known gaps.</span></span>
-          <span class="chip chip-used">Atlassian Rovo MCP<span class="tip">Transitioned implemented VSR stories to Done with comments linking to the deployed application. Deferred features (IRA account selection, FS-DEGRADE) moved to Deferred status with documented rationale. VSR-78 (ES-1) amended with post-handoff revision comment referencing ES-1-rev.</span></span>
-          <span class="chip chip-skipped">n8n<span class="tip">Evaluated for orchestrating cross-system automation beyond individual MCP connections — not used. The MCP tools available (GitHub, Atlassian Rovo, Notion) were sufficient to complete all cross-system updates directly from Claude.ai without requiring a separate workflow automation layer.</span></span>
+          <span class="chip chip-skipped">GitHub MCP<span class="tip">GitHub Integration connector was connected to Claude.ai but no PR-creation MCP tool was exposed in Claude Code sessions — only available in Claude.ai chat threads. Additionally, a PR requires two different branches; since all Dev phase work was committed directly to main, a git tag was used instead as the milestone marker. Learning: establish a feature branch workflow from the start of the Dev phase to enable PR-based code review as originally planned.</span></span>
+          <span class="chip chip-used">Atlassian Rovo MCP<span class="tip">Transitioned 39 VSR tickets: implemented features moved to Done with comments linking to https://vanguard-ai-pipeline-jade.vercel.app/. Deferred features (IRA account selection, FS-DEGRADE) moved to Deferred status with documented rationale. VSR-78 (ES-1) amended with post-handoff revision comment referencing ES-1-rev (node 833:2953).</span></span>
+          <span class="chip chip-used">Notion MCP<span class="tip">Created DDB (Dev Decisions &amp; Build) workspace as a sibling to the PRD and PDB spaces, with five child pages: Architecture overview, Data model &amp; state management, Optimization engine, Deployment, and Known gaps &amp; deferred features. This is the Dev phase equivalent of the PRD (PM) and PDB (PD) documentation spaces.</span></span>
+          <span class="chip chip-skipped">n8n<span class="tip">Evaluated for orchestrating cross-system automation beyond individual MCP connections — not used. Atlassian Rovo MCP and Notion MCP were sufficient for all cross-system updates without requiring a separate workflow automation layer.</span></span>
         </div>
       </div>
     </div>
@@ -998,11 +999,11 @@
     <div class="handoff">
       <div class="handoff-lbl">Dev outputs</div>
       <div class="handoff-items">
-        <span class="handoff-item">Deployed application (Vercel)</span>
+        <span class="handoff-item">Deployed application (Vercel — https://vanguard-ai-pipeline-jade.vercel.app/)</span>
         <span class="handoff-item">Optimization engine (REQ-OE-001 through REQ-OE-010)</span>
-        <span class="handoff-item">Test suite (15 coverage cases)</span>
-        <span class="handoff-item">GitHub PRs</span>
-        <span class="handoff-item">Updated Jira backlog</span>
+        <span class="handoff-item">Test suite (58 unit tests, 2 integration flows)</span>
+        <span class="handoff-item">Git release tag (dev-phase-complete)</span>
+        <span class="handoff-item">Updated Jira backlog (39 tickets transitioned)</span>
         <span class="handoff-item">Deployment configuration (vercel.json + GitHub Actions)</span>
         <span class="handoff-item">dev/CLAUDE.md (standing rules, updated throughout)</span>
       </div>
