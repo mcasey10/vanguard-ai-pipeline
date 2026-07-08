@@ -404,7 +404,7 @@ export default function FundSelectionManual2() {
     portfolio, activeAccountId, activeTaxRates, optimizationPriority, setManualConfig, manualConfig, recommendation,
     scenarios, addScenario, updateScenario, activeScenarioId, setActiveScenarioId, setPortfolio,
     manualActiveFundIds, manualAppliedAmountsCents, manualCostBasisMethods, manualLotSelections,
-    setManualActiveFunds, setManualAppliedAmount, clearManualAppliedAmount, setManualCostBasisMethod,
+    setManualActiveFunds, setManualAppliedAmount, clearManualAppliedAmount, setManualCostBasisMethod, setManualLotSelections,
   } = useAppStore()
 
   // Engine output for this session — per-fund results for display
@@ -421,11 +421,14 @@ export default function FundSelectionManual2() {
   const runManualEngine = useCallback((
     newAmounts: Record<string, number>,
     newActiveFunds: Set<string>,
-    newMethods: Record<string, CostBasisMethod> = {}
+    newMethods: Record<string, CostBasisMethod> = {},
+    // Caller may supply updated lot selections that aren't in the store closure yet
+    lotSelectionsOverride?: Record<string, Record<string, string>>
   ) => {
     if (!portfolio) return
     const totalDollars = r2(Object.values(newAmounts).reduce((s, v) => s + v, 0) / 100)
     if (totalDollars <= 0 || newActiveFunds.size === 0) { setFundResults([]); return }
+    const effectiveLotSelections = lotSelectionsOverride ?? manualLotSelections
     const fundSelectionsForEngine = Array.from(newActiveFunds)
       .filter(ticker => (newAmounts[ticker] ?? 0) > 0)
       .map(ticker => {
@@ -437,7 +440,7 @@ export default function FundSelectionManual2() {
         }
         if (method !== 'SpecID') return base
         // For SpecID: attach persisted lot selections so the engine produces a valid result
-        const storedInputs = manualLotSelections[ticker]
+        const storedInputs = effectiveLotSelections[ticker]
         if (!storedInputs) return base
         const lot_overrides = Object.entries(storedInputs)
           .filter(([, v]) => parseFloat(v) > 0)
@@ -459,12 +462,28 @@ export default function FundSelectionManual2() {
     setFundResults(config.fund_results)
   }, [portfolio, activeAccountId, optimizationPriority, activeTaxRates, setManualConfig, manualLotSelections])
 
-  // handleMethodChange — updates per-fund method in store and re-runs engine
+  // handleMethodChange — updates per-fund method in store and re-runs engine.
+  // When switching TO SpecID, seeds lot selections from the current engine result
+  // (lots_sold from the previous method) so the user starts with a concrete selection
+  // rather than a blank slate. The seeded inputs are passed directly to runManualEngine
+  // because setManualLotSelections is synchronous in the store but the closure still
+  // holds the pre-update value.
   function handleMethodChange(ticker: string, method: CostBasisMethod) {
     setHasUserModified(true)
+    let lotSelectionsOverride: Record<string, Record<string, string>> | undefined
+    if (method === 'SpecID') {
+      const currentResult = manualConfig?.fund_results.find(r => r.fund_id === ticker)
+      if (currentResult && currentResult.lots_sold.length > 0) {
+        const seeded = Object.fromEntries(
+          currentResult.lots_sold.map(l => [l.lot_id, String(l.shares_to_sell)])
+        )
+        setManualLotSelections(ticker, seeded)
+        lotSelectionsOverride = { ...manualLotSelections, [ticker]: seeded }
+      }
+    }
     setManualCostBasisMethod(ticker, method)
     const newMethods = { ...costBasisMethods, [ticker]: method }
-    runManualEngine(appliedAmounts, activeFunds, newMethods)
+    runManualEngine(appliedAmounts, activeFunds, newMethods, lotSelectionsOverride)
   }
 
   // Single mount effect covering two cases:
