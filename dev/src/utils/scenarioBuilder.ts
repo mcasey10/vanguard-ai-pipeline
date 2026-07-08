@@ -17,7 +17,8 @@ import type {
 import { formatCurrency } from './format'
 
 // ---------------------------------------------------------------------------
-// Duplicate detection — same fund IDs and sell amounts (within 1 cent)
+// Duplicate detection — same optimization priority, fund IDs, sell amounts
+// (within 1 cent), and accounting method per fund
 // ---------------------------------------------------------------------------
 
 export function isDuplicateScenario(
@@ -25,12 +26,15 @@ export function isDuplicateScenario(
   existing: SavedScenario[]
 ): boolean {
   return existing.some(s => {
+    if (s.optimization_priority !== candidate.optimization_priority) return false
     if (s.fund_selections.length !== candidate.fund_selections.length) return false
     const sortedExisting  = [...s.fund_selections].sort((a, b) => a.fund_id.localeCompare(b.fund_id))
     const sortedCandidate = [...candidate.fund_selections].sort((a, b) => a.fund_id.localeCompare(b.fund_id))
     return sortedExisting.every((fs, i) => {
       const cf = sortedCandidate[i]
-      return fs.fund_id === cf?.fund_id && Math.abs(fs.sell_amount - (cf?.sell_amount ?? 0)) < 0.01
+      return fs.fund_id === cf?.fund_id
+        && Math.abs(fs.sell_amount - (cf?.sell_amount ?? 0)) < 0.01
+        && fs.accounting_method === cf?.accounting_method
     })
   })
 }

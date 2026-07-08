@@ -703,23 +703,13 @@ export default function FundSelectionManualLot() {
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // REQ-B4-001: "Go to Scenario Analysis" from lot detail — save/update scenario and navigate
+  // REQ-B4-001: "Go to Scenario Analysis" from lot detail — save/update scenario and navigate.
+  // Uses manualConfig.fund_results (all active funds, with actual lots_sold from engine output)
+  // rather than a synthetic single-fund object, so lot selections survive startEditingScenario.
   function handleGoToScenarios() {
-    if (bannerData && portfolio) {
-      const fr = {
-        fund_id: fund,
-        fund_name: holding?.fund_name ?? fund,
-        sell_amount: bannerData.totalSale,
-        accounting_method: 'specific_lot_identification' as const,
-        lots_sold: [],
-        est_st_gain_loss: bannerData.stGainLoss,
-        est_lt_gain_loss: bannerData.ltGainLoss,
-        est_tax_gross: bannerData.estNetTax,
-        impact_pct: 0,
-        impact_asset_class: 'domestic_equity',
-        rationale: '',
-      }
-      const scenario = buildScenarioFromFundResults([fr], portfolio, activeTaxRates, null)
+    const fundResults = manualConfig?.fund_results ?? []
+    if (fundResults.length > 0 && portfolio) {
+      const scenario = buildScenarioFromFundResults(fundResults, portfolio, activeTaxRates, null)
       if (scenario) {
         if (activeScenarioId) {
           updateScenario(activeScenarioId, { ...scenario, scenario_id: activeScenarioId })
