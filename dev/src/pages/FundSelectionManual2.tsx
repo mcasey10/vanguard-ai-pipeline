@@ -917,9 +917,24 @@ export default function FundSelectionManual2() {
                 </div>
               )}
             </div>
-            <button onClick={handleGoToScenarios} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">
-              Go to Scenario Analysis
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => !hasUnresolvedSpecID && handleGoToScenarios()}
+                disabled={hasUnresolvedSpecID}
+                className={`h-[48px] px-7 rounded-full border-[1.5px] text-[14px] font-bold whitespace-nowrap transition-opacity ${
+                  hasUnresolvedSpecID
+                    ? 'border-vg-ink/30 text-vg-ink/30 bg-white cursor-not-allowed'
+                    : 'border-vg-ink text-vg-ink bg-white hover:opacity-90'
+                }`}
+              >
+                Go to Scenario Analysis
+              </button>
+              {hasUnresolvedSpecID && (
+                <div className="absolute bottom-full left-0 mb-2 w-56 bg-vg-ink text-white text-[12px] rounded px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                  Enter lot quantities for all SpecID funds before proceeding.
+                </div>
+              )}
+            </div>
             <button
               onClick={() => setShowResetDialog(true)}
               className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80"
