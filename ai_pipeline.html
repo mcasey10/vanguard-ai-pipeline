@@ -988,10 +988,10 @@
         <span class="sep"></span>
         <span class="tag t5">T5 emerging</span><span class="sep"></span>
         <div class="tools-row">
-          <span class="chip chip-skipped">GitHub MCP<span class="tip">GitHub Integration connector was connected to Claude.ai but no PR-creation MCP tool was exposed in Claude Code sessions — only available in Claude.ai chat threads. Additionally, a PR requires two different branches; since all Dev phase work was committed directly to main, a git tag was used instead as the milestone marker. Learning: establish a feature branch workflow from the start of the Dev phase to enable PR-based code review as originally planned.</span></span>
+          <span class="chip chip-used">GitHub<span class="tip">Git CLI used agentically via Claude Code to create and push the dev-phase-complete release tag (commit 923323b) — visible at github.com/mcasey10/vanguard-ai-pipeline/releases/tag/dev-phase-complete. The GitHub MCP connector (OAuth) was connected to Claude.ai but did not expose PR-creation tools in Claude Code sessions, making a traditional PR impossible. Additionally, a PR requires two different branches — since all Dev phase work was committed directly to main, a tag was the correct milestone artifact regardless. Learning: establish a feature branch workflow from the start of the Dev phase to enable PR-based code review.</span></span>
           <span class="chip chip-used">Atlassian Rovo MCP<span class="tip">Transitioned 39 VSR tickets: implemented features moved to Done with comments linking to https://vanguard-ai-pipeline-jade.vercel.app/. Deferred features (IRA account selection, FS-DEGRADE) moved to Deferred status with documented rationale. VSR-78 (ES-1) amended with post-handoff revision comment referencing ES-1-rev (node 833:2953).</span></span>
           <span class="chip chip-used">Notion MCP<span class="tip">Created DDB (Dev Decisions &amp; Build) workspace as a sibling to the PRD and PDB spaces, with five child pages: Architecture overview, Data model &amp; state management, Optimization engine, Deployment, and Known gaps &amp; deferred features. This is the Dev phase equivalent of the PRD (PM) and PDB (PD) documentation spaces.</span></span>
-          <span class="chip chip-skipped">n8n<span class="tip">Evaluated for orchestrating cross-system automation beyond individual MCP connections — not used. Atlassian Rovo MCP and Notion MCP were sufficient for all cross-system updates without requiring a separate workflow automation layer.</span></span>
+          <span class="chip chip-skipped">n8n<span class="tip">Open-source workflow automation platform (similar to Zapier/Make, but self-hostable) that executes multi-service pipelines through a visual node editor. In Step 7, n8n would have orchestrated the 28 Jira ticket transitions, Notion DDB creation, and GitHub tag in parallel from a single trigger — rather than 28+ sequential MCP calls executed one at a time over several minutes. Not evaluated due to a recurring pattern in this project: when automation was requested, guidance defaulted to MCP tools as sufficient rather than exploring ceiling-level automation. This was a missed learning opportunity. Highest-value use cases that went unexplored: (1) trigger-based pipeline automation — when a Jira story moves to Done, automatically update the corresponding Notion PDB entry; (2) parallel bulk operations — all 28 compliance ticket transitions in one workflow execution; (3) scheduled cross-system sync — nightly Notion→Jira status reconciliation. A future iteration of this pipeline should evaluate n8n for Step 7 explicitly.</span></span>
         </div>
       </div>
     </div>
@@ -1003,7 +1003,8 @@
         <span class="handoff-item">Optimization engine (REQ-OE-001 through REQ-OE-010)</span>
         <span class="handoff-item">Test suite (58 unit tests, 2 integration flows)</span>
         <span class="handoff-item">Git release tag (dev-phase-complete)</span>
-        <span class="handoff-item">Updated Jira backlog (39 tickets transitioned)</span>
+        <span class="handoff-item">DDB — Dev Decisions &amp; Build (Notion)</span>
+        <span class="handoff-item">Updated Jira backlog (39 tickets Done, 28 tickets Deferred)</span>
         <span class="handoff-item">Deployment configuration (vercel.json + GitHub Actions)</span>
         <span class="handoff-item">dev/CLAUDE.md (standing rules, updated throughout)</span>
       </div>
