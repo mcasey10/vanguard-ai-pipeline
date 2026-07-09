@@ -28,8 +28,7 @@ export default function L2Nav() {
             {label}
             <CoachMark
               id="nav-prototype"
-              title="About this prototype"
-              text="These navigation tabs are static (only shown to provide realistic portal context). This prototype covers only the Sell & Rebalance tool: an AI-optimized workflow for selecting which funds to sell when raising cash from a taxable brokerage account."
+              text="These navigation tabs are static (only shown to provide realistic portal context). This application covers only the Sell & Rebalance tool: an AI-optimized workflow for selecting which funds to sell when raising cash from a taxable brokerage account."
             />
           </NavLink>
         ) : (
