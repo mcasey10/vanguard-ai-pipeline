@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { CoachMark } from '../CoachMark'
 
 const NAV_ITEMS = [
   { label: 'Dashboard',        to: '#' },
@@ -21,10 +22,15 @@ export default function L2Nav() {
             key={label}
             to={to}
             end
-            className="flex items-center text-[14px] font-bold text-vg-ink whitespace-nowrap
+            className="flex items-center gap-[6px] text-[14px] font-bold text-vg-ink whitespace-nowrap
               border-b-2 border-vg-red -mb-px"
           >
             {label}
+            <CoachMark
+              id="nav-prototype"
+              title="About this prototype"
+              text="These navigation tabs are static (only shown to provide realistic portal context). This prototype covers only the Sell & Rebalance tool: an AI-optimized workflow for selecting which funds to sell when raising cash from a taxable brokerage account."
+            />
           </NavLink>
         ) : (
           <span

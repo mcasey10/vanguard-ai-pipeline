@@ -15,6 +15,7 @@ export default function FundSelectionEntry() {
     if (searchParams.get('reset') === 'true') {
       localStorage.removeItem('vsr_portfolio_state')
       localStorage.removeItem('vsr_coach_marks_dismissed')
+      window.dispatchEvent(new Event('vsr-reset'))
       setPortfolio(loadPortfolio())  // reload canonical dataset into Zustand store
       resetSession()
       navigate('/', { replace: true })

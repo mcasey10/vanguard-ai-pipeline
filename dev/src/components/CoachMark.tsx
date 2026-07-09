@@ -75,20 +75,24 @@ function computeDialogPos(beaconRect: DOMRect): DialogPosition {
 
 interface CoachMarkProps {
   id: string
+  title?: string
   text: string
   className?: string
   style?: React.CSSProperties
 }
 
-export function CoachMark({ id, text, className, style }: CoachMarkProps) {
+export function CoachMark({ id, title, text, className, style }: CoachMarkProps) {
   const [dismissed, setDismissed] = useState(() => getDismissed().includes(id))
   const [open, setOpen]           = useState(false)
   const [dialogPos, setDialogPos] = useState<DialogPosition>({ top: 0, left: 0 })
   const beaconRef = useRef<HTMLButtonElement>(null)
 
-  // Re-check if dismissed on mount (covers multi-tab edge case)
+  // Re-check if dismissed on mount and on vsr-reset (covers reset flow)
   useEffect(() => {
-    setDismissed(getDismissed().includes(id))
+    const check = () => setDismissed(getDismissed().includes(id))
+    check()
+    window.addEventListener('vsr-reset', check)
+    return () => window.removeEventListener('vsr-reset', check)
   }, [id])
 
   const handleBeaconClick = useCallback(() => {
@@ -148,6 +152,7 @@ export function CoachMark({ id, text, className, style }: CoachMarkProps) {
             <div style={{ height: 4, background: '#00BDA3' }} />
 
             <div className="px-[16px] pt-[14px] pb-[16px] flex flex-col gap-[14px]">
+              {title && <p className="text-[13px] font-bold text-[#040505] uppercase tracking-wide">{title}</p>}
               <p className="text-[14px] text-[#040505] leading-relaxed">{text}</p>
 
               <button
