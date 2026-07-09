@@ -40,6 +40,14 @@ export default function L2Nav() {
           </span>
         ),
       )}
+
+      {/* Reset demo — utility link, far right */}
+      <a
+        onClick={() => { window.location.href = '/?reset=true' }}
+        className="ml-auto flex items-center text-[11px] text-[#717777] underline cursor-pointer whitespace-nowrap hover:opacity-80"
+      >
+        Reset demo
+      </a>
     </nav>
   )
 }

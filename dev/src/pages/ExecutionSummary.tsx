@@ -402,9 +402,6 @@ export default function ExecutionSummary() {
             <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80" onClick={() => navigate('/history')}>
               View transaction history →
             </a>
-            <a className="text-[12px] text-[#717777] cursor-pointer whitespace-nowrap hover:underline" onClick={() => navigate('/?reset=true')}>
-              Reset application
-            </a>
           </div>
 
           {/* Primary CTA */}
