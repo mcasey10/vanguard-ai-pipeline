@@ -41,13 +41,16 @@ export default function L2Nav() {
         ),
       )}
 
-      {/* Reset demo — utility link, far right */}
-      <a
-        onClick={() => { window.location.href = '/?reset=true' }}
-        className="ml-auto flex items-center text-[11px] text-[#717777] underline cursor-pointer whitespace-nowrap hover:opacity-80"
-      >
-        Reset demo
-      </a>
+      {/* Reset demo — utility link + beacon, far right */}
+      <div className="ml-auto flex items-center gap-2">
+        <CoachMark id="reset-demo" text="Reset demo is not part of the production feature set — it exists for demonstration purposes only. It restores the canonical sample portfolio ($870,619.40 total value), clears all completed transactions, and restores all coach mark beacons to their initial state." />
+        <a
+          onClick={() => { window.location.href = '/?reset=true' }}
+          className="flex items-center text-[11px] text-[#717777] underline cursor-pointer whitespace-nowrap hover:opacity-80"
+        >
+          Reset demo
+        </a>
+      </div>
     </nav>
   )
 }

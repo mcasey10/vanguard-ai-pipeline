@@ -109,6 +109,8 @@ function ActiveFundRow({
   onMethodChange,
   showAllocationHint,
   showHarvestableHint,
+  showCostBasisHint,
+  showLotDetailsHint,
   onCancel,
   onLotDetails,
 }: {
@@ -120,6 +122,8 @@ function ActiveFundRow({
   onMethodChange: (ticker: string, method: CostBasisMethod) => void
   showAllocationHint: boolean
   showHarvestableHint: boolean
+  showCostBasisHint: boolean
+  showLotDetailsHint: boolean
   onCancel: () => void
   onLotDetails: (ticker: string, readOnly: boolean) => void
 }) {
@@ -219,7 +223,12 @@ function ActiveFundRow({
 
         {/* COST BASIS METHOD — 160px — lifted to parent for engine re-run on change */}
         <div className="w-[160px] h-full flex flex-col justify-center gap-1 px-2 shrink-0 overflow-hidden">
-          <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-vg-ink-muted whitespace-nowrap">COST BASIS METHOD</span>
+            {showCostBasisHint && (
+              <CoachMark id="cost-basis" text="The cost basis method determines which purchase lots are used to calculate your gain or loss when selling shares, directly affecting estimated taxes. MinTax selects lots that minimize tax impact. FIFO sells oldest lots first. SpecID lets you choose specific lots manually." />
+            )}
+          </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[14px] font-bold text-vg-ink whitespace-nowrap">{currentMethod}</span>
             <a
@@ -292,15 +301,20 @@ function ActiveFundRow({
             <CoachMark id="harvestable" text="This lot is worth less than you paid for it. Selling it realizes a loss that can offset gains elsewhere in your portfolio, potentially reducing your tax bill." />
           )}
         </div>
-        <button
-          onClick={() => canViewLots && onLotDetails(fund.ticker, !isSpecID)}
-          disabled={!canViewLots}
-          title={canViewLots ? (isSpecID ? undefined : 'View lots selected by the engine (read-only)') : 'Enter a sell amount first'}
-          className={`flex items-center gap-1 shrink-0 ${canViewLots ? 'cursor-pointer hover:opacity-70' : 'opacity-30 cursor-not-allowed'}`}
-        >
-          <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">Lot details</span>
-          <span className="text-vg-ink-muted text-base leading-none">▾</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {showLotDetailsHint && (
+            <CoachMark id="lot-details" text="Lot details shows the purchase history for a fund, grouped by long-term and short-term holdings. Each lot's gain or loss is based on the difference between its original cost and the current share price. Lot quantities can only be adjusted when SpecID (Specific Identification) is selected as the cost basis method." />
+          )}
+          <button
+            onClick={() => canViewLots && onLotDetails(fund.ticker, !isSpecID)}
+            disabled={!canViewLots}
+            title={canViewLots ? (isSpecID ? undefined : 'View lots selected by the engine (read-only)') : 'Enter a sell amount first'}
+            className={`flex items-center gap-1 ${canViewLots ? 'cursor-pointer hover:opacity-70' : 'opacity-30 cursor-not-allowed'}`}
+          >
+            <span className="text-[12px] text-vg-ink-muted whitespace-nowrap">Lot details</span>
+            <span className="text-vg-ink-muted text-base leading-none">▾</span>
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -674,18 +688,21 @@ export default function FundSelectionManual2() {
             <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">
               Sell &amp; Rebalance
             </h1>
-            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
-              <button
-                onClick={handleToggleClick}
-                className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink"
-              >
-                <Sparkles size={16} className="text-vg-ink" />
-                Automated
-              </button>
-              <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
-                <PenLine size={16} className="text-white" />
-                <span className="text-[14px] font-bold text-white">Manual</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
+                <button
+                  onClick={handleToggleClick}
+                  className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink"
+                >
+                  <Sparkles size={16} className="text-vg-ink" />
+                  Automated
+                </button>
+                <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
+                  <PenLine size={16} className="text-white" />
+                  <span className="text-[14px] font-bold text-white">Manual</span>
+                </div>
               </div>
+              <CoachMark id="mode-toggle" text="Automated mode uses an AI optimization engine to recommend which funds to sell and how much, minimizing your estimated tax burden while improving portfolio allocation. Manual mode gives you direct control over fund selection, cost basis method, and individual lot choices." />
             </div>
           </div>
 
@@ -848,6 +865,8 @@ export default function FundSelectionManual2() {
                       onLotDetails={(ticker, ro) => handleLotDetails(ticker, ro)}
                       showAllocationHint={holding.asset_class === 'domestic_equity'}
                       showHarvestableHint={(holding.total_unrealized_gain_loss ?? 0) < 0}
+                      showCostBasisHint={fund.ticker === 'VTSAX'}
+                      showLotDetailsHint={fund.ticker === 'VTSAX'}
                       onCancel={() => handleCancel(fund.ticker)}
                     />
                   )

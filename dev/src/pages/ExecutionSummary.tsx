@@ -7,6 +7,7 @@
  */
 
 import { useNavigate } from 'react-router-dom'
+import { CoachMark } from '../components/CoachMark'
 import { useAppStore } from '../store/useAppStore'
 import { getTransactionHistory } from '../data/loader'
 import type { TransactionRecord } from '../types'
@@ -402,6 +403,7 @@ export default function ExecutionSummary() {
             <a className="text-[14px] text-[#1255cc] underline cursor-pointer whitespace-nowrap hover:opacity-80" onClick={() => navigate('/history')}>
               View transaction history →
             </a>
+            <CoachMark id="txn-history" text="Shows all transactions completed in this session. Transaction history and portfolio values are restored to their starting state when the demo is reset." />
           </div>
 
           {/* Primary CTA */}

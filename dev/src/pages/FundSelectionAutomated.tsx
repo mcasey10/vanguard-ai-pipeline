@@ -210,14 +210,17 @@ export default function FundSelectionAutomated() {
           {/* Row 1 — Title + mode toggle */}
           <div className="flex items-center justify-between px-8 h-14">
             <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">Sell &amp; Rebalance</h1>
-            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
-              <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
-                <Sparkles size={16} className="text-white" />
-                <span className="text-[14px] font-bold text-white">Automated</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
+                <div className="self-stretch flex items-center gap-1.5 px-4 rounded-full bg-vg-teal">
+                  <Sparkles size={16} className="text-white" />
+                  <span className="text-[14px] font-bold text-white">Automated</span>
+                </div>
+                <button onClick={() => { setMode('manual'); navigate('/manual-2') }} className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink">
+                  <PenLine size={16} className="text-vg-ink" />Manual
+                </button>
               </div>
-              <button onClick={() => { setMode('manual'); navigate('/manual-2') }} className="self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold text-vg-ink">
-                <PenLine size={16} className="text-vg-ink" />Manual
-              </button>
+              <CoachMark id="mode-toggle" text="Automated mode uses an AI optimization engine to recommend which funds to sell and how much, minimizing your estimated tax burden while improving portfolio allocation. Manual mode gives you direct control over fund selection, cost basis method, and individual lot choices." />
             </div>
           </div>
 
@@ -245,7 +248,10 @@ export default function FundSelectionAutomated() {
               {recommendation ? 'Recalculate' : 'Calculate'}
             </button>
             <div className="ml-auto flex flex-col gap-2 shrink-0">
-              <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">Optimization priority</label>
+              <div className="flex items-center gap-1">
+                <label className="text-[12px] text-vg-ink-muted whitespace-nowrap">Optimization priority</label>
+                <CoachMark id="opt-priority" text="Optimization priority determines how funds are selected: Tax-first minimizes estimated capital gains tax by prioritizing loss harvesting. Balance-first prioritizes correcting your portfolio's asset allocation toward your target." />
+              </div>
               <div className="flex items-center border border-vg-ink rounded-full p-[2px] h-[36px]">
                 {(['tax-first', 'balance-first'] as const).map(p => (
                   <button key={p} onClick={() => handleOptMode(p)}
@@ -473,6 +479,7 @@ export default function FundSelectionAutomated() {
           <div className="flex gap-3 items-center justify-end px-8 w-full">
             <button onClick={() => navigate('/confirm')} className="h-[48px] px-7 rounded-full bg-vg-ink text-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">Review order</button>
             <button onClick={handleGoToScenarios} className="h-[48px] px-7 rounded-full border-[1.5px] border-vg-ink text-vg-ink bg-white text-[14px] font-bold whitespace-nowrap hover:opacity-90 transition-opacity">Go to Scenario Analysis</button>
+            <CoachMark id="scenario-analysis" text="Scenario Analysis shows the full tax impact and asset mix effect of your current selection, and lets you compare up to 3 different scenarios side by side before committing to a transaction." />
           </div>
 
         </div>

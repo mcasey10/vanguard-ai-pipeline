@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Sparkles, PenLine } from 'lucide-react'
+import { CoachMark } from '../components/CoachMark'
 import { useAppStore } from '../store/useAppStore'
 import { loadPortfolio } from '../data/loader'
 import { formatCurrency } from '../utils/format'
@@ -75,25 +76,28 @@ export default function FundSelectionEntry() {
           <h1 className="text-[30px] font-bold text-vg-ink whitespace-nowrap leading-normal">
             Sell &amp; Rebalance
           </h1>
-          <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
-            <button
-              onClick={() => handleModeChange('automated')}
-              className={`self-stretch flex items-center gap-1.5 px-4 rounded-full text-[14px] font-bold transition-colors ${
-                mode === 'automated' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
-              }`}
-            >
-              <Sparkles size={16} className={mode === 'automated' ? 'text-white' : 'text-vg-ink'} />
-              Automated
-            </button>
-            <button
-              onClick={() => handleModeChange('manual')}
-              className={`self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold transition-colors ${
-                mode === 'manual' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
-              }`}
-            >
-              <PenLine size={16} className={mode === 'manual' ? 'text-white' : 'text-vg-ink'} />
-              Manual
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center border-[1.5px] border-vg-ink rounded-full p-[2px] bg-white h-[37px]">
+              <button
+                onClick={() => handleModeChange('automated')}
+                className={`self-stretch flex items-center gap-1.5 px-4 rounded-full text-[14px] font-bold transition-colors ${
+                  mode === 'automated' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
+                }`}
+              >
+                <Sparkles size={16} className={mode === 'automated' ? 'text-white' : 'text-vg-ink'} />
+                Automated
+              </button>
+              <button
+                onClick={() => handleModeChange('manual')}
+                className={`self-stretch flex items-center gap-1.5 px-4 rounded-[4px] text-[14px] font-bold transition-colors ${
+                  mode === 'manual' ? 'bg-vg-teal text-white' : 'bg-transparent text-vg-ink'
+                }`}
+              >
+                <PenLine size={16} className={mode === 'manual' ? 'text-white' : 'text-vg-ink'} />
+                Manual
+              </button>
+            </div>
+            <CoachMark id="mode-toggle" text="Automated mode uses an AI optimization engine to recommend which funds to sell and how much, minimizing your estimated tax burden while improving portfolio allocation. Manual mode gives you direct control over fund selection, cost basis method, and individual lot choices." />
           </div>
         </div>
 
